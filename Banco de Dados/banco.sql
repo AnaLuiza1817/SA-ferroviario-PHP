@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
 INSERT INTO usuarios
 (nome, email, telefone, tipo, status)
+
 VALUES
 ('Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo'),
 ('Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo'),
