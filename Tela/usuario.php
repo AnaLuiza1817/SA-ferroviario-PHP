@@ -22,7 +22,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             exit;
         }
-
         $stmt = $conexao->prepare(
             "DELETE FROM usuarios WHERE id = ?"
         );
@@ -51,7 +50,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
     if ($acao === "cadastrar") {
-
         $nome = trim($_POST["nome"] ?? "");
         $email = trim($_POST["email"] ?? "");
         $telefone = trim($_POST["telefone"] ?? "");
@@ -65,12 +63,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $tipo === "" ||
             $status === ""
         ) {
-
             echo json_encode([
                 "sucesso" => false,
                 "mensagem" => "Preencha todos os campos."
             ]);
-
             exit;
         }
 
