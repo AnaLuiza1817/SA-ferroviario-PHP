@@ -1,5 +1,5 @@
 <?php
-require_once "../infra/conexao.php";
+require_once __DIR__ . "/../infra/conexao.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json; charset=utf-8");

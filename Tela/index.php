@@ -1,8 +1,7 @@
 <?php
-require_once "../infra/conexao.php";
+require_once __DIR__ . "/../infra/conexao.php";
 
 $anoAtual = date('Y');
-
 
 $sqlTotal = "
     SELECT COUNT(*) AS total
