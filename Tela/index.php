@@ -1,6 +1,6 @@
 <?php
 
-require_once "../Banco de Dados/conexao.php";
+require_once "../Infra/conexao.php";
 
 $anoAtual = date('Y');
 
@@ -248,7 +248,7 @@ function isAtiva(
 
     <link
         rel="stylesheet"
-        href="../css/style.css">
+        href="../Css/style.css">
 
 </head>
 
@@ -589,19 +589,15 @@ function isAtiva(
 
             </a>
 
-            <button
-                class="btn btn-outline-secondary btn-lg px-4"
-                onclick="novoUsuario()">
-
+            <a href="cadastro.php" class="btn btn-outline-secondary btn-lg px-4">
                 <i class="fas fa-user-plus me-2"></i>
-
                 Novo Usuário
-
-            </button>
+            </a>
 
             <button
+                type="button"
                 class="btn btn-outline-info btn-lg px-4"
-                onclick="showAlert()">
+                onclick="alert('Funcionalidade de exportação ainda não implementada.')">
 
                 <i class="fas fa-file-export me-2"></i>
 
@@ -610,8 +606,9 @@ function isAtiva(
             </button>
 
             <button
+                type="button"
                 class="btn btn-outline-success btn-lg px-4"
-                onclick="showAlert()">
+                onclick="alert('Relatório rápido ainda não implementado.')">
 
                 <i class="fas fa-chart-simple me-2"></i>
 
@@ -658,7 +655,7 @@ function isAtiva(
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
 </script>
 
-<script src="main.js"></script>
+<script src="../Js/main.js"></script>
 
 </body>
 

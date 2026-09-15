@@ -1,0 +1,17 @@
+body {
+    min-height: 100vh;
+}
+
+.card {
+    overflow: hidden;
+}
+
+.table td,
+.table th {
+    vertical-align: middle;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+    border-radius: .375rem;
+}

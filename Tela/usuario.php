@@ -1,186 +1,6 @@
 <?php
 
-require_once "../Banco de Dados/conexao.php";
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-    header("Content-Type: application/json; charset=utf-8");
-
-    $acao = $_POST["acao"] ?? "";
-
-
-    if ($acao === "excluir") {
-
-        $id = intval($_POST["id"] ?? 0);
-
-        if ($id <= 0) {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "ID inválido."
-            ]);
-
-            exit;
-        }
-
-        $stmt = $conexao->prepare(
-            "DELETE FROM usuarios WHERE id = ?"
-        );
-
-        $stmt->bind_param("i", $id);
-
-        if ($stmt->execute()) {
-
-            echo json_encode([
-                "sucesso" => true,
-                "mensagem" => "Usuário excluído com sucesso!"
-            ]);
-
-        } else {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "Erro ao excluir usuário."
-            ]);
-        }
-
-        $stmt->close();
-
-        exit;
-    }
-
-
-    if ($acao === "cadastrar") {
-
-        $nome = trim($_POST["nome"] ?? "");
-        $email = trim($_POST["email"] ?? "");
-        $telefone = trim($_POST["telefone"] ?? "");
-        $tipo = trim($_POST["tipo"] ?? "");
-        $status = trim($_POST["status"] ?? "");
-
-        if (
-            $nome === "" ||
-            $email === "" ||
-            $telefone === "" ||
-            $tipo === "" ||
-            $status === ""
-        ) {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "Preencha todos os campos."
-            ]);
-
-            exit;
-        }
-
-
-        $stmt = $conexao->prepare(
-            "INSERT INTO usuarios
-            (nome, email, telefone, tipo, status)
-            VALUES (?, ?, ?, ?, ?)"
-        );
-
-        $stmt->bind_param(
-            "sssss",
-            $nome,
-            $email,
-            $telefone,
-            $tipo,
-            $status
-        );
-
-
-        if ($stmt->execute()) {
-
-            echo json_encode([
-                "sucesso" => true,
-                "mensagem" => "Usuário cadastrado com sucesso!"
-            ]);
-
-        } else {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "Erro ao cadastrar usuário."
-            ]);
-        }
-
-        $stmt->close();
-
-        exit;
-    }
-
-
-    if ($acao === "editar") {
-
-        $id = intval($_POST["id"] ?? 0);
-        $nome = trim($_POST["nome"] ?? "");
-        $email = trim($_POST["email"] ?? "");
-        $telefone = trim($_POST["telefone"] ?? "");
-        $tipo = trim($_POST["tipo"] ?? "");
-        $status = trim($_POST["status"] ?? "");
-
-        if (
-            $id <= 0 ||
-            $nome === "" ||
-            $email === "" ||
-            $telefone === "" ||
-            $tipo === "" ||
-            $status === ""
-        ) {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "Preencha todos os campos."
-            ]);
-
-            exit;
-        }
-
-
-        $stmt = $conexao->prepare(
-            "UPDATE usuarios
-             SET nome = ?,
-                 email = ?,
-                 telefone = ?,
-                 tipo = ?,
-                 status = ?
-             WHERE id = ?"
-        );
-
-        $stmt->bind_param(
-            "sssssi",
-            $nome,
-            $email,
-            $telefone,
-            $tipo,
-            $status,
-            $id
-        );
-
-
-        if ($stmt->execute()) {
-
-            echo json_encode([
-                "sucesso" => true,
-                "mensagem" => "Usuário atualizado com sucesso!"
-            ]);
-
-        } else {
-
-            echo json_encode([
-                "sucesso" => false,
-                "mensagem" => "Erro ao atualizar usuário."
-            ]);
-        }
-
-        $stmt->close();
-
-        exit;
-    }
-}
-
+require_once "../Infra/conexao.php";
 
 $sql = "
     SELECT
@@ -212,6 +32,32 @@ if ($resultado) {
 $totalUsuarios = count($usuarios);
 
 $paginaAtual = basename($_SERVER["PHP_SELF"]);
+
+$mensagem = "";
+$tipoMensagem = "";
+
+$sucesso = $_GET["sucesso"] ?? "";
+$erro = $_GET["erro"] ?? "";
+
+$mensagensSucesso = [
+    "cadastro" => "Usuário cadastrado com sucesso!",
+    "edicao" => "Usuário atualizado com sucesso!",
+    "exclusao" => "Usuário excluído com sucesso!"
+];
+
+$mensagensErro = [
+    "id_invalido" => "ID de usuário inválido.",
+    "nao_encontrado" => "Usuário não encontrado."
+];
+
+if (isset($mensagensSucesso[$sucesso])) {
+    $mensagem = $mensagensSucesso[$sucesso];
+    $tipoMensagem = "success";
+} elseif (isset($mensagensErro[$erro])) {
+    $mensagem = $mensagensErro[$erro];
+    $tipoMensagem = "danger";
+}
+
 
 
 function isAtiva(
@@ -264,10 +110,15 @@ function statusBadgeClass(
         rel="stylesheet"
         href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+
 
     <link
         rel="stylesheet"
-        href="../css/style.css">
+        href="../Css/style.css">
 
 </head>
 
@@ -383,6 +234,13 @@ function statusBadgeClass(
 
 <div class="container my-5">
 
+    <?php if ($mensagem): ?>
+        <div class="alert alert-<?= htmlspecialchars($tipoMensagem, ENT_QUOTES, "UTF-8") ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($mensagem, ENT_QUOTES, "UTF-8") ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    <?php endif; ?>
+
 
     <div class="row mb-4">
 
@@ -408,16 +266,15 @@ function statusBadgeClass(
 
         <div class="col-auto align-self-center">
 
-            <button
-                type="button"
-                class="btn btn-success"
-                onclick="novoUsuario()">
+            <a
+                href="cadastro.php"
+                class="btn btn-success">
 
                 <i class="fas fa-plus me-1"></i>
 
                 Novo Usuário
 
-            </button>
+            </a>
 
         </div>
 
@@ -543,33 +400,17 @@ function statusBadgeClass(
 
                                 <td>
 
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-primary"
-                                        onclick="editarUsuario(
-                                            <?= (int)$usuario["id"] ?>
-                                        )">
-
+                                    <a href="editar.php?id=<?= (int)$usuario["id"] ?>"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Editar usuário">
                                         <i class="fas fa-edit"></i>
+                                    </a>
 
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="excluirUsuario(
-                                            <?= (int)$usuario["id"] ?>,
-                                            '<?= htmlspecialchars(
-                                                $usuario["nome"],
-                                                ENT_QUOTES,
-                                                "UTF-8"
-                                            ) ?>'
-                                        )">
-
+                                    <a href="excluir.php?id=<?= (int)$usuario["id"] ?>"
+                                       class="btn btn-sm btn-outline-danger btn-excluir-usuario"
+                                       title="Excluir usuário">
                                         <i class="fas fa-trash"></i>
-
-                                    </button>
+                                    </a>
 
                                 </td>
 
@@ -655,8 +496,15 @@ function statusBadgeClass(
     src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js">
 </script>
 
+<script
+    src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js">
+</script>
 
-<script src="main.js"></script>
+<script
+    src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js">
+</script>
+
+<script src="../Js/main.js"></script>
 
 </body>
 
