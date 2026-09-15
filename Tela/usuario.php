@@ -1,25 +1,19 @@
 <?php
-
 require_once "../Banco de Dados/conexao.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
     header("Content-Type: application/json; charset=utf-8");
-
     $acao = $_POST["acao"] ?? "";
-
-
     if ($acao === "excluir") {
-
         $id = intval($_POST["id"] ?? 0);
-
         if ($id <= 0) {
-
             echo json_encode([
                 "sucesso" => false,
                 "mensagem" => "ID inválido."
             ]);
-
+        }
+    }
+}
             exit;
         }
         $stmt = $conexao->prepare(
