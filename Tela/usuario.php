@@ -1,6 +1,164 @@
 <?php
+<<<<<<< HEAD
 
 require_once "../Infra/conexao.php";
+=======
+require_once __DIR__ . "/../infra/conexao.php";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    header("Content-Type: application/json; charset=utf-8");
+    $acao = $_POST["acao"] ?? "";
+    if ($acao === "excluir") {
+        $id = intval($_POST["id"] ?? 0);
+        if ($id <= 0) {
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "ID inválido."
+            ]);
+            exit;
+        }
+
+        $stmt = $conexao->prepare(
+            "DELETE FROM usuarios WHERE id = ?"
+        );
+
+        $stmt->bind_param("i", $id);
+        if ($stmt->execute()) {
+            echo json_encode([
+                "sucesso" => true,
+                "mensagem" => "Usuário excluído com sucesso!"
+            ]);
+        } else {
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "Erro ao excluir usuário."
+            ]);
+        }
+
+        $stmt->close();
+
+        exit;
+    }
+
+
+    if ($acao === "cadastrar") {
+        $nome = trim($_POST["nome"] ?? "");
+        $email = trim($_POST["email"] ?? "");
+        $telefone = trim($_POST["telefone"] ?? "");
+        $tipo = trim($_POST["tipo"] ?? "");
+        $status = trim($_POST["status"] ?? "");
+
+        if (
+            $nome === "" ||
+            $email === "" ||
+            $telefone === "" ||
+            $tipo === "" ||
+            $status === ""
+        ) {
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "Preencha todos os campos."
+            ]);
+
+            exit;
+        }
+
+        $stmt = $conexao->prepare(
+            "INSERT INTO usuarios
+            (nome, email, telefone, tipo, status)
+            VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param(
+            "sssss",
+            $nome,
+            $email,
+            $telefone,
+            $tipo,
+            $status
+        );
+
+
+        if ($stmt->execute()) {
+            echo json_encode([
+                "sucesso" => true,
+                "mensagem" => "Usuário cadastrado com sucesso!"
+            ]);
+
+        } else {
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "Erro ao cadastrar usuário."
+            ]);
+        }
+
+        $stmt->close();
+        exit;
+    }
+
+    if ($acao === "editar") {
+        $id = intval($_POST["id"] ?? 0);
+        $nome = trim($_POST["nome"] ?? "");
+        $email = trim($_POST["email"] ?? "");
+        $telefone = trim($_POST["telefone"] ?? "");
+        $tipo = trim($_POST["tipo"] ?? "");
+        $status = trim($_POST["status"] ?? "");
+        if (
+            $id <= 0 ||
+            $nome === "" ||
+            $email === "" ||
+            $telefone === "" ||
+            $tipo === "" ||
+            $status === ""
+        ) {
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "Preencha todos os campos."
+            ]);
+
+            exit;
+        }
+
+        $stmt = $conexao->prepare(
+            "UPDATE usuarios
+             SET nome = ?,
+                 email = ?,
+                 telefone = ?,
+                 tipo = ?,
+                 status = ?
+             WHERE id = ?"
+        );
+
+        $stmt->bind_param(
+            "sssssi",
+            $nome,
+            $email,
+            $telefone,
+            $tipo,
+            $status,
+            $id
+        );
+
+        if ($stmt->execute()) {
+            echo json_encode([
+                "sucesso" => true,
+                "mensagem" => "Usuário atualizado com sucesso!"
+            ]);
+
+        } else {
+
+            echo json_encode([
+                "sucesso" => false,
+                "mensagem" => "Erro ao atualizar usuário."
+            ]);
+        }
+
+        $stmt->close();
+
+        exit;
+    }
+}
+
+>>>>>>> 5fd18683975c433175f725f06f4e8a64208675d8
 
 $sql = "
     SELECT
