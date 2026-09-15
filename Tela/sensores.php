@@ -1,1 +1,2 @@
-require_once "../Banco de Dados/conexao.php";
+<?php
+require_once "../infra/conexao.php";

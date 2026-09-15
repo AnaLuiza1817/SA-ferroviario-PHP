@@ -1,6 +1,5 @@
 <?php
-
-require_once "../Banco de Dados/conexao.php";
+require_once "../infra/conexao.php";
 
 $anoAtual = date('Y');
 

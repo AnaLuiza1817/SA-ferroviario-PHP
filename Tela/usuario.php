@@ -1,5 +1,5 @@
 <?php
-require_once "../Banco de Dados/conexao.php";
+require_once "../infra/conexao.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json; charset=utf-8");
@@ -11,26 +11,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "sucesso" => false,
                 "mensagem" => "ID inválido."
             ]);
-        }
-    }
-}
             exit;
         }
+
         $stmt = $conexao->prepare(
             "DELETE FROM usuarios WHERE id = ?"
         );
 
         $stmt->bind_param("i", $id);
-
         if ($stmt->execute()) {
-
             echo json_encode([
                 "sucesso" => true,
                 "mensagem" => "Usuário excluído com sucesso!"
             ]);
-
         } else {
-
             echo json_encode([
                 "sucesso" => false,
                 "mensagem" => "Erro ao excluir usuário."
@@ -61,16 +55,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "sucesso" => false,
                 "mensagem" => "Preencha todos os campos."
             ]);
+
             exit;
         }
-
 
         $stmt = $conexao->prepare(
             "INSERT INTO usuarios
             (nome, email, telefone, tipo, status)
             VALUES (?, ?, ?, ?, ?)"
         );
-
         $stmt->bind_param(
             "sssss",
             $nome,
@@ -82,14 +75,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
         if ($stmt->execute()) {
-
             echo json_encode([
                 "sucesso" => true,
                 "mensagem" => "Usuário cadastrado com sucesso!"
             ]);
 
         } else {
-
             echo json_encode([
                 "sucesso" => false,
                 "mensagem" => "Erro ao cadastrar usuário."
@@ -97,20 +88,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         $stmt->close();
-
         exit;
     }
 
-
     if ($acao === "editar") {
-
         $id = intval($_POST["id"] ?? 0);
         $nome = trim($_POST["nome"] ?? "");
         $email = trim($_POST["email"] ?? "");
         $telefone = trim($_POST["telefone"] ?? "");
         $tipo = trim($_POST["tipo"] ?? "");
         $status = trim($_POST["status"] ?? "");
-
         if (
             $id <= 0 ||
             $nome === "" ||
@@ -119,7 +106,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $tipo === "" ||
             $status === ""
         ) {
-
             echo json_encode([
                 "sucesso" => false,
                 "mensagem" => "Preencha todos os campos."
@@ -127,7 +113,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             exit;
         }
-
 
         $stmt = $conexao->prepare(
             "UPDATE usuarios
@@ -149,9 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $id
         );
 
-
         if ($stmt->execute()) {
-
             echo json_encode([
                 "sucesso" => true,
                 "mensagem" => "Usuário atualizado com sucesso!"
