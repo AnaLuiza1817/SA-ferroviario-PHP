@@ -1,9 +1,582 @@
 body {
     min-height: 100vh;
+    background: #f5f7fb;
 }
 
-.card {
+.navbar-brand {
+    letter-spacing: 0.2px;
+}
+
+.hero-ferroviario {
+    background: linear-gradient(
+        135deg,
+        #f8fbff 0%,
+        #eef5ff 100%
+    );
+    padding: 80px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.hero-ferroviario h1 {
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 20px;
+}
+
+.hero-ferroviario h1 span {
+    display: block;
+    color: #0d6efd;
+}
+
+.hero-ferroviario p {
+    max-width: 700px;
+    color: #526071;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+}
+
+.hero-train-icon {
+    font-size: 9rem;
+    color: #0d6efd;
+    opacity: 0.8;
+}
+
+.metric-card {
+    min-height: 180px;
+    border-radius: 16px;
+    padding: 28px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+}
+
+.metric-card i {
+    font-size: 2.4rem;
+    margin-bottom: 15px;
+}
+
+.metric-card strong {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.metric-card span {
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+.metric-green {
+    background: linear-gradient(
+        135deg,
+        #16a34a,
+        #22c55e
+    );
+}
+
+.metric-blue {
+    background: linear-gradient(
+        135deg,
+        #0284c7,
+        #38bdf8
+    );
+}
+
+.metric-orange {
+    background: linear-gradient(
+        135deg,
+        #f59e0b,
+        #fbbf24
+    );
+}
+
+.metric-red {
+    background: linear-gradient(
+        135deg,
+        #dc2626,
+        #f43f5e
+    );
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.section-title h2 {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.section-title p {
+    color: #64748b;
+    margin: 0;
+}
+
+.info-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    height: 100%;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.info-card-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: #eaf2ff;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.info-card strong {
+    display: block;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.info-card span,
+.info-card small {
+    display: block;
+    color: #64748b;
+    margin-top: 5px;
+}
+
+.dashboard-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.dashboard-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.dashboard-card-header h2,
+.dashboard-card-header h3 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.dashboard-card-header span {
+    display: block;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.dashboard-card-header > i {
+    color: #0d6efd;
+    font-size: 1.6rem;
+}
+
+.feature-card {
+    height: 100%;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 30px 24px;
+    text-align: center;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+}
+
+.feature-card > i {
+    color: #0d6efd;
+    font-size: 2.5rem;
+    margin-bottom: 18px;
+}
+
+.feature-card h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.feature-card p {
+    color: #64748b;
+    min-height: 72px;
+}
+
+.feature-card a {
+    display: inline-block;
+    border: 1px solid #0d6efd;
+    border-radius: 8px;
+    padding: 8px 18px;
+    text-decoration: none;
+    color: #0d6efd;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.feature-card a:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-normal {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-atencao {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-alerta {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.page-heading {
+    margin-bottom: 35px;
+}
+
+.page-heading h1 {
+    margin-top: 12px;
+    margin-bottom: 8px;
+    font-weight: 800;
+}
+
+.page-heading p {
+    color: #64748b;
+    margin: 0;
+}
+
+.chart-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.chart-card-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.chart-card-header span {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.chart-card-header > i {
+    color: #0d6efd;
+    font-size: 1.5rem;
+}
+
+.chart-container {
+    height: 360px;
+    position: relative;
+}
+
+.chart-container-small {
+    height: 320px;
+}
+
+.map-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.map-toolbar {
+    padding: 18px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.map-toolbar strong {
+    display: block;
+}
+
+.map-toolbar span {
+    display: block;
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 3px;
+}
+
+.map-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.rail-map {
+    height: 560px;
+    overflow: hidden;
+    position: relative;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(13, 110, 253, 0.03) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            rgba(13, 110, 253, 0.03) 1px,
+            transparent 1px
+        );
+    background-size: 35px 35px;
+    cursor: grab;
+}
+
+.rail-map.is-dragging {
+    cursor: grabbing;
+}
+
+.rail-map-canvas {
+    width: 1040px;
+    height: 300px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    margin-left: -520px;
+    margin-top: -150px;
+    transition: transform 0.15s ease;
+}
+
+.rail-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.rail-line {
+    stroke: #64748b;
+    stroke-width: 8;
+    stroke-linecap: round;
+    fill: none;
+}
+
+.rail-line.normal {
+    stroke: #0d6efd;
+}
+
+.rail-line.atenção {
+    stroke: #f59e0b;
+}
+
+.rail-line.em-manutenção {
+    stroke: #dc2626;
+    stroke-dasharray: 12 8;
+}
+
+.station-marker {
+    cursor: pointer;
+}
+
+.station-marker circle {
+    fill: #fff;
+    stroke: #0d6efd;
+    stroke-width: 5;
+}
+
+.station-marker text {
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    fill: #1e293b;
+}
+
+.train-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.train-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border: 0;
+    background: #0d6efd;
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+    z-index: 5;
+    transition:
+        left 0.5s linear,
+        top 0.5s linear;
+}
+
+.train-marker span {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.train-marker:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+}
+
+.map-side-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 22px;
+    height: 100%;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.map-side-panel h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.map-side-panel h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.side-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.side-stat span {
+    color: #64748b;
+}
+
+.side-stat strong {
+    font-size: 1.2rem;
+}
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alert-item {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #fecaca;
+    background: #fff7f7;
+    border-radius: 10px;
+    padding: 12px;
+    color: #7f1d1d;
+}
+
+.alert-item strong {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.alert-item span {
+    display: block;
+    font-size: 0.85rem;
+}
+
+.empty-state {
+    color: #64748b;
+    font-size: 0.9rem;
+    padding: 10px 0;
+}
+
+.map-detail-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: min(380px, calc(100vw - 40px));
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+    transform: translateY(30px);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    z-index: 1000;
+}
+
+.map-detail-panel.is-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.map-detail-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.map-detail-panel h3 {
+    font-weight: 700;
+    margin-bottom: 18px;
+    padding-right: 25px;
+}
+
+.map-detail-panel p {
+    color: #475569;
+    margin-bottom: 10px;
 }
 
 .table td,
@@ -11,7 +584,57 @@ body {
     vertical-align: middle;
 }
 
-.dataTables_wrapper .dataTables_filter input,
-.dataTables_wrapper .dataTables_length select {
-    border-radius: .375rem;
+@media (max-width: 991px) {
+
+    .hero-ferroviario {
+        padding: 55px 0;
+    }
+
+    .hero-train-icon {
+        font-size: 6rem;
+        margin-top: 40px;
+    }
+
+    .rail-map {
+        height: 450px;
+    }
+
+}
+
+@media (max-width: 767px) {
+
+    .hero-ferroviario h1 {
+        font-size: 2.4rem;
+    }
+
+    .metric-card {
+        min-height: 150px;
+    }
+
+    .map-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .rail-map {
+        height: 400px;
+    }
+
+    .chart-container {
+        height: 280px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
 }
