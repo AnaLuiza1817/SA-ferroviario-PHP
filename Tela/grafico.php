@@ -110,16 +110,22 @@ function isAtiva(string $pagina, string $paginaAtual): string
     <link rel="stylesheet" href="../Css/style.css">
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-train-subway me-2"></i>Hyper Sense</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação"><span class="navbar-toggler-icon"></span></button>
+        <a class="navbar-brand fw-bold" href="index.php">
+            <i class="fas fa-train-subway me-2"></i>Hyper Sense
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráficos</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             </ul>
         </div>
@@ -175,10 +181,10 @@ function isAtiva(string $pagina, string $paginaAtual): string
 </main>
 
 <script>
-const dadosManutencoes = <?= json_encode($manutencoesPorAno, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-const dadosOcorrencias = <?= json_encode($ocorrenciasPorTrem, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-const detalhesTrens = <?= json_encode($detalhesTrens, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-const mesesGrafico = <?= json_encode($meses, JSON_UNESCAPED_UNICODE) ?>;
+window.dadosManutencoes = <?= json_encode($manutencoesPorAno, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+window.dadosOcorrencias = <?= json_encode($ocorrenciasPorTrem, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+window.detalhesTrens = <?= json_encode($detalhesTrens, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+window.mesesGrafico = <?= json_encode($meses, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

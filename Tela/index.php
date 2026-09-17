@@ -55,9 +55,10 @@ $estatisticas = [
 ];
 
 $recursos = [
+    ['icone' => 'fa-users', 'titulo' => 'Gestão de Usuários', 'texto' => 'Cadastre, edite, exclua e visualize os usuários do sistema.', 'link' => 'usuario.php', 'label' => 'Acessar usuários'],
+    ['icone' => 'fa-train', 'titulo' => 'Trens', 'texto' => 'Gerencie o status operacional de cada trem: em operação, parado, em manutenção ou atrasado.', 'link' => 'trens.php', 'label' => 'Acessar trens'],
     ['icone' => 'fa-map-location-dot', 'titulo' => 'Mapa Ferroviário', 'texto' => 'Visualize estações, trechos, trens, sensores, AMVs, ocorrências e alertas em um mapa interativo.', 'link' => 'mapa.php', 'label' => 'Abrir mapa'],
     ['icone' => 'fa-chart-pie', 'titulo' => 'Gráficos', 'texto' => 'Analise manutenções por mês e ocorrências por trem com dados vindos do banco.', 'link' => 'grafico.php', 'label' => 'Ver gráficos'],
-    ['icone' => 'fa-users', 'titulo' => 'Gestão de Usuários', 'texto' => 'Cadastre, edite, exclua e visualize os usuários do sistema.', 'link' => 'usuario.php', 'label' => 'Acessar usuários'],
     ['icone' => 'fa-satellite-dish', 'titulo' => 'Sensores', 'texto' => 'Consulte os sensores ferroviários e seus estados operacionais.', 'link' => 'sensores.php', 'label' => 'Acessar sensores'],
 ];
 
@@ -79,6 +80,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
     <link rel="stylesheet" href="../Css/style.css">
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
@@ -90,9 +92,10 @@ function isAtiva(string $pagina, string $paginaAtual): string
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráficos</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             </ul>
         </div>
@@ -147,7 +150,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
         </div>
         <div class="row g-4">
             <?php foreach ($recursos as $recurso): ?>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-4 col-md-6">
                     <div class="card h-100 resource-card border-0 shadow-sm">
                         <div class="card-body text-center p-4">
                             <div class="resource-icon"><i class="fas <?= htmlspecialchars($recurso['icone'], ENT_QUOTES, 'UTF-8') ?>"></i></div>
@@ -189,6 +192,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
                         <h4 class="mb-3">Acesso rápido</h4>
                         <div class="d-grid gap-2">
                             <a href="usuario.php" class="btn btn-primary"><i class="fas fa-users me-2"></i>Ver usuários</a>
+                            <a href="trens.php" class="btn btn-outline-primary"><i class="fas fa-train me-2"></i>Ver trens</a>
                             <a href="sensores.php" class="btn btn-outline-secondary"><i class="fas fa-satellite-dish me-2"></i>Ver sensores</a>
                             <a href="mapa.php" class="btn btn-outline-secondary"><i class="fas fa-map me-2"></i>Ver mapa</a>
                         </div>

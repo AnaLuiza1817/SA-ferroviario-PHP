@@ -447,3 +447,45 @@ body {
         transition: none;
     }
 }
+
+.badge-status-em-operacao {
+    background: #198754;
+    color: #fff;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.badge-status-parado {
+    background: #dc3545;
+    color: #fff;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.badge-status-manutencao {
+    background: #6f42c1;
+    color: #fff;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.badge-status-atrasado {
+    background: #fd7e14;
+    color: #fff;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+/* Botão ativo no grupo de mudança de status */
+.btn-group-status .btn.active {
+    font-weight: 700;
+    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.25);
+}

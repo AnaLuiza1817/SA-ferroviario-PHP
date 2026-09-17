@@ -118,24 +118,25 @@ function e($valor): string
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../Css/style.css">
-
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
             <i class="fa-solid fa-train-subway me-2"></i>Hyper Sense
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="menu">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link <?= ativo('index.php', $paginaAtual) ?>" href="index.php">Home</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('usuario.php', $paginaAtual) ?>" href="usuario.php">Usuários</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('mapa.php', $paginaAtual) ?>" href="mapa.php">Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('grafico.php', $paginaAtual) ?>" href="grafico.php">Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('sensores.php', $paginaAtual) ?>" href="sensores.php">Sensores</a></li>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link <?= ativo('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             </ul>
         </div>
     </div>
@@ -256,39 +257,6 @@ function e($valor): string
                                     </button>
                                 </td>
                             </tr>
-
-                            <div class="modal fade" id="modalSensor<?= (int)$sensor['id'] ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <form method="post">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Atualizar <?= e($sensor['codigo']) ?></h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="hidden" name="acao" value="atualizar">
-                                                <input type="hidden" name="id" value="<?= (int)$sensor['id'] ?>">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Leitura</label>
-                                                    <input type="number" step="0.01" name="leitura" class="form-control" value="<?= e($leitura) ?>" required>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">Status</label>
-                                                    <select name="status" class="form-select" required>
-                                                        <?php foreach (['Normal', 'Atenção', 'Alerta', 'Inativo'] as $opcao): ?>
-                                                            <option value="<?= e($opcao) ?>" <?= $sensor['status'] === $opcao ? 'selected' : '' ?>><?= e($opcao) ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-primary">Salvar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                     </tbody>
@@ -297,6 +265,46 @@ function e($valor): string
         </div>
     </div>
 </main>
+
+<?php if ($sensores): ?>
+    <?php foreach ($sensores as $sensor): ?>
+        <?php
+            $leituraModal = (float)($sensor['leitura'] ?? 0);
+        ?>
+        <div class="modal fade" id="modalSensor<?= (int)$sensor['id'] ?>" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Atualizar <?= e($sensor['codigo']) ?></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="acao" value="atualizar">
+                            <input type="hidden" name="id" value="<?= (int)$sensor['id'] ?>">
+                            <div class="mb-3">
+                                <label class="form-label">Leitura</label>
+                                <input type="number" step="0.01" name="leitura" class="form-control" value="<?= e($leituraModal) ?>" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select" required>
+                                    <?php foreach (['Normal', 'Atenção', 'Alerta', 'Inativo'] as $opcao): ?>
+                                        <option value="<?= e($opcao) ?>" <?= $sensor['status'] === $opcao ? 'selected' : '' ?>><?= e($opcao) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <footer class="bg-dark text-white py-4">
     <div class="container text-center">
