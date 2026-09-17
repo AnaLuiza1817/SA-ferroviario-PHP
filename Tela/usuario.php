@@ -1,9 +1,8 @@
 <?php
-<<<<<<< HEAD
 
 require_once "../Infra/conexao.php";
-=======
-require_once __DIR__ . "/../infra/conexao.php";
+
+
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     header("Content-Type: application/json; charset=utf-8");
@@ -158,7 +157,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
->>>>>>> 5fd18683975c433175f725f06f4e8a64208675d8
 
 $sql = "
     SELECT
