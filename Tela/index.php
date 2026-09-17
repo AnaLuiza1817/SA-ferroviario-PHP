@@ -1,74 +1,75 @@
 <?php
-require_once "../infra/conexao.php";
+require_once "../infra/conexao.php"; 
 
 $totalUsuarios = 0;
 $usuariosAtivos = 0;
 $novosHoje = 0;
 $taxaAtivos = 0;
 
-$sqlTotal = "SELECT COUNT(*) AS total FROM usuarios";
-$resultTotal = $conexao->query($sqlTotal);
+try {
 
-if ($resultTotal) {
-    $dados = $resultTotal->fetch_assoc();
-    $totalUsuarios = (int) $dados['total'];
+    $resultado = $conexao->query("SELECT COUNT(*) AS total FROM usuarios");
+
+    if ($resultado) {
+        $dados = $resultado->fetch_assoc();
+        $totalUsuarios = (int) $dados['total'];
+    }
+
+    $resultado = $conexao->query(
+        "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo'"
+    );
+
+    if ($resultado) {
+        $dados = $resultado->fetch_assoc();
+        $usuariosAtivos = (int) $dados['total'];
+    }
+
+    $resultado = $conexao->query(
+        "SELECT COUNT(*) AS total
+         FROM usuarios
+         WHERE DATE(criado_em) = CURDATE()"
+    );
+
+    if ($resultado) {
+        $dados = $resultado->fetch_assoc();
+        $novosHoje = (int) $dados['total'];
+    }
+
+    if ($totalUsuarios > 0) {
+        $taxaAtivos = round(($usuariosAtivos / $totalUsuarios) * 100);
+    }
+
+} catch (Exception $e) {
+    $totalUsuarios = 0;
+    $usuariosAtivos = 0;
+    $novosHoje = 0;
+    $taxaAtivos = 0;
 }
 
-$sqlAtivos = "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo'";
-$resultAtivos = $conexao->query($sqlAtivos);
-
-if ($resultAtivos) {
-    $dados = $resultAtivos->fetch_assoc();
-    $usuariosAtivos = (int) $dados['total'];
-}
-
-$sqlHoje = "SELECT COUNT(*) AS total FROM usuarios WHERE DATE(criado_em) = CURDATE()";
-$resultHoje = $conexao->query($sqlHoje);
-
-if ($resultHoje) {
-    $dados = $resultHoje->fetch_assoc();
-    $novosHoje = (int) $dados['total'];
-}
-
-if ($totalUsuarios > 0) {
-    $taxaAtivos = round(($usuariosAtivos / $totalUsuarios) * 100);
-}
-
-$trens = [
-    ['id' => 'TR-0001', 'posicao' => 20, 'status' => 'Normal'],
-    ['id' => 'TR-0002', 'posicao' => 48, 'status' => 'Atenção'],
-    ['id' => 'TR-0003', 'posicao' => 78, 'status' => 'Normal']
-];
-
-$sensores = [
-    ['id' => 'SEN-001', 'tipo' => 'Manutenção', 'leitura' => 87, 'unidade' => '%', 'limite' => 80],
-    ['id' => 'SEN-002', 'tipo' => 'Temperatura', 'leitura' => 64, 'unidade' => '°C', 'limite' => 70],
-    ['id' => 'SEN-003', 'tipo' => 'Via', 'leitura' => 78, 'unidade' => '%', 'limite' => 85],
-    ['id' => 'SEN-004', 'tipo' => 'Manutenção', 'leitura' => 42, 'unidade' => '%', 'limite' => 80]
-];
-
-$estacoes = [
-    ['id' => 'EST-001', 'posicao' => 10],
-    ['id' => 'EST-002', 'posicao' => 30],
-    ['id' => 'EST-003', 'posicao' => 50],
-    ['id' => 'EST-004', 'posicao' => 70],
-    ['id' => 'EST-005', 'posicao' => 90]
-];
-
-$amvs = [
-    ['id' => 'AMV-001', 'trecho' => 'TRC-002', 'estado' => 'Normal', 'status' => 'Operacional'],
-    ['id' => 'AMV-002', 'trecho' => 'TRC-004', 'estado' => 'Alternado', 'status' => 'Operacional']
-];
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Hyper Sense</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -77,326 +78,461 @@ $amvs = [
 
     <link
         rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
+
         * {
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             margin: 0;
-            background: #f5f7fa;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #172033;
+            min-height: 100vh;
+            background: #fbf5e9;
+            color: #0d47a1;
+            font-family: 'Orbitron', sans-serif;
         }
 
         .navbar {
-            background: #1473ea;
-            min-height: 64px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+            background: #1e88e5;
+            padding: 15px 0;
+            box-shadow: 0 4px 15px rgba(13, 71, 161, 0.25);
         }
 
         .navbar-brand {
+            color: white !important;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
             font-size: 21px;
-            font-weight: 700;
+            letter-spacing: 1px;
         }
 
         .navbar-brand i {
-            margin-right: 10px;
+            margin-right: 9px;
         }
 
-        .navbar .nav-link {
-            color: rgba(255,255,255,.75);
-            font-size: 15px;
-            margin-left: 8px;
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            margin-left: 12px;
+            transition: 0.2s;
         }
 
-        .navbar .nav-link:hover,
-        .navbar .nav-link.active {
-            color: white;
+        .navbar-nav .nav-link:hover {
+            color: #fbf5e9 !important;
+            transform: translateY(-2px);
         }
 
         .hero {
-            background: white;
-            padding: 55px 0;
-            border-bottom: 1px solid #ddd;
+            min-height: 360px;
+            padding: 45px 0;
+            background: #fbf5e9;
+            border-bottom: 1px solid rgba(30, 136, 229, 0.2);
         }
 
         .hero h1 {
-            color: #1473ea;
-            font-size: 48px;
-            font-weight: 700;
+            margin: 0 0 18px;
+            color: #1e88e5;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
         .hero p {
-            font-size: 18px;
-            color: #444;
+            color: #0d47a1;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            line-height: 1.8;
+            max-width: 700px;
         }
 
-        .rocket {
-            font-size: 80px;
-            color: #80b1ff;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: #1473ea;
-            border-color: #1473ea;
-        }
-
-        .btn-primary:hover {
-            background: #075fc9;
-            border-color: #075fc9;
-        }
-
-        .stats {
-            padding: 48px 0 25px;
-        }
-
-        .stat-card {
-            border: none;
-            border-radius: 7px;
+        .btn-principal {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 13px 20px;
+            background: #1e88e5;
             color: white;
-            min-height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            box-shadow: 0 3px 8px rgba(0,0,0,.12);
-        }
-
-        .stat-card i {
-            font-size: 43px;
-        }
-
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-
-        .green {
-            background: linear-gradient(135deg, #20a84b, #21c997);
-        }
-
-        .blue {
-            background: linear-gradient(135deg, #20a5bd, #4bbbd3);
-        }
-
-        .yellow {
-            background: linear-gradient(135deg, #ffb900, #ffb73e);
-        }
-
-        .red {
-            background: linear-gradient(135deg, #dc3044, #e85868);
-        }
-
-        .section {
-            padding: 35px 0;
-        }
-
-        .section-title {
-            font-size: 32px;
+            text-decoration: none;
+            border-radius: 7px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 25px;
+            transition: 0.2s;
+            box-shadow: 0 5px 12px rgba(30, 136, 229, 0.25);
         }
 
-        .card-custom {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
-            padding: 25px;
-            height: 100%;
+        .btn-principal:hover {
+            background: #0d47a1;
+            color: white;
+            transform: translateY(-2px);
         }
 
-        .resource-icon {
-            font-size: 48px;
-            color: #1473ea;
-        }
-
-        .resource-card {
-            text-align: center;
-            padding: 35px 20px;
-            transition: .2s;
-        }
-
-        .resource-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,.1);
-        }
-
-        .railway-map {
+        .trem-area {
             position: relative;
-            height: 390px;
-            background: #fafafa;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            height: 260px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
-            margin-top: 15px;
         }
 
-        .rail-line {
+        .vento {
             position: absolute;
-            left: 6%;
-            right: 6%;
-            top: 53%;
-            height: 8px;
-            background: #343a40;
+            right: 0;
+            width: 300px;
+            height: 5px;
+            background: #0d47a1;
+            opacity: 0.25;
+            border-radius: 50%;
+            transform: skewX(-30deg);
+        }
+
+        .vento:nth-child(1) {
+            top: 88px;
+            width: 280px;
+        }
+
+        .vento:nth-child(2) {
+            top: 108px;
+            width: 230px;
+            opacity: 0.18;
+        }
+
+        .vento:nth-child(3) {
+            top: 128px;
+            width: 180px;
+            opacity: 0.12;
+        }
+
+        .trem {
+            position: relative;
+            z-index: 5;
+            width: 390px;
+            height: 125px;
+            transform: translateX(10px);
+        }
+
+        .trem-cabine {
+            position: absolute;
+            right: 0;
+            top: 20px;
+            width: 150px;
+            height: 85px;
+            background: white;
+            border: 4px solid #0d47a1;
+            border-radius: 12px 65px 18px 12px;
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.2);
+            overflow: hidden;
+        }
+
+        .trem-cabine::before {
+            content: "";
+            position: absolute;
+            right: 8px;
+            top: 10px;
+            width: 105px;
+            height: 35px;
+            background: #0d47a1;
+            border-radius: 7px 45px 4px 4px;
+        }
+
+        .trem-cabine::after {
+            content: "";
+            position: absolute;
+            right: 20px;
+            bottom: 14px;
+            width: 85px;
+            height: 6px;
+            background: #1e88e5;
             border-radius: 10px;
         }
 
-        .rail-line::before,
-        .rail-line::after {
+        .trem-corpo {
+            position: absolute;
+            left: 25px;
+            top: 35px;
+            width: 245px;
+            height: 72px;
+            background: white;
+            border: 4px solid #0d47a1;
+            border-right: none;
+            border-radius: 35px 0 0 15px;
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.16);
+        }
+
+        .trem-corpo::before {
             content: "";
             position: absolute;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: #aaa;
+            left: 22px;
+            top: 13px;
+            width: 185px;
+            height: 28px;
+            background: #0d47a1;
+            border-radius: 20px;
         }
 
-        .rail-line::before {
-            top: -10px;
-        }
-
-        .rail-line::after {
-            bottom: -10px;
-        }
-
-        .station {
+        .trem-corpo::after {
+            content: "";
             position: absolute;
-            top: calc(53% - 30px);
-            transform: translateX(-50%);
-            text-align: center;
-            z-index: 5;
+            left: 30px;
+            bottom: 10px;
+            width: 185px;
+            height: 7px;
+            background: #1e88e5;
+            border-radius: 10px;
         }
 
-        .station-dot {
-            width: 23px;
-            height: 23px;
+        .trem-porta {
+            position: absolute;
+            left: 150px;
+            top: 47px;
+            width: 42px;
+            height: 56px;
+            border-left: 3px solid #0d47a1;
+            border-right: 3px solid #0d47a1;
+            z-index: 6;
+        }
+
+        .trem-roda {
+            position: absolute;
+            bottom: 0;
+            width: 27px;
+            height: 27px;
+            background: #0d47a1;
             border-radius: 50%;
-            background: #111;
-            margin: auto;
-            border: 3px solid white;
-            box-shadow: 0 1px 4px rgba(0,0,0,.3);
+            border: 7px solid #fbf5e9;
+            box-shadow: 0 0 0 3px #0d47a1;
         }
 
-        .station span {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            font-weight: 600;
+        .roda1 {
+            left: 65px;
         }
 
-        .train {
+        .roda2 {
+            left: 190px;
+        }
+
+        .trilho {
             position: absolute;
-            top: calc(53% - 12px);
-            transform: translateX(-50%);
-            z-index: 10;
-            background: white;
-            border: 2px solid #1473ea;
-            color: #1473ea;
+            bottom: 35px;
+            left: 5px;
+            width: 380px;
+            height: 5px;
+            background: #0d47a1;
             border-radius: 5px;
-            padding: 5px 8px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: .2s;
         }
 
-        .train:hover {
-            transform: translateX(-50%) scale(1.08);
+        .trilho::before,
+        .trilho::after {
+            content: "";
+            position: absolute;
+            top: -9px;
+            width: 390px;
+            height: 3px;
+            background: #1e88e5;
         }
 
-        .alert-box {
-            border: 1px solid #aaa;
-            padding: 10px;
-            background: #f1f1f1;
-            margin-bottom: 8px;
-            border-radius: 3px;
+        .trilho::before {
+            left: 0;
         }
 
-        .sensor-status {
+        .trilho::after {
+            top: 9px;
+            left: 0;
+        }
+
+        .indicadores {
+            padding: 45px 0;
+            background: #fbf5e9;
+        }
+
+        .card-indicador {
+            min-height: 155px;
+            border-radius: 10px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 7px 18px rgba(13, 71, 161, 0.18);
+            transition: 0.2s;
+        }
+
+        .card-indicador:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-indicador i {
+            font-size: 37px;
+            margin-bottom: 12px;
+        }
+
+        .numero {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .card-indicador p {
+            margin: 5px 0 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+        }
+
+        .azul-claro {
+            background: #1e88e5;
+        }
+
+        .azul-escuro {
+            background: #0d47a1;
+        }
+
+        .secao {
+            padding: 25px 0 70px;
+            background: #fbf5e9;
+        }
+
+        .secao-titulo {
+            margin-bottom: 38px;
+            text-align: center;
+            color: #1e88e5;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .recurso {
+            height: 100%;
+            padding: 32px 24px;
+            text-align: center;
+            background: #fffdf8;
+            border: 1px solid rgba(30, 136, 229, 0.15);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.08);
+            transition: 0.2s;
+        }
+
+        .recurso:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 9px 22px rgba(13, 71, 161, 0.15);
+        }
+
+        .recurso i {
+            margin-bottom: 18px;
+            color: #1e88e5;
+            font-size: 42px;
+        }
+
+        .recurso h3 {
+            color: #1e88e5;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .recurso p {
+            min-height: 58px;
+            color: #0d47a1;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .btn-recurso {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 9px 14px;
+            border: 1px solid #1e88e5;
+            border-radius: 5px;
+            color: #1e88e5;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
             font-weight: 600;
+            transition: 0.2s;
         }
 
-        .status-normal {
-            color: #198754;
-        }
-
-        .status-alerta {
-            color: #dc3545;
-        }
-
-        .status-atencao {
-            color: #fd7e14;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 340px;
-        }
-
-        .table th {
-            white-space: nowrap;
-        }
-
-        .edit-panel {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 18px;
-            margin-top: 15px;
-        }
-
-        .map-edit {
-            display: none;
-        }
-
-        .map-edit.show {
-            display: block;
+        .btn-recurso:hover {
+            background: #1e88e5;
+            color: white;
         }
 
         footer {
-            background: #172033;
+            padding: 22px;
+            text-align: center;
+            background: #0d47a1;
             color: white;
-            padding: 30px 0;
-            margin-top: 30px;
+        }
+
+        footer p {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
         }
 
         @media (max-width: 768px) {
+
+            .hero {
+                padding: 35px 0;
+            }
+
             .hero h1 {
-                font-size: 35px;
+                font-size: 30px;
             }
 
-            .rocket {
-                display: none;
+            .hero p {
+                font-size: 12px;
             }
 
-            .railway-map {
-                height: 300px;
+            .trem-area {
+                margin-top: 25px;
+                height: 210px;
             }
+
+            .trem {
+                transform: scale(0.8);
+            }
+
+            .navbar-nav .nav-link {
+                margin-left: 0;
+                padding: 10px 0;
+            }
+
+            .secao-titulo {
+                font-size: 22px;
+            }
+
         }
+
     </style>
+
 </head>
 
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg">
+
     <div class="container">
 
-        <a class="navbar-brand" href="index.php">
-            <i class="bi bi-graph-up"></i>
-            Hyper Sense
+        <a
+            class="navbar-brand"
+            href="index.php"
+        >
+            <i class="fa-solid fa-train"></i>
+            HYPER SENSE
         </a>
 
         <button
-            class="navbar-toggler"
+            class="navbar-toggler bg-light"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#menu"
@@ -404,44 +540,70 @@ $amvs = [
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="menu">
+        <div
+            class="collapse navbar-collapse"
+            id="menu"
+        >
 
             <ul class="navbar-nav ms-auto">
 
                 <li class="nav-item">
-                    <a class="nav-link active" href="index.php">
-                        <i class="bi bi-house-fill"></i>
+                    <a
+                        class="nav-link"
+                        href="index.php"
+                    >
+                        <i class="fa-solid fa-house"></i>
                         Home
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="usuario.php">
-                        <i class="bi bi-people-fill"></i>
+                    <a
+                        class="nav-link"
+                        href="usuario.php"
+                    >
+                        <i class="fa-solid fa-users"></i>
                         Usuários
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="relatorio.php">
-                        <i class="bi bi-bar-chart-line"></i>
-                        Relatórios
+                    <a
+                        class="nav-link"
+                        href="mapa.php"
+                    >
+                        <i class="fa-solid fa-map"></i>
+                        Mapa
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="bi bi-gear-fill"></i>
-                        Configurações
+                    <a
+                        class="nav-link"
+                        href="grafico.php"
+                    >
+                        <i class="fa-solid fa-chart-column"></i>
+                        Gráfico
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a
+                        class="nav-link"
+                        href="sensores.php"
+                    >
+                        <i class="fa-solid fa-microchip"></i>
+                        Sensores
                     </a>
                 </li>
 
             </ul>
 
         </div>
-    </div>
-</nav>
 
+    </div>
+
+</nav>
 
 <section class="hero">
 
@@ -449,24 +611,54 @@ $amvs = [
 
         <div class="row align-items-center">
 
-            <div class="col-md-8">
+            <div class="col-lg-7">
 
-                <h1>Bem-vindo ao Hyper Sense</h1>
+                <h1>
+                    Bem-vindo ao Hyper Sense
+                </h1>
 
                 <p>
                     Solução completa para gestão de usuários,
-                    monitoramento ferroviário, sensores e tomada de decisões.
+                    monitoramento ferroviário, sensores e
+                    tomada de decisões.
                 </p>
 
-                <a href="usuario.php" class="btn btn-primary btn-lg mt-3">
-                    <i class="bi bi-arrow-right"></i>
+                <a
+                    href="usuario.php"
+                    class="btn-principal"
+                >
+                    <i class="fa-solid fa-arrow-right"></i>
                     Acessar Usuários
                 </a>
 
             </div>
 
-            <div class="col-md-4 rocket">
-                <i class="bi bi-rocket-takeoff"></i>
+            <div class="col-lg-5">
+
+                <div class="trem-area">
+
+                    <span class="vento"></span>
+                    <span class="vento"></span>
+                    <span class="vento"></span>
+
+                    <div class="trem">
+
+                        <div class="trem-corpo"></div>
+
+                        <div class="trem-cabine"></div>
+
+                        <div class="trem-porta"></div>
+
+                        <div class="trem-roda roda1"></div>
+
+                        <div class="trem-roda roda2"></div>
+
+                        <div class="trilho"></div>
+
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
@@ -475,99 +667,79 @@ $amvs = [
 
 </section>
 
-
-<section class="stats">
+<section class="indicadores">
 
     <div class="container">
 
         <div class="row g-4">
 
-            <div class="col-md-3">
+            <div class="col-md-6 col-lg-3">
 
-                <div class="stat-card green">
+                <div class="card-indicador azul-claro">
 
-                    <div>
+                    <i class="fa-solid fa-user-check"></i>
 
-                        <i class="bi bi-person-check-fill"></i>
-
-                        <div class="stat-number">
-                            <?= $usuariosAtivos ?>
-                        </div>
-
-                        <div>
-                            Usuários Ativos
-                        </div>
-
+                    <div class="numero">
+                        <?= $usuariosAtivos ?>
                     </div>
+
+                    <p>
+                        Usuários Ativos
+                    </p>
 
                 </div>
 
             </div>
 
+            <div class="col-md-6 col-lg-3">
 
-            <div class="col-md-3">
+                <div class="card-indicador azul-escuro">
 
-                <div class="stat-card blue">
+                    <i class="fa-solid fa-chart-line"></i>
 
-                    <div>
-
-                        <i class="bi bi-graph-up-arrow"></i>
-
-                        <div class="stat-number">
-                            +100%
-                        </div>
-
-                        <div>
-                            Crescimento (mês)
-                        </div>
-
+                    <div class="numero">
+                        +100%
                     </div>
+
+                    <p>
+                        Crescimento (mês)
+                    </p>
 
                 </div>
 
             </div>
 
+            <div class="col-md-6 col-lg-3">
 
-            <div class="col-md-3">
+                <div class="card-indicador azul-claro">
 
-                <div class="stat-card yellow">
+                    <i class="fa-solid fa-calendar-day"></i>
 
-                    <div>
-
-                        <i class="bi bi-calendar-event-fill"></i>
-
-                        <div class="stat-number">
-                            <?= $novosHoje ?>
-                        </div>
-
-                        <div>
-                            Novos Hoje
-                        </div>
-
+                    <div class="numero">
+                        <?= $novosHoje ?>
                     </div>
+
+                    <p>
+                        Novos Hoje
+                    </p>
 
                 </div>
 
             </div>
 
+            <div class="col-md-6 col-lg-3">
 
-            <div class="col-md-3">
+                <div class="card-indicador azul-escuro">
 
-                <div class="stat-card red">
+                    <i class="fa-solid fa-star"></i>
 
-                    <div>
-
-                        <i class="bi bi-star-fill"></i>
-
-                        <div class="stat-number">
-                            <?= $taxaAtivos ?>%
-                        </div>
-
-                        <div>
-                            Taxa de Usuários Ativos
-                        </div>
-
+                    <div class="numero">
+                        <?= $taxaAtivos ?>%
                     </div>
+
+                    <p>
+                        Taxa de Usuários Ativos
+                    </p>
 
                 </div>
 
@@ -579,569 +751,173 @@ $amvs = [
 
 </section>
 
-
-<section class="section">
+<section class="secao">
 
     <div class="container">
 
-        <h2 class="text-center section-title">
+        <h2 class="secao-titulo">
             Monitoramento Ferroviário
         </h2>
 
         <div class="row g-4">
 
+            <div class="col-md-6 col-lg-4">
 
-            <div class="col-lg-8">
+                <div class="recurso">
 
-                <div class="card-custom">
-
-                    <div class="d-flex justify-content-between align-items-center">
-
-                        <div>
-
-                            <h3 class="mb-1">
-                                <i class="bi bi-map"></i>
-                                Mapa Ferroviário
-                            </h3>
-
-                            <p class="text-muted mb-0">
-                                Visualização dos elementos operacionais.
-                            </p>
-
-                        </div>
-
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary"
-                            onclick="alternarEdicaoMapa()"
-                        >
-                            <i class="bi bi-pencil"></i>
-                            Editar Mapa
-                        </button>
-
-                    </div>
-
-
-                    <div class="map-edit" id="mapEdit">
-
-                        <div class="edit-panel">
-
-                            <div class="row g-2">
-
-                                <div class="col-md-4">
-
-                                    <label class="form-label">
-                                        Posição do trem
-                                    </label>
-
-                                    <select class="form-select" id="tremEditar">
-
-                                        <?php foreach ($trens as $trem): ?>
-
-                                            <option value="<?= $trem['id'] ?>">
-                                                <?= $trem['id'] ?>
-                                            </option>
-
-                                        <?php endforeach; ?>
-
-                                    </select>
-
-                                </div>
-
-
-                                <div class="col-md-4">
-
-                                    <label class="form-label">
-                                        Posição %
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        class="form-control"
-                                        id="posicaoTrem"
-                                        min="5"
-                                        max="95"
-                                        value="50"
-                                    >
-
-                                </div>
-
-
-                                <div class="col-md-4 d-flex align-items-end">
-
-                                    <button
-                                        class="btn btn-primary w-100"
-                                        onclick="moverTrem()"
-                                    >
-                                        Salvar posição
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="railway-map" id="railwayMap">
-
-                        <div class="rail-line"></div>
-
-                        <?php foreach ($estacoes as $estacao): ?>
-
-                            <div
-                                class="station"
-                                style="left: <?= $estacao['posicao'] ?>%;"
-                            >
-
-                                <span>
-                                    <?= $estacao['id'] ?>
-                                </span>
-
-                                <div class="station-dot"></div>
-
-                            </div>
-
-                        <?php endforeach; ?>
-
-
-                        <?php foreach ($trens as $trem): ?>
-
-                            <button
-                                class="train"
-                                id="<?= $trem['id'] ?>"
-                                style="left: <?= $trem['posicao'] ?>%;"
-                                title="<?= $trem['status'] ?>"
-                            >
-                                <i class="bi bi-train-front"></i>
-                                <?= $trem['id'] ?>
-                            </button>
-
-                        <?php endforeach; ?>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="col-lg-4">
-
-                <div class="card-custom">
+                    <i class="fa-solid fa-map-location-dot"></i>
 
                     <h3>
-                        Painel operacional
-                    </h3>
-
-                    <hr>
-
-                    <p>
-                        <strong>Trens:</strong>
-                        <?= count($trens) ?>
-                    </p>
-
-                    <p>
-                        <strong>Estações:</strong>
-                        <?= count($estacoes) ?>
-                    </p>
-
-                    <p>
-                        <strong>Sensores:</strong>
-                        <?= count($sensores) ?>
-                    </p>
-
-                    <p>
-                        <strong>Alertas:</strong>
-                        <span id="quantidadeAlertas">0</span>
-                    </p>
-
-                    <hr>
-
-                    <h4>
-                        Alertas ativos
-                    </h4>
-
-                    <div id="alertas"></div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<section class="section">
-
-    <div class="container">
-
-        <div class="row g-4">
-
-
-            <div class="col-lg-7">
-
-                <div class="card-custom">
-
-                    <div class="d-flex justify-content-between align-items-center">
-
-                        <div>
-
-                            <h2>
-                                Sensores
-                            </h2>
-
-                            <p class="text-muted">
-                                Últimas leituras registradas.
-                            </p>
-
-                        </div>
-
-                        <button
-                            class="btn btn-outline-primary"
-                            onclick="abrirEdicaoSensores()"
-                        >
-                            <i class="bi bi-pencil"></i>
-                            Editar
-                        </button>
-
-                    </div>
-
-
-                    <div class="table-responsive">
-
-                        <table class="table table-hover align-middle">
-
-                            <thead>
-
-                                <tr>
-                                    <th>Sensor</th>
-                                    <th>Tipo</th>
-                                    <th>Leitura</th>
-                                    <th>Limite</th>
-                                    <th>Status</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="tabelaSensores">
-
-                                <?php foreach ($sensores as $sensor): ?>
-
-                                    <?php
-
-                                    if ($sensor['leitura'] > $sensor['limite']) {
-                                        $status = 'Alerta';
-                                        $classe = 'status-alerta';
-                                    } elseif ($sensor['leitura'] >= $sensor['limite'] * 0.85) {
-                                        $status = 'Atenção';
-                                        $classe = 'status-atencao';
-                                    } else {
-                                        $status = 'Normal';
-                                        $classe = 'status-normal';
-                                    }
-
-                                    ?>
-
-                                    <tr>
-
-                                        <td>
-                                            <?= htmlspecialchars($sensor['id']) ?>
-                                        </td>
-
-                                        <td>
-                                            <?= htmlspecialchars($sensor['tipo']) ?>
-                                        </td>
-
-                                        <td>
-                                            <?= number_format($sensor['leitura'], 2, ',', '.') ?>
-                                            <?= $sensor['unidade'] ?>
-                                        </td>
-
-                                        <td>
-                                            <?= number_format($sensor['limite'], 2, ',', '.') ?>
-                                            <?= $sensor['unidade'] ?>
-                                        </td>
-
-                                        <td class="sensor-status <?= $classe ?>">
-                                            <?= $status ?>
-                                        </td>
-
-                                    </tr>
-
-                                <?php endforeach; ?>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-
-                    <div
-                        class="edit-panel"
-                        id="edicaoSensores"
-                        style="display:none;"
-                    >
-
-                        <h5>
-                            Editar sensores
-                        </h5>
-
-                        <div id="listaEdicaoSensores"></div>
-
-                        <button
-                            class="btn btn-primary mt-3"
-                            onclick="salvarSensores()"
-                        >
-                            <i class="bi bi-check-lg"></i>
-                            Salvar sensores
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="col-lg-5">
-
-                <div class="card-custom">
-
-                    <div class="d-flex justify-content-between align-items-center">
-
-                        <div>
-
-                            <h2>
-                                Gráfico
-                            </h2>
-
-                            <p class="text-muted">
-                                Leituras dos sensores.
-                            </p>
-
-                        </div>
-
-                        <button
-                            class="btn btn-outline-primary"
-                            onclick="abrirEdicaoGrafico()"
-                        >
-                            <i class="bi bi-pencil"></i>
-                            Editar
-                        </button>
-
-                    </div>
-
-                    <div class="chart-container">
-
-                        <canvas id="graficoSensores"></canvas>
-
-                    </div>
-
-
-                    <div
-                        class="edit-panel"
-                        id="edicaoGrafico"
-                        style="display:none;"
-                    >
-
-                        <label class="form-label">
-                            Tipo de gráfico
-                        </label>
-
-                        <select
-                            class="form-select"
-                            id="tipoGrafico"
-                            onchange="alterarTipoGrafico()"
-                        >
-
-                            <option value="bar">
-                                Barras
-                            </option>
-
-                            <option value="line">
-                                Linha
-                            </option>
-
-                            <option value="doughnut">
-                                Rosca
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<section class="section">
-
-    <div class="container">
-
-        <h2 class="text-center section-title">
-            AMVs
-        </h2>
-
-        <div class="card-custom">
-
-            <p class="text-muted">
-                Situação dos aparelhos de mudança de via.
-            </p>
-
-            <div class="table-responsive">
-
-                <table class="table table-hover">
-
-                    <thead>
-
-                        <tr>
-                            <th>AMV</th>
-                            <th>Trecho</th>
-                            <th>Estado</th>
-                            <th>Status</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <?php foreach ($amvs as $amv): ?>
-
-                            <tr>
-
-                                <td>
-                                    <?= $amv['id'] ?>
-                                </td>
-
-                                <td>
-                                    <?= $amv['trecho'] ?>
-                                </td>
-
-                                <td>
-                                    <?= $amv['estado'] ?>
-                                </td>
-
-                                <td class="text-success fw-bold">
-                                    <?= $amv['status'] ?>
-                                </td>
-
-                            </tr>
-
-                        <?php endforeach; ?>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<section class="section">
-
-    <div class="container">
-
-        <h2 class="text-center section-title">
-            Recursos do Sistema
-        </h2>
-
-        <div class="row g-4">
-
-
-            <div class="col-md-4">
-
-                <div class="card-custom resource-card">
-
-                    <i class="bi bi-person-lines-fill resource-icon"></i>
-
-                    <h3 class="mt-3">
-                        Gestão de Usuários
+                        Mapa Ferroviário
                     </h3>
 
                     <p>
-                        Cadastre, edite e visualize todos os usuários
-                        em uma tabela organizada e responsiva.
+                        Visualize estações, trens,
+                        trechos e aparelhos de
+                        mudança de via.
                     </p>
 
                     <a
-                        href="usuario.php"
-                        class="btn btn-outline-primary"
+                        href="mapa.php"
+                        class="btn-recurso"
                     >
-                        Acessar →
+                        Acessar Mapa →
                     </a>
 
                 </div>
 
             </div>
 
+            <div class="col-md-6 col-lg-4">
 
-            <div class="col-md-4">
+                <div class="recurso">
 
-                <div class="card-custom resource-card">
+                    <i class="fa-solid fa-chart-pie"></i>
 
-                    <i class="bi bi-pie-chart-fill resource-icon"></i>
-
-                    <h3 class="mt-3">
-                        Dashboards
+                    <h3>
+                        Gráficos
                     </h3>
 
                     <p>
-                        Acompanhe métricas e estatísticas do
-                        sistema através de gráficos dinâmicos.
+                        Acompanhe os dados e
+                        indicadores do
+                        monitoramento ferroviário.
                     </p>
 
-                    <button
-                        class="btn btn-outline-primary"
-                        onclick="document.getElementById('graficoSensores').scrollIntoView({behavior:'smooth'})"
+                    <a
+                        href="grafico.php"
+                        class="btn-recurso"
                     >
-                        Ver gráfico
-                    </button>
+                        Acessar Gráficos →
+                    </a>
 
                 </div>
 
             </div>
 
+            <div class="col-md-6 col-lg-4">
 
-            <div class="col-md-4">
+                <div class="recurso">
 
-                <div class="card-custom resource-card">
+                    <i class="fa-solid fa-microchip"></i>
 
-                    <i class="bi bi-shield-fill resource-icon"></i>
-
-                    <h3 class="mt-3">
-                        Segurança
+                    <h3>
+                        Sensores
                     </h3>
 
                     <p>
-                        Controle de acesso por perfis e
-                        gerenciamento dos dados do sistema.
+                        Consulte as últimas leituras
+                        e acompanhe os alertas
+                        dos sensores.
                     </p>
 
-                    <button
-                        class="btn btn-outline-primary"
-                        onclick="alert('Área de segurança em desenvolvimento.')"
+                    <a
+                        href="sensores.php"
+                        class="btn-recurso"
                     >
-                        Saiba mais
-                    </button>
+                        Acessar Sensores →
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+
+                <div class="recurso">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <h3>
+                        Gestão de Usuários
+                    </h3>
+
+                    <p>
+                        Cadastre, edite e visualize
+                        os usuários cadastrados
+                        no sistema.
+                    </p>
+
+                    <a
+                        href="usuario.php"
+                        class="btn-recurso"
+                    >
+                        Acessar Usuários →
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+
+                <div class="recurso">
+
+                    <i class="fa-solid fa-train"></i>
+
+                    <h3>
+                        Trens
+                    </h3>
+
+                    <p>
+                        Acompanhe os trens cadastrados
+                        e suas posições na rede
+                        ferroviária.
+                    </p>
+
+                    <a
+                        href="mapa.php"
+                        class="btn-recurso"
+                    >
+                        Ver Trens →
+                    </a>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+
+                <div class="recurso">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    <h3>
+                        Monitoramento
+                    </h3>
+
+                    <p>
+                        Acompanhe as informações
+                        operacionais da rede
+                        ferroviária.
+                    </p>
+
+                    <a
+                        href="mapa.php"
+                        class="btn-recurso"
+                    >
+                        Monitorar →
+                    </a>
 
                 </div>
 
@@ -1153,457 +929,13 @@ $amvs = [
 
 </section>
 
-
 <footer>
 
-    <div class="container text-center">
-
-        <h5>
-            Hyper Sense
-        </h5>
-
-        <p class="mb-0">
-            Sistema de monitoramento e gestão ferroviária.
-        </p>
-
-    </div>
+    <p>
+        HYPER SENSE — SISTEMA DE MONITORAMENTO FERROVIÁRIO
+    </p>
 
 </footer>
-
-
-<script>
-
-const sensores = <?= json_encode($sensores, JSON_UNESCAPED_UNICODE) ?>;
-
-let grafico = null;
-
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    criarGrafico();
-
-    atualizarAlertas();
-
-});
-
-
-function criarGrafico(tipo = "bar") {
-
-    const canvas = document.getElementById("graficoSensores");
-
-    if (grafico) {
-        grafico.destroy();
-    }
-
-    grafico = new Chart(canvas, {
-
-        type: tipo,
-
-        data: {
-
-            labels: sensores.map(sensor => sensor.id),
-
-            datasets: [
-
-                {
-                    label: "Leitura",
-
-                    data: sensores.map(sensor => sensor.leitura),
-
-                    borderWidth: 2
-                },
-
-                {
-                    label: "Limite",
-
-                    data: sensores.map(sensor => sensor.limite),
-
-                    borderWidth: 2
-                }
-
-            ]
-
-        },
-
-        options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            scales: {
-
-                y: {
-
-                    beginAtZero: true
-
-                }
-
-            }
-
-        }
-
-    });
-
-}
-
-
-function abrirEdicaoGrafico() {
-
-    const painel = document.getElementById("edicaoGrafico");
-
-    painel.style.display =
-        painel.style.display === "none"
-            ? "block"
-            : "none";
-
-}
-
-
-function alterarTipoGrafico() {
-
-    const tipo = document.getElementById("tipoGrafico").value;
-
-    criarGrafico(tipo);
-
-}
-
-
-function alternarEdicaoMapa() {
-
-    const painel = document.getElementById("mapEdit");
-
-    painel.classList.toggle("show");
-
-}
-
-
-function moverTrem() {
-
-    const trem = document.getElementById("tremEditar").value;
-
-    let posicao = Number(
-        document.getElementById("posicaoTrem").value
-    );
-
-    if (posicao < 5) {
-        posicao = 5;
-    }
-
-    if (posicao > 95) {
-        posicao = 95;
-    }
-
-    const elemento = document.getElementById(trem);
-
-    if (elemento) {
-
-        elemento.style.left = posicao + "%";
-
-        localStorage.setItem(
-            "posicao_" + trem,
-            posicao
-        );
-
-    }
-
-}
-
-
-function carregarPosicoesTrens() {
-
-    document.querySelectorAll(".train").forEach(function (trem) {
-
-        const posicao =
-            localStorage.getItem(
-                "posicao_" + trem.id
-            );
-
-        if (posicao) {
-            trem.style.left = posicao + "%";
-        }
-
-    });
-
-}
-
-
-function abrirEdicaoSensores() {
-
-    const painel =
-        document.getElementById("edicaoSensores");
-
-    if (painel.style.display === "none") {
-
-        painel.style.display = "block";
-
-        montarFormularioSensores();
-
-    } else {
-
-        painel.style.display = "none";
-
-    }
-
-}
-
-
-function montarFormularioSensores() {
-
-    const lista =
-        document.getElementById("listaEdicaoSensores");
-
-    lista.innerHTML = "";
-
-    sensores.forEach(function (sensor, index) {
-
-        lista.innerHTML += `
-
-            <div class="row g-2 mb-2">
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        ${sensor.id}
-                    </label>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        value="${sensor.tipo}"
-                        id="tipo_${index}"
-                    >
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        Leitura
-                    </label>
-
-                    <input
-                        type="number"
-                        class="form-control"
-                        value="${sensor.leitura}"
-                        id="leitura_${index}"
-                    >
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        Limite
-                    </label>
-
-                    <input
-                        type="number"
-                        class="form-control"
-                        value="${sensor.limite}"
-                        id="limite_${index}"
-                    >
-
-                </div>
-
-            </div>
-
-        `;
-
-    });
-
-}
-
-
-function salvarSensores() {
-
-    sensores.forEach(function (sensor, index) {
-
-        sensor.tipo =
-            document.getElementById(
-                "tipo_" + index
-            ).value;
-
-        sensor.leitura =
-            Number(
-                document.getElementById(
-                    "leitura_" + index
-                ).value
-            );
-
-        sensor.limite =
-            Number(
-                document.getElementById(
-                    "limite_" + index
-                ).value
-            );
-
-    });
-
-
-    atualizarTabelaSensores();
-
-    atualizarAlertas();
-
-    criarGrafico(
-        document.getElementById("tipoGrafico")?.value || "bar"
-    );
-
-    localStorage.setItem(
-        "sensoresHyperSense",
-        JSON.stringify(sensores)
-    );
-
-}
-
-
-function atualizarTabelaSensores() {
-
-    const tabela =
-        document.getElementById("tabelaSensores");
-
-    tabela.innerHTML = "";
-
-    sensores.forEach(function (sensor) {
-
-        let status;
-        let classe;
-
-        if (sensor.leitura > sensor.limite) {
-
-            status = "Alerta";
-            classe = "status-alerta";
-
-        } else if (
-            sensor.leitura >= sensor.limite * 0.85
-        ) {
-
-            status = "Atenção";
-            classe = "status-atencao";
-
-        } else {
-
-            status = "Normal";
-            classe = "status-normal";
-
-        }
-
-
-        tabela.innerHTML += `
-
-            <tr>
-
-                <td>${sensor.id}</td>
-
-                <td>${sensor.tipo}</td>
-
-                <td>
-                    ${sensor.leitura.toFixed(2)}
-                    ${sensor.unidade}
-                </td>
-
-                <td>
-                    ${sensor.limite.toFixed(2)}
-                    ${sensor.unidade}
-                </td>
-
-                <td class="sensor-status ${classe}">
-                    ${status}
-                </td>
-
-            </tr>
-
-        `;
-
-    });
-
-}
-
-
-function atualizarAlertas() {
-
-    const container =
-        document.getElementById("alertas");
-
-    container.innerHTML = "";
-
-    let quantidade = 0;
-
-
-    sensores.forEach(function (sensor) {
-
-        if (sensor.leitura > sensor.limite) {
-
-            quantidade++;
-
-            container.innerHTML += `
-
-                <div class="alert-box">
-
-                    <strong>Alto</strong>
-
-                    Sensor ${sensor.id}
-                    acima do limite.
-
-                </div>
-
-            `;
-
-        } else if (
-            sensor.leitura >= sensor.limite * 0.85
-        ) {
-
-            quantidade++;
-
-            container.innerHTML += `
-
-                <div class="alert-box">
-
-                    <strong>Médio</strong>
-
-                    Leitura do sensor
-                    ${sensor.id} próxima do limite.
-
-                </div>
-
-            `;
-
-        }
-
-    });
-
-
-    if (quantidade === 0) {
-
-        container.innerHTML = `
-
-            <div class="alert-box">
-
-                <strong>Normal</strong>
-
-                Nenhum alerta ativo.
-
-            </div>
-
-        `;
-
-    }
-
-
-    document.getElementById(
-        "quantidadeAlertas"
-    ).textContent = quantidade;
-
-}
-
-
-window.addEventListener(
-    "load",
-    carregarPosicoesTrens
-);
-
-</script>
-
 
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
