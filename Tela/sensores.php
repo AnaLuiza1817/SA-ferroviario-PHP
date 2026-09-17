@@ -1,528 +1,310 @@
 <?php
 require_once "../infra/conexao.php";
 
-$mensagem = "";
+$mensagem = '';
+$tipoMensagem = 'success';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $acao = $_POST['acao'] ?? '';
 
-    $acao = $_POST["acao"] ?? "";
+    if ($acao === 'atualizar') {
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $leitura = filter_input(INPUT_POST, 'leitura', FILTER_VALIDATE_FLOAT);
+        $status = trim($_POST['status'] ?? 'Normal');
 
-    if ($acao === "salvar") {
-
-        $id = (int)($_POST["id"] ?? 0);
-        $codigo = trim($_POST["codigo"] ?? "");
-        $tipo = trim($_POST["tipo"] ?? "");
-        $trecho = trim($_POST["trecho"] ?? "");
-        $leitura = (float)($_POST["leitura"] ?? 0);
-        $unidade = trim($_POST["unidade"] ?? "%");
-        $limite = (float)($_POST["limite"] ?? 100);
-
-        if ($leitura > $limite) {
-            $status = "Alerta";
-        } elseif ($leitura >= ($limite * 0.8)) {
-            $status = "Atenção";
+        if ($id && $leitura !== false && $leitura !== null && $status !== '') {
+            $sql = "UPDATE sensores SET leitura = ?, status = ?, ultima_atualizacao = NOW() WHERE id = ?";
+            $stmt = $conexao->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param('dsi', $leitura, $status, $id);
+                if ($stmt->execute()) {
+                    $mensagem = 'Sensor atualizado com sucesso.';
+                } else {
+                    $mensagem = 'Não foi possível atualizar o sensor.';
+                    $tipoMensagem = 'danger';
+                }
+                $stmt->close();
+            } else {
+                $mensagem = 'Erro ao preparar a atualização do sensor.';
+                $tipoMensagem = 'danger';
+            }
         } else {
-            $status = "Normal";
+            $mensagem = 'Preencha os dados corretamente.';
+            $tipoMensagem = 'danger';
         }
-
-        if ($id > 0) {
-
-            $stmt = $conexao->prepare("
-                UPDATE sensores
-                SET codigo = ?, tipo = ?, trecho = ?, leitura = ?,
-                    unidade = ?, limite = ?, status = ?
-                WHERE id = ?
-            ");
-
-            $stmt->bind_param(
-                "sssdsdsi",
-                $codigo,
-                $tipo,
-                $trecho,
-                $leitura,
-                $unidade,
-                $limite,
-                $status,
-                $id
-            );
-
-            $stmt->execute();
-
-            $mensagem = "Sensor atualizado com sucesso.";
-
-        } else {
-
-            $stmt = $conexao->prepare("
-                INSERT INTO sensores
-                (codigo, tipo, trecho, leitura, unidade, limite, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-
-            $stmt->bind_param(
-                "sssdsds",
-                $codigo,
-                $tipo,
-                $trecho,
-                $leitura,
-                $unidade,
-                $limite,
-                $status
-            );
-
-            $stmt->execute();
-
-            $mensagem = "Sensor cadastrado com sucesso.";
-        }
-    }
-
-    if ($acao === "excluir") {
-
-        $id = (int)$_POST["id"];
-
-        $stmt = $conexao->prepare("DELETE FROM sensores WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-
-        $mensagem = "Sensor excluído com sucesso.";
     }
 }
 
-$editar = null;
+$sql = "
+    SELECT
+        s.id,
+        s.codigo,
+        s.tipo,
+        s.trecho_id,
+        COALESCE(t.codigo, 'Não informado') AS trecho,
+        s.status,
+        s.leitura,
+        s.limite,
+        COALESCE(s.unidade, '') AS unidade,
+        s.ultima_atualizacao AS atualizado_em
+    FROM sensores s
+    LEFT JOIN trechos t ON t.id = s.trecho_id
+    ORDER BY s.id ASC
+";
 
-if (isset($_GET["editar"])) {
-
-    $id = (int)$_GET["editar"];
-
-    $stmt = $conexao->prepare("SELECT * FROM sensores WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-
-    $resultado = $stmt->get_result();
-    $editar = $resultado->fetch_assoc();
-}
-
+$resultado = $conexao->query($sql);
 $sensores = [];
 
-$resultado = $conexao->query("
-    SELECT *
-    FROM sensores
-    ORDER BY id ASC
-");
-
-while ($sensor = $resultado->fetch_assoc()) {
-    $sensores[] = $sensor;
+if ($resultado) {
+    while ($linha = $resultado->fetch_assoc()) {
+        $sensores[] = $linha;
+    }
 }
 
-?>
+$totalSensores = count($sensores);
+$sensoresNormais = 0;
+$sensoresAtencao = 0;
+$sensoresAlerta = 0;
 
+foreach ($sensores as $sensor) {
+    $status = mb_strtolower(trim($sensor['status'] ?? ''), 'UTF-8');
+
+    if ($status === 'normal' || $status === 'ativo') {
+        $sensoresNormais++;
+    } elseif ($status === 'atenção' || $status === 'atencao') {
+        $sensoresAtencao++;
+    } elseif ($status === 'alerta') {
+        $sensoresAlerta++;
+    }
+}
+
+$paginaAtual = basename($_SERVER['PHP_SELF']);
+
+function ativo(string $pagina, string $paginaAtual): string
+{
+    return $pagina === $paginaAtual ? 'active' : '';
+}
+
+function classeStatus(string $status): string
+{
+    $status = mb_strtolower(trim($status), 'UTF-8');
+
+    if ($status === 'normal' || $status === 'ativo') {
+        return 'sensor-status-normal';
+    }
+
+    if ($status === 'atenção' || $status === 'atencao') {
+        return 'sensor-status-atencao';
+    }
+
+    if ($status === 'alerta') {
+        return 'sensor-status-alerta';
+    }
+
+    return 'sensor-status-default';
+}
+
+function e($valor): string
+{
+    return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Sensores - Hyper Sense</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-<link rel="stylesheet" href="../Css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensores | Hyper Sense</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../Css/style.css">
 
 </head>
-
 <body>
-
-<nav class="navbar navbar-expand-lg bg-primary">
-
-<div class="container">
-
-<a class="navbar-brand text-white fw-bold" href="index.php">
-<i class="bi bi-graph-up-arrow"></i>
-Hyper Sense
-</a>
-
-<div class="navbar-nav ms-auto">
-
-<a class="nav-link text-white" href="index.php">
-Home
-</a>
-
-<a class="nav-link text-white" href="usuario.php">
-Usuários
-</a>
-
-<a class="nav-link text-white" href="grafico.php">
-Relatórios
-</a>
-
-<a class="nav-link text-white active" href="sensores.php">
-Sensores
-</a>
-
-<a class="nav-link text-white" href="mapa.php">
-Mapa
-</a>
-
-</div>
-
-</div>
-
+<nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="index.php">
+            <i class="fa-solid fa-train-subway me-2"></i>Hyper Sense
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="menu">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link <?= ativo('index.php', $paginaAtual) ?>" href="index.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('usuario.php', $paginaAtual) ?>" href="usuario.php">Usuários</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('mapa.php', $paginaAtual) ?>" href="mapa.php">Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('grafico.php', $paginaAtual) ?>" href="grafico.php">Gráfico</a></li>
+                <li class="nav-item"><a class="nav-link <?= ativo('sensores.php', $paginaAtual) ?>" href="sensores.php">Sensores</a></li>
+            </ul>
+        </div>
+    </div>
 </nav>
 
-<div class="container py-5">
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-
-<div>
-
-<h1 class="text-primary">
-<i class="bi bi-cpu"></i>
-Sensores
-</h1>
-
-<p class="text-muted">
-Cadastre, edite e acompanhe os sensores ferroviários.
-</p>
-
-</div>
-
-<a href="index.php" class="btn btn-primary">
-<i class="bi bi-house"></i>
-Home
-</a>
-
-</div>
-
-<?php if ($mensagem): ?>
-
-<div class="alert alert-success">
-<?= htmlspecialchars($mensagem) ?>
-</div>
-
-<?php endif; ?>
-
-<div class="card shadow-sm mb-5">
-
-<div class="card-header bg-primary text-white">
-
-<h4 class="mb-0">
-
-<?= $editar ? "Editar sensor" : "Cadastrar sensor" ?>
-
-</h4>
-
-</div>
-
-<div class="card-body">
-
-<form method="POST">
-
-<input type="hidden" name="acao" value="salvar">
-
-<input
-type="hidden"
-name="id"
-value="<?= $editar["id"] ?? 0 ?>"
->
-
-<div class="row g-3">
-
-<div class="col-md-3">
-
-<label class="form-label">
-Código
-</label>
-
-<input
-type="text"
-name="codigo"
-class="form-control"
-required
-value="<?= htmlspecialchars($editar["codigo"] ?? "") ?>"
-placeholder="SEN-005"
->
-
-</div>
-
-<div class="col-md-3">
-
-<label class="form-label">
-Tipo
-</label>
-
-<select name="tipo" class="form-select" required>
-
-<option value="">Selecione</option>
-
-<?php
-
-$tipos = [
-    "Manutenção",
-    "Temperatura",
-    "Via",
-    "Vibração",
-    "Pressão",
-    "Velocidade"
-];
-
-foreach ($tipos as $tipo):
-
-?>
-
-<option
-value="<?= $tipo ?>"
-<?= (($editar["tipo"] ?? "") === $tipo) ? "selected" : "" ?>
->
-
-<?= $tipo ?>
-
-</option>
-
-<?php endforeach; ?>
-
-</select>
-
-</div>
-
-<div class="col-md-2">
-
-<label class="form-label">
-Trecho
-</label>
-
-<input
-type="text"
-name="trecho"
-class="form-control"
-value="<?= htmlspecialchars($editar["trecho"] ?? "") ?>"
-placeholder="TRC-001"
->
-
-</div>
-
-<div class="col-md-2">
-
-<label class="form-label">
-Leitura
-</label>
-
-<input
-type="number"
-step="0.01"
-name="leitura"
-class="form-control"
-required
-value="<?= $editar["leitura"] ?? 0 ?>"
->
-
-</div>
-
-<div class="col-md-1">
-
-<label class="form-label">
-Unid.
-</label>
-
-<input
-type="text"
-name="unidade"
-class="form-control"
-value="<?= htmlspecialchars($editar["unidade"] ?? "%") ?>"
->
-
-</div>
-
-<div class="col-md-2">
-
-<label class="form-label">
-Limite
-</label>
-
-<input
-type="number"
-step="0.01"
-name="limite"
-class="form-control"
-required
-value="<?= $editar["limite"] ?? 100 ?>"
->
-
-</div>
-
-</div>
-
-<div class="mt-4">
-
-<button class="btn btn-primary">
-
-<i class="bi bi-save"></i>
-
-<?= $editar ? "Atualizar" : "Cadastrar" ?>
-
-</button>
-
-<?php if ($editar): ?>
-
-<a href="sensores.php" class="btn btn-secondary">
-Cancelar
-</a>
-
-<?php endif; ?>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-<div class="card shadow-sm">
-
-<div class="card-header">
-
-<h4 class="mb-0">
-Últimas leituras registradas
-</h4>
-
-</div>
-
-<div class="table-responsive">
-
-<table class="table table-hover mb-0">
-
-<thead class="table-light">
-
-<tr>
-
-<th>Sensor</th>
-<th>Tipo</th>
-<th>Trecho</th>
-<th>Leitura</th>
-<th>Limite</th>
-<th>Status</th>
-<th>Atualizado</th>
-<th>Ações</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<?php foreach ($sensores as $sensor): ?>
-
-<tr>
-
-<td>
-<?= htmlspecialchars($sensor["codigo"]) ?>
-</td>
-
-<td>
-<?= htmlspecialchars($sensor["tipo"]) ?>
-</td>
-
-<td>
-<?= htmlspecialchars($sensor["trecho"]) ?>
-</td>
-
-<td>
-<strong>
-<?= number_format($sensor["leitura"], 2, ",", ".") ?>
-<?= htmlspecialchars($sensor["unidade"]) ?>
-</strong>
-</td>
-
-<td>
-<?= number_format($sensor["limite"], 2, ",", ".") ?>
-<?= htmlspecialchars($sensor["unidade"]) ?>
-</td>
-
-<td>
-
-<?php
-
-$classe = match ($sensor["status"]) {
-    "Alerta" => "danger",
-    "Atenção" => "warning",
-    default => "success"
-};
-
-?>
-
-<span class="badge bg-<?= $classe ?>">
-
-<?= htmlspecialchars($sensor["status"]) ?>
-
-</span>
-
-</td>
-
-<td>
-
-<?= date(
-    "d/m/Y H:i",
-    strtotime($sensor["atualizado_em"])
-) ?>
-
-</td>
-
-<td>
-
-<a
-href="?editar=<?= $sensor["id"] ?>"
-class="btn btn-sm btn-warning"
->
-<i class="bi bi-pencil"></i>
-</a>
-
-<form
-method="POST"
-style="display:inline"
-onsubmit="return confirm('Excluir este sensor?')"
->
-
-<input
-type="hidden"
-name="acao"
-value="excluir"
->
-
-<input
-type="hidden"
-name="id"
-value="<?= $sensor["id"] ?>"
->
-
-<button class="btn btn-sm btn-danger">
-
-<i class="bi bi-trash"></i>
-
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
-<?php endforeach; ?>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
+<header class="page-header py-5 mb-5">
+    <div class="container">
+        <span class="badge bg-light text-primary mb-3">Monitoramento ferroviário</span>
+        <h1 class="fw-bold">Sensores</h1>
+        <p class="mb-0">Acompanhe leituras, limites, trechos e status dos sensores do sistema.</p>
+    </div>
+</header>
+
+<main class="container pb-5">
+    <?php if ($mensagem !== ''): ?>
+        <div class="alert alert-<?= e($tipoMensagem) ?> alert-dismissible fade show" role="alert">
+            <?= e($mensagem) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card sensor-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="sensor-icon mb-3"><i class="fa-solid fa-satellite-dish"></i></div>
+                    <div class="text-muted">Total de sensores</div>
+                    <div class="fs-2 fw-bold"><?= $totalSensores ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card sensor-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="sensor-icon mb-3"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="text-muted">Normais</div>
+                    <div class="fs-2 fw-bold"><?= $sensoresNormais ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card sensor-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="sensor-icon mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="text-muted">Em atenção</div>
+                    <div class="fs-2 fw-bold"><?= $sensoresAtencao ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card sensor-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="sensor-icon mb-3"><i class="fa-solid fa-bell"></i></div>
+                    <div class="text-muted">Em alerta</div>
+                    <div class="fs-2 fw-bold"><?= $sensoresAlerta ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm table-wrap">
+        <div class="card-body p-0">
+            <div class="p-4 border-bottom">
+                <h2 class="h4 mb-1">Sensores cadastrados</h2>
+                <p class="text-muted mb-0">Dados carregados diretamente do MySQL.</p>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Trecho</th>
+                            <th>Leitura</th>
+                            <th>Limite</th>
+                            <th>Status</th>
+                            <th>Atualizado em</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!$sensores): ?>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">Nenhum sensor cadastrado.</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($sensores as $sensor): ?>
+                            <?php
+                                $leitura = (float)($sensor['leitura'] ?? 0);
+                                $limite = $sensor['limite'] !== null ? (float)$sensor['limite'] : null;
+                                $unidade = trim((string)($sensor['unidade'] ?? ''));
+                                $dataAtualizacao = $sensor['atualizado_em'] ?? null;
+                            ?>
+                            <tr>
+                                <td class="fw-bold"><?= e($sensor['codigo']) ?></td>
+                                <td><?= e($sensor['tipo']) ?></td>
+                                <td><?= e($sensor['trecho']) ?></td>
+                                <td>
+                                    <span class="leitura"><?= number_format($leitura, 2, ',', '.') ?></span>
+                                    <?= e($unidade) ?>
+                                </td>
+                                <td>
+                                    <?= $limite === null ? 'Não definido' : number_format($limite, 2, ',', '.') . ' ' . e($unidade) ?>
+                                </td>
+                                <td>
+                                    <span class="sensor-status <?= e(classeStatus($sensor['status'])) ?>">
+                                        <i class="fa-solid fa-circle"></i>
+                                        <?= e($sensor['status']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?= $dataAtualizacao ? e(date('d/m/Y H:i', strtotime($dataAtualizacao))) : 'Não informado' ?>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSensor<?= (int)$sensor['id'] ?>">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <div class="modal fade" id="modalSensor<?= (int)$sensor['id'] ?>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form method="post">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Atualizar <?= e($sensor['codigo']) ?></h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="hidden" name="acao" value="atualizar">
+                                                <input type="hidden" name="id" value="<?= (int)$sensor['id'] ?>">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Leitura</label>
+                                                    <input type="number" step="0.01" name="leitura" class="form-control" value="<?= e($leitura) ?>" required>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Status</label>
+                                                    <select name="status" class="form-select" required>
+                                                        <?php foreach (['Normal', 'Atenção', 'Alerta', 'Inativo'] as $opcao): ?>
+                                                            <option value="<?= e($opcao) ?>" <?= $sensor['status'] === $opcao ? 'selected' : '' ?>><?= e($opcao) ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-dark text-white py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
-
 </body>
-
 </html>
