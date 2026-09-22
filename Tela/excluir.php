@@ -13,23 +13,21 @@ $stmt->bind_param('i', $id);
 $stmt->execute();
 $stmt->bind_result($usuarioId, $usuarioNome, $usuarioEmail, $usuarioTelefone, $usuarioTipo, $usuarioStatus);
 
-$usuario = null;
-if ($stmt->fetch()) {
-    $usuario = [
-        'id' => $usuarioId,
-        'nome' => $usuarioNome,
-        'email' => $usuarioEmail,
-        'telefone' => $usuarioTelefone,
-        'tipo' => $usuarioTipo,
-        'status' => $usuarioStatus
-    ];
-}
-$stmt->close();
-
-if (!$usuario) {
+if (!$stmt->fetch()) {
+    $stmt->close();
     header('Location: usuario.php?erro=nao_encontrado');
     exit;
 }
+
+$usuario = [
+    'id' => (int)$usuarioId,
+    'nome' => (string)$usuarioNome,
+    'email' => (string)$usuarioEmail,
+    'telefone' => (string)$usuarioTelefone,
+    'tipo' => (string)$usuarioTipo,
+    'status' => (string)$usuarioStatus
+];
+$stmt->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmacao = $_POST['confirmacao'] ?? '';
@@ -91,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="card bg-light border-0 text-start my-4">
                         <div class="card-body">
-                            <p class="mb-2"><strong>ID:</strong> <?= (int)$usuario['id'] ?></p>
+                            <p class="mb-2"><strong>ID:</strong> <?= $usuario['id'] ?></p>
                             <p class="mb-2"><strong>Nome:</strong> <?= htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8') ?></p>
                             <p class="mb-2"><strong>E-mail:</strong> <?= htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8') ?></p>
                             <p class="mb-2"><strong>Telefone:</strong> <?= htmlspecialchars($usuario['telefone'], ENT_QUOTES, 'UTF-8') ?></p>
