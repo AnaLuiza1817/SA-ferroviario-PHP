@@ -1,7 +1,23 @@
-O que é o PDO
-Para que ele é utilizado no PHP
-Como funciona uma conexão utilizando PDO
+# O que é o PDO?
 
+PDO (PHP Data Objects) é uma extensão do PHP que permite que uma aplicação PHP se conecte e trabalhe com bancos de dados. Ele funciona como uma interface de acesso aos dados, permitindo utilizar uma forma padronizada de comunicação com diferentes bancos de dados, desde que exista o driver PDO correspondente.
+
+# Para que ele é utilizado no PHP
+
+O PDO é utilizado principalmente para conectar o PHP a um banco de dados e realizar operações com os dados.
+Com ele, podemos:
+Conectar o PHP ao MySQL e outros bancos;
+Fazer consultas (SELECT);
+Cadastrar informações (INSERT);
+Alterar informações (UPDATE);
+Excluir informações (DELETE);
+Preparar comandos SQL;
+Trabalhar com erros e exceções;
+Realizar transações no banco de dados.
+
+# Como funciona uma conexão utilizando PDO?
+
+Para criar uma conexão, o PHP utiliza a classe PDO. No caso do MySQL, é necessário informar algumas informações, como servidor, nome do banco, usuário e senha. Essas informações são organizadas no chamado DSN (Data Source Name).
 
 
 # Diferenças entre PDO e MySQLi
@@ -109,4 +125,21 @@ Independentemente da tecnologia escolhida, é importante utilizar **Prepared Sta
 6. **OWASP — Query Parameterization Cheat Sheet**
    [OWASP: Query Parameterization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html?utm_source=chatgpt.com)
 
+7. **PHP Manual – PHP Data Objects (PDO)**
+   [PHP: PHP Data Objects (PDO)](https://www.php.net/manual/pt_BR/book.pdo.php)
+
+8. **PHP Manual – Conexões e gerenciamento de conexões**
+   [PHP: Conexões e gerenciamento de conexões](https://www.php.net/manual/pt_BR/pdo.connections.php)
+
+9. **PHP Manual – PDO::__construct**
+   [PHP: PDO::__construct](https://www.php.net/manual/pt_BR/pdo.construct.php)
+
+10. **PHP Manual – Driver PDO do MySQL**
+    [PHP: Driver PDO do MySQL](https://www.php.net/manual/pt_BR/ref.pdo-mysql.php)
+
+11. **PHP Manual – Declarações preparadas com PDO**
+    [PHP: Declarações preparadas e procedimentos armazenados](https://www.php.net/manual/pt_BR/pdo.prepared-statements.php)
+
+12. **PHP Manual – Erros e manipulação de erros**
+    [PHP: Erros e manipulação de erros](https://www.php.net/manual/pt_BR/pdo.error-handling.php)
 
