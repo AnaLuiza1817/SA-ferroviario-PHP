@@ -1,4 +1,7 @@
 <?php
+require_once "auth.php";
+requireAdmin();
+
 require_once "../Infra/conexao.php";
 
 $erros = [];
@@ -7,30 +10,35 @@ $email = '';
 $telefone = '';
 $tipo = '';
 $status = 'Ativo';
+$senha = '';
 
-$tiposPermitidos = ['Administrador', 'Usuário', 'Supervisor'];
+$tiposPermitidos = ['Usuário', 'Supervisor', 'Administrador'];
 $statusPermitidos = ['Ativo', 'Inativo'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    validarCsrf();
     $nome = trim($_POST['nome'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $telefone = trim($_POST['telefone'] ?? '');
     $tipo = trim($_POST['tipo'] ?? '');
     $status = trim($_POST['status'] ?? '');
+    $senha = $_POST['senha'] ?? '';
 
     if ($nome === '') $erros[] = 'Informe o nome completo.';
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $erros[] = 'Informe um e-mail válido.';
     if ($telefone === '') $erros[] = 'Informe o telefone.';
     if (!in_array($tipo, $tiposPermitidos, true)) $erros[] = 'Selecione um tipo de usuário válido.';
+    if (strlen($senha) < 6) $erros[] = 'A senha deve ter pelo menos 6 caracteres.';
     if (!in_array($status, $statusPermitidos, true)) $erros[] = 'Selecione um status válido.';
 
     if (!$erros) {
-        $stmt = $conexao->prepare('INSERT INTO usuarios (nome, email, telefone, tipo, status) VALUES (?, ?, ?, ?, ?)');
+        $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+        $stmt = $conexao->prepare('INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES (?, ?, ?, ?, ?, ?)');
 
         if (!$stmt) {
             $erros[] = 'Não foi possível preparar o cadastro.';
         } else {
-            $stmt->bind_param('sssss', $nome, $email, $telefone, $tipo, $status);
+            $stmt->bind_param('ssssss', $nome, $email, $telefone, $tipo, $status, $senhaHash);
 
             if ($stmt->execute()) {
                 $stmt->close();
@@ -65,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -93,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body p-4 p-md-5">
             <form method="post" id="formCadastroUsuario" data-validar="usuario" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="nome" class="form-label">Nome completo</label>
@@ -101,6 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label for="email" class="form-label">E-mail</label>
                         <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha" minlength="6" required>
                     </div>
                     <div class="col-md-6">
                         <label for="telefone" class="form-label">Telefone</label>
