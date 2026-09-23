@@ -1,4 +1,7 @@
 <?php
+require_once "auth.php";
+requireAdmin();
+
 require_once "../Infra/conexao.php";
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -30,6 +33,7 @@ $usuario = [
 $stmt->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    validarCsrf();
     $confirmacao = $_POST['confirmacao'] ?? '';
 
     if ($confirmacao !== 'sim') {
@@ -37,17 +41,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $stmt = $conexao->prepare('DELETE FROM usuarios WHERE id = ?');
-    $stmt->bind_param('i', $id);
+    if ($usuario['tipo'] === 'Administrador') {
+        $resultadoAdmins = $conexao->query("SELECT COUNT(*) AS total FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo'");
+        $totalAdmins = $resultadoAdmins ? (int)$resultadoAdmins->fetch_assoc()['total'] : 0;
 
-    if ($stmt->execute()) {
-        $stmt->close();
-        header('Location: usuario.php?sucesso=exclusao');
-        exit;
+        if ($totalAdmins <= 1) {
+            $erro = 'O último administrador ativo não pode ser excluído.';
+        }
     }
 
-    $erro = 'Não foi possível excluir o usuário. Verifique se ele está sendo usado por outro registro.';
-    $stmt->close();
+    if (!empty($erro)) {
+    } else {
+        $stmt = $conexao->prepare('DELETE FROM usuarios WHERE id = ?');
+        $stmt->bind_param('i', $id);
+
+        if ($stmt->execute()) {
+            $stmt->close();
+            header('Location: usuario.php?sucesso=exclusao');
+            exit;
+        }
+
+        $erro = 'Não foi possível excluir o usuário. Verifique se ele está sendo usado por outro registro.';
+        $stmt->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -69,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -99,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <form method="post" id="formExcluirUsuario" data-nome="<?= htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="confirmacao" value="sim">
                         <a href="usuario.php" class="btn btn-outline-secondary me-2">Cancelar</a>
                         <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Sim, excluir usuário</button>
