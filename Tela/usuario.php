@@ -1,4 +1,7 @@
 <?php
+require_once "auth.php";
+requireUsuariosView();
+
 require_once "../infra/conexao.php";
 
 $sql = "
@@ -86,11 +89,14 @@ function statusBadgeClass(string $status): string {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
+                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+                <?php endif; ?>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
+            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -112,11 +118,13 @@ function statusBadgeClass(string $status): string {
             </h1>
             <p class="text-muted">Gerenciamento completo de usuários cadastrados.</p>
         </div>
+        <?php if (($_SESSION['usuario_tipo'] ?? '') === 'Administrador'): ?>
         <div class="col-auto align-self-center">
             <a href="Cadastro.php" class="btn btn-success">
                 <i class="fas fa-plus me-1"></i>Novo Usuário
             </a>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="card shadow-sm border-0 rounded-4">
@@ -148,12 +156,16 @@ function statusBadgeClass(string $status): string {
                                     </span>
                                 </td>
                                 <td>
+                                    <?php if (($_SESSION['usuario_tipo'] ?? '') === 'Administrador'): ?>
                                     <a href="editar.php?id=<?= (int)$usuario["id"] ?>" class="btn btn-sm btn-outline-primary" title="Editar usuário">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <a href="excluir.php?id=<?= (int)$usuario["id"] ?>" class="btn btn-sm btn-outline-danger btn-excluir-usuario" title="Excluir usuário">
                                         <i class="fas fa-trash"></i>
                                     </a>
+                                    <?php else: ?>
+                                    <span class="text-muted">Visualização</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
