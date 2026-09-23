@@ -242,3 +242,16 @@ WHERE LOWER(email) = 'arthur@gmail.com';
 INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
 SELECT 'Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'arthur@gmail.com');
+
+UPDATE usuarios
+SET nome = 'Fernanda Lima',
+    email = 'fernanda@gmail.com',
+    telefone = '(47) 94444-4444',
+    tipo = 'Administrador',
+    status = 'Ativo',
+    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE LOWER(email) = 'fernanda@gmail.com';
+
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Fernanda Lima', 'fernanda@gmail.com', '(47) 94444-4444', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'fernanda@gmail.com');
