@@ -11,9 +11,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
     telefone VARCHAR(20) NULL,
     tipo VARCHAR(50) NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
+    senha VARCHAR(255) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME NULL
 );
+
+ALTER TABLE usuarios
+ADD COLUMN IF NOT EXISTS senha VARCHAR(255) NULL;
 
 CREATE TABLE IF NOT EXISTS estacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -200,26 +204,41 @@ INSERT IGNORE INTO alertas (sensor_id, trem_id, trecho_id, nivel, mensagem, stat
 INSERT IGNORE INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv_id, motivo, alterado_em) VALUES
 (2, 1, 2, 2, 'Desvio simulado devido à manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
 
-INSERT IGNORE INTO usuarios (nome, email, telefone, tipo, status) VALUES
-('Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo'),
-('Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo'),
-('Arthur Backes', 'Arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Inativo');
+UPDATE usuarios
+SET nome = 'Gabriel Silva',
+    email = 'gabriel@gmail.com',
+    telefone = '(47) 99999-1111',
+    tipo = 'Administrador',
+    status = 'Ativo',
+    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE LOWER(email) = 'gabriel@gmail.com';
 
-USE ferrorama_db;
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'gabriel@gmail.com');
 
-ALTER TABLE sensores
-ADD COLUMN IF NOT EXISTS trecho_id INT NULL,
-ADD COLUMN IF NOT EXISTS leitura DECIMAL(10,2) NOT NULL DEFAULT 0,
-ADD COLUMN IF NOT EXISTS limite DECIMAL(10,2) NULL,
-ADD COLUMN IF NOT EXISTS unidade VARCHAR(20) NULL,
-ADD COLUMN IF NOT EXISTS ultima_atualizacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+UPDATE usuarios
+SET nome = 'Ana Souza',
+    email = 'ana@gmail.com',
+    telefone = '(47) 98888-2222',
+    tipo = 'Administrador',
+    status = 'Ativo',
+    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE LOWER(email) = 'ana@gmail.com';
 
-UPDATE sensores
-SET ultima_atualizacao = NOW()
-WHERE ultima_atualizacao IS NULL;
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'ana@gmail.com');
 
-INSERT IGNORE INTO sensores (codigo, tipo, trecho_id, status, leitura, limite, unidade, ultima_atualizacao) VALUES
-('SEN-001', 'Manutenção', 3, 'Alerta', 87, 80, '%', NOW()),
-('SEN-002', 'Temperatura', 2, 'Normal', 64, 80, 'C', NOW()),
-('SEN-003', 'Via', 4, 'Atenção', 78, 75, '%', NOW()),
-('SEN-004', 'Manutenção', 1, 'Normal', 42, 80, '%', NOW());
+UPDATE usuarios
+SET nome = 'Arthur Backes',
+    email = 'arthur@gmail.com',
+    telefone = '(47) 95555-5555',
+    tipo = 'Administrador',
+    status = 'Ativo',
+    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE LOWER(email) = 'arthur@gmail.com';
+
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'arthur@gmail.com');
