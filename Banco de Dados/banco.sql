@@ -6,18 +6,21 @@ USE ferrorama_db;
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
+    nome VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL,
-    telefone VARCHAR(20) NULL,
+    telefone VARCHAR(30) NULL,
     tipo VARCHAR(50) NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
     senha VARCHAR(255) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ultimo_acesso DATETIME NULL
+    ultimo_acesso DATETIME NULL,
+    deleted_at DATETIME NULL DEFAULT NULL,
+    email_ativo VARCHAR(150) GENERATED ALWAYS AS (IF(deleted_at IS NULL, email, NULL)) STORED,
+    UNIQUE KEY uk_usuarios_email_ativo (email_ativo),
+    INDEX idx_usuarios_deleted_at (deleted_at),
+    INDEX idx_usuarios_status (status),
+    INDEX idx_usuarios_tipo (tipo)
 );
-
-ALTER TABLE usuarios
-ADD COLUMN IF NOT EXISTS senha VARCHAR(255) NULL;
 
 CREATE TABLE IF NOT EXISTS estacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -204,54 +207,12 @@ INSERT IGNORE INTO alertas (sensor_id, trem_id, trecho_id, nivel, mensagem, stat
 INSERT IGNORE INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv_id, motivo, alterado_em) VALUES
 (2, 1, 2, 2, 'Desvio simulado devido à manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
 
-UPDATE usuarios
-SET nome = 'Gabriel Silva',
-    email = 'gabriel@gmail.com',
-    telefone = '(47) 99999-1111',
-    tipo = 'Administrador',
-    status = 'Ativo',
-    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE LOWER(email) = 'gabriel@gmail.com';
-
 INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
-SELECT 'Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'gabriel@gmail.com');
-
-UPDATE usuarios
-SET nome = 'Ana Souza',
-    email = 'ana@gmail.com',
-    telefone = '(47) 98888-2222',
-    tipo = 'Administrador',
-    status = 'Ativo',
-    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE LOWER(email) = 'ana@gmail.com';
-
-INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
-SELECT 'Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'ana@gmail.com');
-
-UPDATE usuarios
-SET nome = 'Arthur Backes',
-    email = 'arthur@gmail.com',
-    telefone = '(47) 95555-5555',
-    tipo = 'Administrador',
-    status = 'Ativo',
-    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE LOWER(email) = 'arthur@gmail.com';
-
-INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
-SELECT 'Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'arthur@gmail.com');
-
-UPDATE usuarios
-SET nome = 'Fernanda Lima',
-    email = 'fernanda@gmail.com',
-    telefone = '(47) 94444-4444',
-    tipo = 'Administrador',
-    status = 'Ativo',
-    senha = '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE LOWER(email) = 'fernanda@gmail.com';
-
-INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
-SELECT 'Fernanda Lima', 'fernanda@gmail.com', '(47) 94444-4444', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
-WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'fernanda@gmail.com');
+VALUES
+  ('Gabriel Silva',  'gabriel@gmail.com',  '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
+  ('Ana Souza',      'ana@gmail.com',      '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
+  ('Arthur Backes',  'arthur@gmail.com',   '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
+  ('Fernanda Lima',  'fernanda@gmail.com', '(47) 94444-4444', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W')
+ON DUPLICATE KEY UPDATE
+  nome     = VALUES(nome),
+  telefone = VALUES(telefone);

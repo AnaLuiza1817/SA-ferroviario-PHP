@@ -14,8 +14,8 @@ $erro = "";
 $sucesso = ($_GET["cadastro"] ?? "") === "sucesso";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $usuario = trim($_POST["usuario"] ?? "");
-    $senha = $_POST["senha"] ?? "";
+    $usuario = strtolower(trim($_POST["usuario"] ?? ""));
+    $senha   = $_POST["senha"] ?? "";
 
     if ($usuario === "" || $senha === "") {
         $erro = "Preencha o usuário e a senha.";
@@ -23,25 +23,34 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt = $conexao->prepare(
             "SELECT id, nome, email, senha, tipo, status
              FROM usuarios
-             WHERE (email = ? OR nome = ?) AND status = 'Ativo'
+             WHERE (LOWER(email) = ? OR LOWER(nome) = ?)
+               AND status = 'Ativo'
+               AND deleted_at IS NULL
              LIMIT 1"
         );
 
         if ($stmt) {
             $stmt->bind_param("ss", $usuario, $usuario);
             $stmt->execute();
-            $resultado = $stmt->get_result();
-            $dados = $resultado->fetch_assoc();
+            $dados = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
             if ($dados && !empty($dados["senha"]) && password_verify($senha, $dados["senha"])) {
+                if (password_needs_rehash($dados["senha"], PASSWORD_DEFAULT)) {
+                    $novoHash = password_hash($senha, PASSWORD_DEFAULT);
+                    $up = $conexao->prepare("UPDATE usuarios SET senha = ? WHERE id = ?");
+                    $up->bind_param("si", $novoHash, $dados["id"]);
+                    $up->execute();
+                    $up->close();
+                }
+
                 session_regenerate_id(true);
 
                 $_SESSION["usuario_logado"] = true;
-                $_SESSION["usuario_id"] = (int)$dados["id"];
-                $_SESSION["usuario_nome"] = $dados["nome"];
-                $_SESSION["usuario_email"] = $dados["email"];
-                $_SESSION["usuario_tipo"] = $dados["tipo"];
+                $_SESSION["usuario_id"]     = (int)$dados["id"];
+                $_SESSION["usuario_nome"]   = $dados["nome"];
+                $_SESSION["usuario_email"]  = $dados["email"];
+                $_SESSION["usuario_tipo"]   = $dados["tipo"];
 
                 $stmt = $conexao->prepare("UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?");
                 if ($stmt) {

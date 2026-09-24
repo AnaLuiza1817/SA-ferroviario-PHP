@@ -1,6 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    session_start([
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax',
+        'use_strict_mode' => true,
+    ]);
 }
 
 require_once __DIR__ . "/../Infra/conexao.php";
@@ -13,7 +17,12 @@ function requireLogin(): void
     }
 
     $id = (int)$_SESSION['usuario_id'];
-    $stmt = $GLOBALS['conexao']->prepare("SELECT nome, email, tipo, status FROM usuarios WHERE id = ? LIMIT 1");
+    $stmt = $GLOBALS['conexao']->prepare(
+        "SELECT nome, email, tipo, status
+         FROM usuarios
+         WHERE id = ? AND deleted_at IS NULL
+         LIMIT 1"
+    );
 
     if (!$stmt) {
         session_destroy();
@@ -33,9 +42,9 @@ function requireLogin(): void
         exit;
     }
 
-    $_SESSION['usuario_nome'] = $usuario['nome'];
+    $_SESSION['usuario_nome']  = $usuario['nome'];
     $_SESSION['usuario_email'] = $usuario['email'];
-    $_SESSION['usuario_tipo'] = $usuario['tipo'];
+    $_SESSION['usuario_tipo']  = $usuario['tipo'];
 }
 
 function requireAdmin(): void
@@ -65,7 +74,6 @@ function csrfToken(): string
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
-
     return $_SESSION['csrf_token'];
 }
 
