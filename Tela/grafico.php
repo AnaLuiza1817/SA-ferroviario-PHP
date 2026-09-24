@@ -18,6 +18,23 @@ function buscarTodos(mysqli $conexao, string $sql): array
     return $dados;
 }
 
+function buscarPorTrem(mysqli $conexao, string $sql, int $tremId): array
+{
+    $stmt = $conexao->prepare($sql);
+    if (!$stmt) {
+        return [];
+    }
+    $stmt->bind_param("i", $tremId);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+    $dados = [];
+    while ($linha = $resultado->fetch_assoc()) {
+        $dados[] = $linha;
+    }
+    $stmt->close();
+    return $dados;
+}
+
 $anos = [2024, 2025, 2026];
 $manutencoesPorAno = [];
 
@@ -58,29 +75,32 @@ $detalhesTrens = [];
 foreach ($ocorrenciasPorTrem as $trem) {
     $tremId = (int) $trem['id'];
 
-    $tipos = buscarTodos(
+    $tipos = buscarPorTrem(
         $conexao,
         "SELECT tipo, COUNT(*) AS total
          FROM ocorrencias
-         WHERE trem_id = $tremId
+         WHERE trem_id = ?
          GROUP BY tipo
-         ORDER BY total DESC"
+         ORDER BY total DESC",
+        $tremId
     );
 
-    $ocorrencias = buscarTodos(
+    $ocorrencias = buscarPorTrem(
         $conexao,
         "SELECT descricao, tipo, status, ocorrido_em
          FROM ocorrencias
-         WHERE trem_id = $tremId
-         ORDER BY ocorrido_em DESC"
+         WHERE trem_id = ?
+         ORDER BY ocorrido_em DESC",
+        $tremId
     );
 
-    $manutencoes = buscarTodos(
+    $manutencoes = buscarPorTrem(
         $conexao,
         "SELECT componente, ordem_manutencao, status, inicio, fim, descricao
          FROM manutencoes
-         WHERE trem_id = $tremId
-         ORDER BY inicio DESC"
+         WHERE trem_id = ?
+         ORDER BY inicio DESC",
+        $tremId
     );
 
     $detalhesTrens[$trem['codigo']] = [
@@ -132,7 +152,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
                 <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>

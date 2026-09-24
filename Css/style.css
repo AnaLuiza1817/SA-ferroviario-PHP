@@ -483,9 +483,39 @@ body {
     font-size: .78rem;
     font-weight: 700;
 }
-
-/* Botão ativo no grupo de mudança de status */
 .btn-group-status .btn.active {
     font-weight: 700;
     box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.25);
+}
+.trem-ponto {
+    cursor: grab;
+}
+
+.trem-grupo.arrastando .trem-ponto {
+    cursor: grabbing;
+    stroke: #ffc107;
+    stroke-width: 4;
+    filter: drop-shadow(0 0 6px rgba(255, 193, 7, 0.9));
+}
+
+.trem-grupo.arrastando .trem-rotulo {
+    fill: #ffc107;
+    font-weight: 900;
+}
+
+.mapa-viewport.arrastando-trem {
+    cursor: grabbing;
+}
+
+.mapa-viewport.arrastando-trem .trecho-linha,
+.mapa-viewport.arrastando-trem .rota-ativa,
+.mapa-viewport.arrastando-trem .estacao-ponto,
+.mapa-viewport.arrastando-trem .estacao-rotulo,
+.mapa-viewport.arrastando-trem .sensor-ponto,
+.mapa-viewport.arrastando-trem .amv-ponto,
+.mapa-viewport.arrastando-trem .ocorrencia-ponto,
+.mapa-viewport.arrastando-trem .manutencao-ponto,
+.mapa-viewport.arrastando-trem .alerta-ponto,
+.mapa-viewport.arrastando-trem .trecho-rotulo {
+    pointer-events: none;
 }
