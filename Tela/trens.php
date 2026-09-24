@@ -7,8 +7,85 @@ require_once "../infra/conexao.php";
 $mensagem = '';
 $tipoMensagem = 'success';
 
-// Processa mudança de status via POST tradicional (fallback sem JS)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'mudar_status') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_trem') {
+
+    validarCsrf();
+
+    $codigo    = trim($_POST['codigo'] ?? '');
+    $status    = trim($_POST['status'] ?? '');
+    $trechoId  = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT);
+    $rotaId    = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
+    $posicao   = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
+
+    $statusPermitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
+    $errosCadastro = [];
+
+    if ($codigo === '') {
+        $errosCadastro[] = 'Informe o código do trem.';
+    } elseif (mb_strlen($codigo) > 20) {
+        $errosCadastro[] = 'O código deve ter no máximo 20 caracteres.';
+    }
+
+    if (!in_array($status, $statusPermitidos, true)) {
+        $errosCadastro[] = 'Selecione um status válido.';
+    }
+
+    if ($posicao === false || $posicao === null) {
+        $posicao = 50.0;
+    }
+    $posicao = max(0.0, min(100.0, (float)$posicao));
+    $trechoId = ($trechoId && $trechoId > 0) ? $trechoId : null;
+    $rotaId   = ($rotaId   && $rotaId   > 0) ? $rotaId   : null;
+
+    if (!$errosCadastro) {
+        $stmt = $conexao->prepare(
+            "INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual)
+             VALUES (?, ?, ?, ?, ?)"
+        );
+
+        if (!$stmt) {
+            $errosCadastro[] = 'Não foi possível preparar o cadastro.';
+        } else {
+            
+            $stmt->bind_param(
+                "ssiid",
+                $codigo,
+                $status,
+                $trechoId,
+                $rotaId,
+                $posicao
+            );
+
+            if ($stmt->execute()) {
+                $stmt->close();
+                header('Location: trens.php?sucesso=cadastro');
+                exit;
+            }
+
+            $errosCadastro[] = $stmt->errno === 1062
+                ? 'Já existe um trem com esse código.'
+                : 'Não foi possível cadastrar o trem.';
+
+            $stmt->close();
+        }
+    }
+
+    if ($errosCadastro) {
+        $mensagem = implode(' ', $errosCadastro);
+        $tipoMensagem = 'danger';
+    }
+}
+
+if (($_GET['sucesso'] ?? '') === 'cadastro') {
+    $mensagem = 'Trem cadastrado com sucesso!';
+    $tipoMensagem = 'success';
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_status') {
+
+    validarCsrf();
+
     $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
     $novoStatus = trim($_POST['status'] ?? '');
 
@@ -30,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
     }
 }
 
-// Busca todos os trens com JOIN para trazer trecho e rota
 $sql = "
     SELECT
         t.id,
@@ -69,6 +145,26 @@ foreach ($trens as $trem) {
         case 'Parado':        $parados++;    break;
         case 'Em manutenção': $manutencao++; break;
         case 'Atrasado':      $atrasados++;  break;
+    }
+}
+
+$trechosDisponiveis = [];
+$resTrechos = $conexao->query(
+    "SELECT id, codigo, status FROM trechos ORDER BY codigo"
+);
+if ($resTrechos) {
+    while ($linha = $resTrechos->fetch_assoc()) {
+        $trechosDisponiveis[] = $linha;
+    }
+}
+
+$rotasDisponiveis = [];
+$resRotas = $conexao->query(
+    "SELECT id, codigo, nome FROM rotas ORDER BY codigo"
+);
+if ($resRotas) {
+    while ($linha = $resRotas->fetch_assoc()) {
+        $rotasDisponiveis[] = $linha;
     }
 }
 
@@ -122,7 +218,7 @@ function e($valor): string {
                 <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -186,9 +282,14 @@ function e($valor): string {
 
     <div class="card border-0 shadow-sm table-wrap">
         <div class="card-body p-0">
-            <div class="p-4 border-bottom">
-                <h2 class="h4 mb-1">Trens cadastrados</h2>
-                <p class="text-muted mb-0">Clique num botão para mudar o status do trem instantaneamente.</p>
+            <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h2 class="h4 mb-1">Trens cadastrados</h2>
+                    <p class="text-muted mb-0">Clique num botão para mudar o status do trem instantaneamente.</p>
+                </div>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdicionarTrem">
+                    <i class="fas fa-plus me-1"></i>Adicionar trem
+                </button>
             </div>
 
             <div class="table-responsive">
@@ -231,6 +332,7 @@ function e($valor): string {
                                 <td>
                                     <form method="post" class="d-flex flex-wrap gap-1">
                                         <input type="hidden" name="acao" value="mudar_status">
+                                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                                         <input type="hidden" name="id" value="<?= (int)$trem['id'] ?>">
 
                                         <?php
@@ -272,6 +374,95 @@ function e($valor): string {
 
 </main>
 
+<div class="modal fade" id="modalAdicionarTrem" tabindex="-1" aria-labelledby="modalAdicionarTremLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" novalidate>
+                <input type="hidden" name="acao" value="cadastrar_trem">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAdicionarTremLabel">
+                        <i class="fas fa-plus me-2"></i>Adicionar trem
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código do trem <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="codigo"
+                            name="codigo"
+                            maxlength="20"
+                            placeholder="Ex.: TR-0004"
+                            required>
+                        <small class="text-muted">Máximo 20 caracteres. Não pode repetir.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="Em operação" selected>Em operação</option>
+                            <option value="Parado">Parado</option>
+                            <option value="Em manutenção">Em manutenção</option>
+                            <option value="Atrasado">Atrasado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="trecho_id" class="form-label">Trecho (opcional)</label>
+                        <select class="form-select" id="trecho_id" name="trecho_id">
+                            <option value="">— Sem trecho —</option>
+                            <?php foreach ($trechosDisponiveis as $tr): ?>
+                                <option value="<?= (int)$tr['id'] ?>">
+                                    <?= e($tr['codigo']) ?>
+                                    <?= $tr['status'] ? ' (' . e($tr['status']) . ')' : '' ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rota_id" class="form-label">Rota (opcional)</label>
+                        <select class="form-select" id="rota_id" name="rota_id">
+                            <option value="">— Sem rota —</option>
+                            <?php foreach ($rotasDisponiveis as $ro): ?>
+                                <option value="<?= (int)$ro['id'] ?>">
+                                    <?= e($ro['codigo']) ?> — <?= e($ro['nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="posicao_percentual" class="form-label">Posição no trecho (%)</label>
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="posicao_percentual"
+                            name="posicao_percentual"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value="50">
+                        <small class="text-muted">De 0 a 100. Padrão: 50.</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Salvar trem
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <footer class="bg-dark text-white py-4">
     <div class="container text-center">
         <p class="mb-0">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão.</p>
@@ -279,5 +470,18 @@ function e($valor): string {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<?php if ($tipoMensagem === 'danger' && $mensagem !== ''): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('modalAdicionarTrem');
+        if (modalEl && window.bootstrap) {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    });
+</script>
+<?php endif; ?>
+
 </body>
 </html>
