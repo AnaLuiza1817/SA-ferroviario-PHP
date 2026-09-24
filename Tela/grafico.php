@@ -316,23 +316,11 @@ function e($valor): string
 </nav>
 
 <main class="container py-5">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-            <span class="badge bg-primary-subtle text-primary">Análise operacional</span>
-            <h1 class="fw-bold mt-2">Gráficos e indicadores</h1>
-            <p class="text-muted mb-0">Dados de manutenção e ocorrências consultados diretamente no banco ferroviário.</p>
-        </div>
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdicionarDados">
-            <i class="fas fa-plus me-1"></i>Adicionar dados
-        </button>
+    <div class="mb-4">
+        <span class="badge bg-primary-subtle text-primary">Análise operacional</span>
+        <h1 class="fw-bold mt-2">Gráficos e indicadores</h1>
+        <p class="text-muted mb-0">Dados de manutenção e ocorrências consultados diretamente no banco ferroviário.</p>
     </div>
-
-    <?php if ($mensagem !== ''): ?>
-        <div class="alert alert-<?= e($tipoMensagem) ?> alert-dismissible fade show" role="alert">
-            <?= e($mensagem) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    <?php endif; ?>
 
     <div class="row g-4">
         <div class="col-12">
