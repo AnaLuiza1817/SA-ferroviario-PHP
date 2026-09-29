@@ -10,19 +10,19 @@ $email = '';
 $telefone = '';
 $tipo = '';
 $status = 'Ativo';
-$senha = '';
 
-$tiposPermitidos = ['Usuário', 'Supervisor', 'Administrador'];
+$tiposPermitidos  = ['Usuário', 'Supervisor', 'Administrador'];
 $statusPermitidos = ['Ativo', 'Inativo'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validarCsrf();
-    $nome = trim($_POST['nome'] ?? '');
-    $email = trim($_POST['email'] ?? '');
+
+    $nome     = trim($_POST['nome'] ?? '');
+    $email    = strtolower(trim($_POST['email'] ?? ''));
     $telefone = trim($_POST['telefone'] ?? '');
-    $tipo = trim($_POST['tipo'] ?? '');
-    $status = trim($_POST['status'] ?? '');
-    $senha = $_POST['senha'] ?? '';
+    $tipo     = trim($_POST['tipo'] ?? '');
+    $status   = trim($_POST['status'] ?? '');
+    $senha    = $_POST['senha'] ?? '';
 
     if ($nome === '') $erros[] = 'Informe o nome completo.';
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $erros[] = 'Informe um e-mail válido.';
@@ -33,10 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$erros) {
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-        $stmt = $conexao->prepare('INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt = $conexao->prepare(
+            'INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
 
         if (!$stmt) {
-            $erros[] = 'Não foi possível preparar o cadastro.';
+            $erros[] = 'Não foi possível cadastrar o usuário.';
+            error_log('Cadastro prepare falhou: ' . $conexao->error);
         } else {
             $stmt->bind_param('ssssss', $nome, $email, $telefone, $tipo, $status, $senhaHash);
 
@@ -46,9 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $erros[] = $stmt->errno === 1062
-                ? 'Este e-mail já está cadastrado.'
-                : 'Não foi possível cadastrar o usuário.';
+            if ($stmt->errno === 1062) {
+                $erros[] = 'Este e-mail já está cadastrado.';
+            } else {
+                $erros[] = 'Não foi possível cadastrar o usuário.';
+                error_log('Cadastro execute falhou: ' . $stmt->error);
+            }
             $stmt->close();
         }
     }
@@ -73,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -97,56 +104,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endforeach; ?>
             </ul>
         </div>
-    <?php endif; ?>
-
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4 p-md-5">
-            <form method="post" id="formCadastroUsuario" data-validar="usuario" novalidate>
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="nome" class="form-label">Nome completo</label>
-                        <input type="text" class="form-control" id="nome" name="nome" maxlength="150" value="<?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="email" class="form-label">E-mail</label>
-                        <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="senha" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="senha" name="senha" minlength="6" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="telefone" class="form-label">Telefone</label>
-                        <input type="text" class="form-control" id="telefone" name="telefone" maxlength="30" value="<?= htmlspecialchars($telefone, ENT_QUOTES, 'UTF-8') ?>" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="tipo" class="form-label">Tipo de usuário</label>
-                        <select class="form-select" id="tipo" name="tipo" required>
-                            <option value="">Selecione...</option>
-                            <?php foreach ($tiposPermitidos as $opcao): ?>
-                                <option value="<?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?>" <?= $tipo === $opcao ? 'selected' : '' ?>><?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status" required>
-                            <?php foreach ($statusPermitidos as $opcao): ?>
-                                <option value="<?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?>" <?= $status === $opcao ? 'selected' : '' ?>><?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-end mt-4">
-                    <a href="usuario.php" class="btn btn-outline-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Cadastrar Usuário</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+    <?php
