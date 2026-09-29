@@ -10,18 +10,26 @@ if (!empty($_SESSION['usuario_logado'])) {
     exit;
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $erros = [];
 $nome = '';
 $email = '';
 $telefone = '';
-$senha = '';
-$confirmarSenha = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $nome = trim($_POST["nome"] ?? "");
-    $email = trim($_POST["email"] ?? "");
-    $telefone = trim($_POST["telefone"] ?? "");
-    $senha = $_POST["senha"] ?? "";
+    $token = $_POST['csrf_token'] ?? '';
+    if (!$token || !hash_equals($_SESSION['csrf_token'], $token)) {
+        http_response_code(403);
+        exit('Requisição inválida.');
+    }
+
+    $nome           = trim($_POST["nome"] ?? "");
+    $email          = strtolower(trim($_POST["email"] ?? ""));
+    $telefone       = trim($_POST["telefone"] ?? "");
+    $senha          = $_POST["senha"] ?? "";
     $confirmarSenha = $_POST["confirmar_senha"] ?? "";
 
     if ($nome === '') $erros[] = 'Informe seu nome completo.';
@@ -31,20 +39,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($senha !== $confirmarSenha) $erros[] = 'As senhas não coincidem.';
 
     if (!$erros) {
-        $stmt = $conexao->prepare("SELECT id FROM usuarios WHERE email = ? LIMIT 1");
-        if (!$stmt) {
-            $erros[] = 'Não foi possível verificar o cadastro.';
-        } else {
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $resultado = $stmt->get_result();
-
-            if ($resultado->fetch_assoc()) {
-                $erros[] = 'Este e-mail já está cadastrado.';
-            }
-
-            $stmt->close();
+        $stmt = $conexao->prepare(
+            "SELECT id FROM usuarios
+             WHERE LOWER(email) = ? AND deleted_at IS NULL LIMIT 1"
+        );
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        if ($stmt->get_result()->fetch_assoc()) {
+            $erros[] = 'Não foi possível concluir o cadastro. Verifique os dados e tente novamente.';
+            error_log("CadastroPublico: email ativo duplicado - $email");
         }
+        $stmt->close();
     }
 
     if (!$erros) {
@@ -54,21 +59,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
              VALUES (?, ?, ?, 'Usuário', 'Ativo', ?)"
         );
+        $stmt->bind_param("ssss", $nome, $email, $telefone, $senhaHash);
 
-        if (!$stmt) {
-            $erros[] = 'Não foi possível preparar o cadastro.';
-        } else {
-            $stmt->bind_param("ssss", $nome, $email, $telefone, $senhaHash);
-
-            if ($stmt->execute()) {
-                $stmt->close();
-                header("Location: Login.php?cadastro=sucesso");
-                exit;
-            }
-
-            $erros[] = 'Não foi possível criar sua conta.';
+        if ($stmt->execute()) {
             $stmt->close();
+            header("Location: Login.php?cadastro=sucesso");
+            exit;
         }
+
+        $erros[] = 'Não foi possível concluir o cadastro. Verifique os dados e tente novamente.';
+        error_log("CadastroPublico INSERT falhou: " . $stmt->error);
+        $stmt->close();
     }
 }
 ?>
@@ -104,20 +105,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST">
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+
                         <div class="mb-3">
                             <label for="nome" class="form-label">Nome completo</label>
-                            <input type="text" class="form-control" id="nome" name="nome" value="<?= htmlspecialchars($nome, ENT_QUOTES, "UTF-8") ?>" required>
+                            <input type="text" class="form-control" id="nome" name="nome" maxlength="150" value="<?= htmlspecialchars($nome, ENT_QUOTES, "UTF-8") ?>" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="email" class="form-label">E-mail</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($email, ENT_QUOTES, "UTF-8") ?>" required>
+                            <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?= htmlspecialchars($email, ENT_QUOTES, "UTF-8") ?>" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="telefone" class="form-label">Telefone</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone" value="<?= htmlspecialchars($telefone, ENT_QUOTES, "UTF-8") ?>" required>
+                            <input type="text" class="form-control" id="telefone" name="telefone" maxlength="30" value="<?= htmlspecialchars($telefone, ENT_QUOTES, "UTF-8") ?>" required>
                         </div>
 
                         <div class="mb-3">
