@@ -11,7 +11,7 @@ if (!$id || $id <= 0) {
     exit;
 }
 
-$stmt = $conexao->prepare('SELECT id, nome, email, telefone, tipo, status FROM usuarios WHERE id = ?');
+$stmt = $conexao->prepare('SELECT id, nome, email, telefone, tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL');
 $stmt->bind_param('i', $id);
 $stmt->execute();
 $stmt->bind_result($usuarioId, $usuarioNome, $usuarioEmail, $usuarioTelefone, $usuarioTipo, $usuarioStatus);
@@ -41,28 +41,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if ($usuario['tipo'] === 'Administrador') {
-        $resultadoAdmins = $conexao->query("SELECT COUNT(*) AS total FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo'");
-        $totalAdmins = $resultadoAdmins ? (int)$resultadoAdmins->fetch_assoc()['total'] : 0;
-
-        if ($totalAdmins <= 1) {
-            $erro = 'O último administrador ativo não pode ser excluído.';
+    if ($usuario['id'] === (int)($_SESSION['usuario_id'] ?? 0)) {
+        $erro = 'Você não pode excluir a própria conta enquanto estiver conectado.';
+    } elseif ($usuario['tipo'] === 'Administrador') {
+        $stmtAdmins = $conexao->prepare("SELECT COUNT(*) FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo' AND deleted_at IS NULL");
+        if (!$stmtAdmins || !$stmtAdmins->execute()) {
+            $erro = 'Não foi possível validar a proteção das contas administrativas.';
+        } else {
+            $stmtAdmins->bind_result($totalAdmins);
+            $stmtAdmins->fetch();
+            $stmtAdmins->close();
+            if ((int)$totalAdmins <= 1) {
+                $erro = 'O último administrador ativo não pode ser excluído.';
+            }
         }
     }
 
     if (!empty($erro)) {
     } else {
-        $stmt = $conexao->prepare('DELETE FROM usuarios WHERE id = ?');
-        $stmt->bind_param('i', $id);
+        $stmt = $conexao->prepare("UPDATE usuarios SET deleted_at = NOW(), status = 'Inativo' WHERE id = ? AND deleted_at IS NULL");
+        if (!$stmt) {
+            $erro = 'Não foi possível preparar a exclusão do usuário.';
+        } else {
+            $stmt->bind_param('i', $id);
+        }
 
-        if ($stmt->execute()) {
+        if (!$erro && $stmt->execute() && $stmt->affected_rows === 1) {
             $stmt->close();
             header('Location: usuario.php?sucesso=exclusao');
             exit;
         }
 
-        $erro = 'Não foi possível excluir o usuário. Verifique se ele está sendo usado por outro registro.';
-        $stmt->close();
+        if (!$erro) {
+            $erro = 'Não foi possível excluir o usuário. Ele pode já ter sido removido ou estar indisponível.';
+        }
+        if ($stmt) {
+            $stmt->close();
+        }
     }
 }
 ?>
@@ -84,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
             <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
