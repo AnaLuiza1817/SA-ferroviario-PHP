@@ -6,8 +6,11 @@ require_once "../infra/conexao.php";
 
 $mensagem = '';
 $tipoMensagem = 'success';
+$podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_trem') {
+
+    requireOperationalControl();
 
     validarCsrf();
 
@@ -83,6 +86,8 @@ if (($_GET['sucesso'] ?? '') === 'cadastro') {
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_status') {
+
+    requireOperationalControl();
 
     validarCsrf();
 
@@ -212,12 +217,7 @@ function e($valor): string {
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
                 <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -228,7 +228,7 @@ function e($valor): string {
     <div class="container">
         <span class="badge bg-light text-primary mb-3">Controle operacional</span>
         <h1 class="fw-bold">Trens</h1>
-        <p class="mb-0">Gerencie o status de cada trem. As alterações refletem imediatamente no mapa.</p>
+        <p class="mb-0"><?= $podeGerenciar ? 'Gerencie o status de cada trem. As alterações refletem imediatamente no mapa.' : 'Consulte o status dos trens.' ?></p>
     </div>
 </header>
 
@@ -285,11 +285,13 @@ function e($valor): string {
             <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h2 class="h4 mb-1">Trens cadastrados</h2>
-                    <p class="text-muted mb-0">Clique num botão para mudar o status do trem instantaneamente.</p>
+                    <p class="text-muted mb-0">Consulte os trens e seus estados operacionais.</p>
                 </div>
+                <?php if ($podeGerenciar): ?>
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdicionarTrem">
                     <i class="fas fa-plus me-1"></i>Adicionar trem
                 </button>
+                <?php endif; ?>
             </div>
 
             <div class="table-responsive">
@@ -330,6 +332,7 @@ function e($valor): string {
                                     </span>
                                 </td>
                                 <td>
+                                    <?php if ($podeGerenciar): ?>
                                     <form method="post" class="d-flex flex-wrap gap-1">
                                         <input type="hidden" name="acao" value="mudar_status">
                                         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -356,6 +359,9 @@ function e($valor): string {
                                             </button>
                                         <?php endforeach; ?>
                                     </form>
+                                    <?php else: ?>
+                                    <span class="text-muted">Visualização</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -374,6 +380,7 @@ function e($valor): string {
 
 </main>
 
+<?php if ($podeGerenciar): ?>
 <div class="modal fade" id="modalAdicionarTrem" tabindex="-1" aria-labelledby="modalAdicionarTremLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -463,7 +470,9 @@ function e($valor): string {
     </div>
 </div>
 
-<footer class="bg-dark text-white py-4">
+<?php endif; ?>
+
+<footer class="bg-dark text-white py-2">
     <div class="container text-center">
         <p class="mb-0">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão.</p>
     </div>
