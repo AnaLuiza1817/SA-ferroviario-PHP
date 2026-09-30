@@ -11,7 +11,7 @@ $telefone = '';
 $tipo = '';
 $status = 'Ativo';
 
-$tiposPermitidos  = ['Usuário', 'Supervisor', 'Administrador'];
+$tiposPermitidos  = ['Usuário', 'Supervisor'];
 $statusPermitidos = ['Ativo', 'Inativo'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -79,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -104,4 +103,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endforeach; ?>
             </ul>
         </div>
-    <?php
+    <?php endif; ?>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 p-md-5">
+            <form method="post" data-validar="usuario" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nome" class="form-label">Nome completo</label>
+                        <input type="text" class="form-control" id="nome" name="nome" maxlength="150" value="<?= htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="text" class="form-control" id="telefone" name="telefone" maxlength="30" value="<?= htmlspecialchars($telefone, ENT_QUOTES, 'UTF-8') ?>" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label">Tipo de usuário</label>
+                        <select class="form-select" id="tipo" name="tipo" required>
+                            <option value="">Selecione</option>
+                            <?php foreach ($tiposPermitidos as $opcao): ?>
+                                <option value="<?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?>" <?= $tipo === $opcao ? 'selected' : '' ?>><?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <?php foreach ($statusPermitidos as $opcao): ?>
+                                <option value="<?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?>" <?= $status === $opcao ? 'selected' : '' ?>><?= htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha" minlength="6" required>
+                        <small class="text-muted">Mínimo de 6 caracteres.</small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="usuario.php" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Cadastrar usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-dark text-white py-2 mt-5">
+    <div class="container text-center">
+        <p class="mb-0">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../Js/main.js"></script>
+</body>
+</html>
