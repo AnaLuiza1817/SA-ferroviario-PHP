@@ -1,10 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_start([
-        'cookie_httponly' => true,
-        'cookie_samesite' => 'Lax',
-        'use_strict_mode' => true,
-    ]);
+    session_start();
 }
 
 require_once __DIR__ . "/../Infra/conexao.php";
@@ -16,12 +12,9 @@ function requireLogin(): void
         exit;
     }
 
-    $id = (int)$_SESSION['usuario_id'];
+    $id = (int) $_SESSION['usuario_id'];
     $stmt = $GLOBALS['conexao']->prepare(
-        "SELECT nome, email, tipo, status
-         FROM usuarios
-         WHERE id = ? AND deleted_at IS NULL
-         LIMIT 1"
+        "SELECT nome, email, tipo, status FROM usuarios WHERE id = ? LIMIT 1"
     );
 
     if (!$stmt) {
@@ -50,18 +43,7 @@ function requireLogin(): void
 function requireAdmin(): void
 {
     requireLogin();
-
     if (($_SESSION['usuario_tipo'] ?? '') !== 'Administrador') {
-        http_response_code(403);
-        exit('Acesso negado.');
-    }
-}
-
-function requireOperationalControl(): void
-{
-    requireLogin();
-
-    if (!in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) {
         http_response_code(403);
         exit('Acesso negado.');
     }
@@ -70,9 +52,7 @@ function requireOperationalControl(): void
 function requireUsuariosView(): void
 {
     requireLogin();
-
     $tipo = $_SESSION['usuario_tipo'] ?? '';
-
     if (!in_array($tipo, ['Administrador', 'Supervisor'], true)) {
         http_response_code(403);
         exit('Acesso negado.');
@@ -90,9 +70,38 @@ function csrfToken(): string
 function validarCsrf(): void
 {
     $token = $_POST['csrf_token'] ?? '';
-
     if (!$token || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
         http_response_code(403);
         exit('Requisição inválida.');
     }
+}
+
+function usuarioIniciais(string $nome): string
+{
+    $partes = preg_split('/\s+/', trim($nome)) ?: [];
+    $ini = '';
+    foreach (array_slice(array_filter($partes), 0, 2) as $p) {
+        $ini .= mb_strtoupper(mb_substr($p, 0, 1, 'UTF-8'), 'UTF-8');
+    }
+    return $ini !== '' ? $ini : '?';
+}
+
+function badgeTipoUsuario(string $tipo): string
+{
+    return match ($tipo) {
+        'Administrador' => 'bg-danger',
+        'Supervisor'    => 'bg-warning text-dark',
+        'Usuário'       => 'bg-info text-dark',
+        default         => 'bg-secondary',
+    };
+}
+
+function badgeStatusUsuario(string $status): string
+{
+    return $status === 'Ativo' ? 'bg-success' : 'bg-secondary';
+}
+
+function e(?string $valor): string
+{
+    return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
 }
