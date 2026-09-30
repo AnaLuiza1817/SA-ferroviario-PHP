@@ -57,6 +57,16 @@ function requireAdmin(): void
     }
 }
 
+function requireOperationalControl(): void
+{
+    requireLogin();
+
+    if (!in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) {
+        http_response_code(403);
+        exit('Acesso negado.');
+    }
+}
+
 function requireUsuariosView(): void
 {
     requireLogin();
