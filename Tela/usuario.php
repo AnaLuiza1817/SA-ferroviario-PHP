@@ -14,6 +14,7 @@ $sql = "
         status,
         criado_em
     FROM usuarios
+    WHERE deleted_at IS NULL
     ORDER BY id ASC
 ";
 
@@ -44,7 +45,8 @@ $mensagensSucesso = [
 
 $mensagensErro = [
     "id_invalido" => "ID de usuário inválido.",
-    "nao_encontrado" => "Usuário não encontrado."
+    "nao_encontrado" => "Usuário não encontrado.",
+    "sem_permissao" => "Você não possui permissão para realizar esta operação."
 ];
 
 if (isset($mensagensSucesso[$sucesso])) {
@@ -90,12 +92,7 @@ function statusBadgeClass(string $status): string {
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -185,7 +182,7 @@ function statusBadgeClass(string $status): string {
 
 </div>
 
-<footer class="bg-dark text-white py-4 mt-5">
+<footer class="bg-dark text-white py-2 mt-5">
     <div class="container text-center">
         <p class="mb-0">&copy; <?= date("Y") ?> Hyper Sense - Módulo de Usuários</p>
     </div>
