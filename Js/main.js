@@ -1423,6 +1423,10 @@
             trem,
             evento
         ) {
+            if (!window.podeControlarTrens) {
+                return;
+            }
+
             const grupo =
                 camadas.trens.querySelector(
                     '[data-id="' +
@@ -1670,6 +1674,7 @@
             posicao
         ) {
             if (
+                !window.podeControlarTrens ||
                 !window.urlAtualizarTrem ||
                 !window.csrfToken
             ) {
