@@ -1,6 +1,6 @@
 <?php
 require_once "auth.php";
-requireLogin();
+requireOperationalControl();
 
 require_once "../infra/conexao.php";
 
