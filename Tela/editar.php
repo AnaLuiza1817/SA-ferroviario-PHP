@@ -52,6 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($usuario['tipo'] !== 'Administrador' && !in_array($usuario['tipo'], $tiposPermitidos, true)) $erros[] = 'Selecione um tipo de usuário válido.';
     if (!in_array($usuario['status'], $statusPermitidos, true)) $erros[] = 'Selecione um status válido.';
 
+    if (!$erros && $usuario['tipo'] === 'Administrador' && $usuario['status'] !== 'Ativo') {
+        $stmtAdmins = $conexao->prepare("SELECT COUNT(*) FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo' AND deleted_at IS NULL");
+        if (!$stmtAdmins || !$stmtAdmins->execute()) {
+            $erros[] = 'Não foi possível validar a proteção das contas administrativas.';
+        } else {
+            $stmtAdmins->bind_result($totalAdminsAtivos);
+            $stmtAdmins->fetch();
+            $stmtAdmins->close();
+            if ((int)$totalAdminsAtivos <= 1) {
+                $erros[] = 'O último administrador ativo não pode ser desativado.';
+            }
+        }
+    }
+
     if (!$erros) {
         $stmt = $conexao->prepare('UPDATE usuarios SET nome = ?, email = ?, telefone = ?, tipo = ?, status = ? WHERE id = ?');
         $stmt->bind_param('sssssi', $usuario['nome'], $usuario['email'], $usuario['telefone'], $usuario['tipo'], $usuario['status'], $id);
@@ -87,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <li class="nav-item"><a class="nav-link active" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
             <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
