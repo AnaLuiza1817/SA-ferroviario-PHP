@@ -137,12 +137,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
                 <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -155,7 +150,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
             <div>
                 <span class="badge bg-primary-subtle text-primary">Simulação acadêmica</span>
                 <h1 class="fw-bold mt-2 mb-1">Mapa Ferroviário</h1>
-                <p class="text-muted mb-0">Arraste os trens com o mouse para reposicioná-los nos trechos.</p>
+                <p class="text-muted mb-0"><?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? 'Arraste os trens com o mouse para reposicioná-los nos trechos.' : 'Consulte a posição dos trens e clique para ver detalhes.' ?></p>
             </div>
             <a href="index.php" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Voltar ao painel</a>
         </div>
@@ -168,7 +163,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
                             <button type="button" class="btn btn-sm btn-outline-primary" id="mapaZoomMais"><i class="fas fa-plus"></i></button>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="mapaZoomMenos"><i class="fas fa-minus"></i></button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="mapaReset"><i class="fas fa-expand"></i> Ajustar</button>
-                            <span class="ms-auto small text-muted">Arraste um trem para movê-lo. Clique para ver detalhes.</span>
+                            <span class="ms-auto small text-muted"><?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? 'Arraste um trem para movê-lo. Clique para ver detalhes.' : 'Clique em um trem para ver detalhes.' ?></span>
                         </div>
                         <div class="mapa-viewport" id="mapaViewport">
                             <svg id="mapa-ferroviario" viewBox="0 0 1040 430" role="img" aria-label="Mapa ferroviário interativo">
@@ -189,7 +184,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
                             <span><i class="legend-line atencao"></i>Atenção</span>
                             <span><i class="legend-line manutencao"></i>Manutenção</span>
                             <span><i class="legend-line bloqueado"></i>Bloqueado</span>
-                            <span><i class="legend-dot train"></i>Trem (arrastável)</span>
+                            <span><i class="legend-dot train"></i>Trem <?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? '(arrastável)' : '(somente visualização)' ?></span>
                             <span><i class="legend-dot sensor"></i>Sensor</span>
                             <span><i class="legend-square amv"></i>AMV</span>
                         </div>
@@ -216,7 +211,8 @@ function isAtiva(string $pagina, string $paginaAtual): string
 
 <script>
 window.csrfToken = <?= json_encode(csrfToken()) ?>;
-window.urlAtualizarTrem = "atualizar_trem.php";
+window.podeControlarTrens = <?= json_encode(in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ?>;
+window.urlAtualizarTrem = "atualizar.php";
 window.dadosMapa = {
     estacoes: <?= json_encode($estacoes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
     trechos: <?= json_encode($trechos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
