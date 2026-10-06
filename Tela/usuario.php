@@ -145,9 +145,8 @@ $ehAdmin  = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Usuário</th>
+                            <th>Nome</th>
                             <th>E-mail</th>
-                            <th>Telefone</th>
                             <th>Tipo</th>
                             <th>Status</th>
                             <th>Criado em</th>
@@ -157,14 +156,7 @@ $ehAdmin  = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                     <tbody>
                     <?php if (!$usuarios): ?>
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td colspan="7" class="text-center py-5 text-muted">Nenhum usuário cadastrado.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($usuarios as $usuario): ?>
@@ -177,15 +169,9 @@ $ehAdmin  = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="avatar-usuario" aria-hidden="true">
-                                            <?= e(usuarioIniciais($usuario['nome'])) ?>
-                                        </span>
-                                        <span class="fw-semibold"><?= e($usuario['nome']) ?></span>
-                                    </div>
+                                    <span class="fw-semibold"><?= e($usuario['nome']) ?></span>
                                 </td>
                                 <td><?= e($usuario['email']) ?></td>
-                                <td><?= e($usuario['telefone'] ?? '—') ?></td>
                                 <td>
                                     <span class="badge <?= e(badgeTipoUsuario($usuario['tipo'] ?? '')) ?>">
                                         <?= e($usuario['tipo'] ?? '—') ?>
@@ -230,7 +216,6 @@ $ehAdmin  = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
     <div class="alert alert-info mt-4" role="alert">
         <i class="fas fa-info-circle me-2"></i>
         Visualizando <strong><?= (int) $totalUsuarios ?></strong> usuários cadastrados.
-        Utilize a busca e os filtros para refinar a lista.
     </div>
 
 </div>
