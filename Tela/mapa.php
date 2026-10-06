@@ -1,7 +1,6 @@
 <?php
 require_once "auth.php";
 requireLogin();
-
 require_once "../infra/conexao.php";
 
 function buscarTodos(mysqli $conexao, string $sql): array
@@ -10,7 +9,6 @@ function buscarTodos(mysqli $conexao, string $sql): array
     if (!$resultado) {
         return [];
     }
-
     $dados = [];
     while ($linha = $resultado->fetch_assoc()) {
         $dados[] = $linha;
@@ -112,11 +110,8 @@ $alertas = buscarTodos(
 );
 
 $paginaAtual = basename($_SERVER['PHP_SELF']);
-
-function isAtiva(string $pagina, string $paginaAtual): string
-{
-    return $pagina === $paginaAtual ? 'active' : '';
-}
+$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
+$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -129,16 +124,54 @@ function isAtiva(string $pagina, string $paginaAtual): string
     <link rel="stylesheet" href="../Css/style.css">
 </head>
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-train-subway me-2"></i>Hyper Sense</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação"><span class="navbar-toggler-icon"></span></button>
+        <a class="navbar-brand fw-bold" href="index.php">
+            <i class="fas fa-train-subway me-2"></i>Hyper Sense
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <?php if ($podeVerUsuarios): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php">
+                        <i class="fas fa-users me-1"></i>Usuários
+                    </a>
+                </li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php">
+                        <i class="fas fa-train me-1"></i>Trens
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php">
+                        <i class="fas fa-map me-1"></i>Mapa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php">
+                        <i class="fas fa-chart-bar me-1"></i>Gráfico
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php">
+                        <i class="fas fa-satellite-dish me-1"></i>Sensores
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">
+                        <i class="fas fa-right-from-bracket me-1"></i>Sair
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -150,9 +183,15 @@ function isAtiva(string $pagina, string $paginaAtual): string
             <div>
                 <span class="badge bg-primary-subtle text-primary">Simulação acadêmica</span>
                 <h1 class="fw-bold mt-2 mb-1">Mapa Ferroviário</h1>
-                <p class="text-muted mb-0"><?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? 'Arraste os trens com o mouse para reposicioná-los nos trechos.' : 'Consulte a posição dos trens e clique para ver detalhes.' ?></p>
+                <p class="text-muted mb-0">
+                    <?= $podeVerUsuarios
+                        ? 'Arraste os trens com o mouse para reposicioná-los nos trechos.'
+                        : 'Consulte a posição dos trens e clique para ver detalhes.' ?>
+                </p>
             </div>
-            <a href="index.php" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Voltar ao painel</a>
+            <a href="index.php" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar ao painel
+            </a>
         </div>
 
         <div class="row g-3">
@@ -163,7 +202,11 @@ function isAtiva(string $pagina, string $paginaAtual): string
                             <button type="button" class="btn btn-sm btn-outline-primary" id="mapaZoomMais"><i class="fas fa-plus"></i></button>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="mapaZoomMenos"><i class="fas fa-minus"></i></button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="mapaReset"><i class="fas fa-expand"></i> Ajustar</button>
-                            <span class="ms-auto small text-muted"><?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? 'Arraste um trem para movê-lo. Clique para ver detalhes.' : 'Clique em um trem para ver detalhes.' ?></span>
+                            <span class="ms-auto small text-muted">
+                                <?= $podeVerUsuarios
+                                    ? 'Arraste um trem para movê-lo. Clique para ver detalhes.'
+                                    : 'Clique em um trem para ver detalhes.' ?>
+                            </span>
                         </div>
                         <div class="mapa-viewport" id="mapaViewport">
                             <svg id="mapa-ferroviario" viewBox="0 0 1040 430" role="img" aria-label="Mapa ferroviário interativo">
@@ -184,7 +227,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
                             <span><i class="legend-line atencao"></i>Atenção</span>
                             <span><i class="legend-line manutencao"></i>Manutenção</span>
                             <span><i class="legend-line bloqueado"></i>Bloqueado</span>
-                            <span><i class="legend-dot train"></i>Trem <?= (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ? '(arrastável)' : '(somente visualização)' ?></span>
+                            <span><i class="legend-dot train"></i>Trem <?= $podeVerUsuarios ? '(arrastável)' : '(somente visualização)' ?></span>
                             <span><i class="legend-dot sensor"></i>Sensor</span>
                             <span><i class="legend-square amv"></i>AMV</span>
                         </div>
@@ -211,7 +254,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
 
 <script>
 window.csrfToken = <?= json_encode(csrfToken()) ?>;
-window.podeControlarTrens = <?= json_encode(in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) ?>;
+window.podeControlarTrens = <?= json_encode($podeVerUsuarios) ?>;
 window.urlAtualizarTrem = "atualizar.php";
 window.dadosMapa = {
     estacoes: <?= json_encode($estacoes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,

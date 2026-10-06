@@ -1,7 +1,6 @@
 <?php
 require_once "auth.php";
 requireLogin();
-
 require_once "../infra/conexao.php";
 
 $mensagem = '';
@@ -42,14 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $sql = "
     SELECT
-        s.id,
-        s.codigo,
-        s.tipo,
-        s.trecho_id,
+        s.id, s.codigo, s.tipo, s.trecho_id,
         COALESCE(t.codigo, 'Não informado') AS trecho,
-        s.status,
-        s.leitura,
-        s.limite,
+        s.status, s.leitura, s.limite,
         COALESCE(s.unidade, '') AS unidade,
         s.ultima_atualizacao AS atualizado_em
     FROM sensores s
@@ -73,7 +67,6 @@ $sensoresAlerta = 0;
 
 foreach ($sensores as $sensor) {
     $status = mb_strtolower(trim($sensor['status'] ?? ''), 'UTF-8');
-
     if ($status === 'normal' || $status === 'ativo') {
         $sensoresNormais++;
     } elseif ($status === 'atenção' || $status === 'atencao') {
@@ -84,35 +77,8 @@ foreach ($sensores as $sensor) {
 }
 
 $paginaAtual = basename($_SERVER['PHP_SELF']);
-
-function ativo(string $pagina, string $paginaAtual): string
-{
-    return $pagina === $paginaAtual ? 'active' : '';
-}
-
-function classeStatus(string $status): string
-{
-    $status = mb_strtolower(trim($status), 'UTF-8');
-
-    if ($status === 'normal' || $status === 'ativo') {
-        return 'sensor-status-normal';
-    }
-
-    if ($status === 'atenção' || $status === 'atencao') {
-        return 'sensor-status-atencao';
-    }
-
-    if ($status === 'alerta') {
-        return 'sensor-status-alerta';
-    }
-
-    return 'sensor-status-default';
-}
-
-function e($valor): string
-{
-    return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
-}
+$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
+$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -136,10 +102,15 @@ function e($valor): string
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link <?= ativo('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
+                <?php if ($podeVerUsuarios): ?>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
+                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
     </div>
@@ -229,9 +200,9 @@ function e($valor): string
                     <?php else: ?>
                         <?php foreach ($sensores as $sensor): ?>
                             <?php
-                                $leitura = (float)($sensor['leitura'] ?? 0);
-                                $limite = $sensor['limite'] !== null ? (float)$sensor['limite'] : null;
-                                $unidade = trim((string)($sensor['unidade'] ?? ''));
+                                $leitura = (float) ($sensor['leitura'] ?? 0);
+                                $limite = $sensor['limite'] !== null ? (float) $sensor['limite'] : null;
+                                $unidade = trim((string) ($sensor['unidade'] ?? ''));
                                 $dataAtualizacao = $sensor['atualizado_em'] ?? null;
                             ?>
                             <tr>
@@ -256,7 +227,7 @@ function e($valor): string
                                 </td>
                                 <td>
                                     <?php if ($podeGerenciar): ?>
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSensor<?= (int)$sensor['id'] ?>">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSensor<?= (int) $sensor['id'] ?>">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                     <?php else: ?>
@@ -275,10 +246,8 @@ function e($valor): string
 
 <?php if ($podeGerenciar && $sensores): ?>
     <?php foreach ($sensores as $sensor): ?>
-        <?php
-            $leituraModal = (float)($sensor['leitura'] ?? 0);
-        ?>
-        <div class="modal fade" id="modalSensor<?= (int)$sensor['id'] ?>" tabindex="-1" aria-hidden="true">
+        <?php $leituraModal = (float) ($sensor['leitura'] ?? 0); ?>
+        <div class="modal fade" id="modalSensor<?= (int) $sensor['id'] ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="post">
@@ -288,7 +257,7 @@ function e($valor): string
                         </div>
                         <div class="modal-body">
                             <input type="hidden" name="acao" value="atualizar">
-                            <input type="hidden" name="id" value="<?= (int)$sensor['id'] ?>">
+                            <input type="hidden" name="id" value="<?= (int) $sensor['id'] ?>">
                             <div class="mb-3">
                                 <label class="form-label">Leitura</label>
                                 <input type="number" step="0.01" name="leitura" class="form-control" value="<?= e($leituraModal) ?>" required>

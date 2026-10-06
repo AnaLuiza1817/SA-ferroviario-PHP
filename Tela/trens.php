@@ -1,7 +1,6 @@
 <?php
 require_once "auth.php";
 requireLogin();
-
 require_once "../infra/conexao.php";
 
 $mensagem = '';
@@ -9,16 +8,14 @@ $tipoMensagem = 'success';
 $podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_trem') {
-
     requireOperationalControl();
-
     validarCsrf();
 
-    $codigo    = trim($_POST['codigo'] ?? '');
-    $status    = trim($_POST['status'] ?? '');
-    $trechoId  = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT);
-    $rotaId    = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
-    $posicao   = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
+    $codigo   = trim($_POST['codigo'] ?? '');
+    $status   = trim($_POST['status'] ?? '');
+    $trechoId = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT);
+    $rotaId   = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
+    $posicao  = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
 
     $statusPermitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
     $errosCadastro = [];
@@ -36,9 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
     if ($posicao === false || $posicao === null) {
         $posicao = 50.0;
     }
-    $posicao = max(0.0, min(100.0, (float)$posicao));
+    $posicao = max(0.0, min(100.0, (float) $posicao));
     $trechoId = ($trechoId && $trechoId > 0) ? $trechoId : null;
-    $rotaId   = ($rotaId   && $rotaId   > 0) ? $rotaId   : null;
+    $rotaId   = ($rotaId && $rotaId > 0) ? $rotaId : null;
 
     if (!$errosCadastro) {
         $stmt = $conexao->prepare(
@@ -49,15 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         if (!$stmt) {
             $errosCadastro[] = 'Não foi possível preparar o cadastro.';
         } else {
-            
-            $stmt->bind_param(
-                "ssiid",
-                $codigo,
-                $status,
-                $trechoId,
-                $rotaId,
-                $posicao
-            );
+            $stmt->bind_param("ssiid", $codigo, $status, $trechoId, $rotaId, $posicao);
 
             if ($stmt->execute()) {
                 $stmt->close();
@@ -68,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
             $errosCadastro[] = $stmt->errno === 1062
                 ? 'Já existe um trem com esse código.'
                 : 'Não foi possível cadastrar o trem.';
-
             $stmt->close();
         }
     }
@@ -84,16 +72,12 @@ if (($_GET['sucesso'] ?? '') === 'cadastro') {
     $tipoMensagem = 'success';
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_status') {
-
     requireOperationalControl();
-
     validarCsrf();
 
     $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
     $novoStatus = trim($_POST['status'] ?? '');
-
     $permitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
 
     if ($id && in_array($novoStatus, $permitidos, true)) {
@@ -114,16 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_s
 
 $sql = "
     SELECT
-        t.id,
-        t.codigo,
-        t.status,
-        t.trecho_id,
-        t.rota_id,
-        t.posicao_percentual,
+        t.id, t.codigo, t.status, t.trecho_id, t.rota_id, t.posicao_percentual,
         COALESCE(tr.codigo, '—') AS trecho_codigo,
-        COALESCE(tr.status, '—')  AS trecho_status,
-        COALESCE(r.codigo, '—')   AS rota_codigo,
-        COALESCE(r.nome, '—')     AS rota_nome
+        COALESCE(tr.status, '—') AS trecho_status,
+        COALESCE(r.codigo, '—')  AS rota_codigo,
+        COALESCE(r.nome, '—')    AS rota_nome
     FROM trens t
     LEFT JOIN trechos tr ON tr.id = t.trecho_id
     LEFT JOIN rotas   r  ON r.id  = t.rota_id
@@ -154,9 +133,7 @@ foreach ($trens as $trem) {
 }
 
 $trechosDisponiveis = [];
-$resTrechos = $conexao->query(
-    "SELECT id, codigo, status FROM trechos ORDER BY codigo"
-);
+$resTrechos = $conexao->query("SELECT id, codigo, status FROM trechos ORDER BY codigo");
 if ($resTrechos) {
     while ($linha = $resTrechos->fetch_assoc()) {
         $trechosDisponiveis[] = $linha;
@@ -164,9 +141,7 @@ if ($resTrechos) {
 }
 
 $rotasDisponiveis = [];
-$resRotas = $conexao->query(
-    "SELECT id, codigo, nome FROM rotas ORDER BY codigo"
-);
+$resRotas = $conexao->query("SELECT id, codigo, nome FROM rotas ORDER BY codigo");
 if ($resRotas) {
     while ($linha = $resRotas->fetch_assoc()) {
         $rotasDisponiveis[] = $linha;
@@ -174,24 +149,8 @@ if ($resRotas) {
 }
 
 $paginaAtual = basename($_SERVER['PHP_SELF']);
-
-function isAtiva(string $pagina, string $paginaAtual): string {
-    return $pagina === $paginaAtual ? 'active' : '';
-}
-
-function classeBadgeTrem(string $status): string {
-    switch ($status) {
-        case 'Em operação':   return 'badge-status-em-operacao';
-        case 'Parado':        return 'badge-status-parado';
-        case 'Em manutenção': return 'badge-status-manutencao';
-        case 'Atrasado':      return 'badge-status-atrasado';
-        default:              return 'bg-secondary';
-    }
-}
-
-function e($valor): string {
-    return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
-}
+$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
+$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -216,8 +175,13 @@ function e($valor): string {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
+                <?php if ($podeVerUsuarios): ?>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
                 <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -325,7 +289,7 @@ function e($valor): string {
                                     <span class="fw-semibold"><?= e($trem['rota_codigo']) ?></span>
                                     <br><small class="text-muted"><?= e($trem['rota_nome']) ?></small>
                                 </td>
-                                <td><?= number_format((float)$trem['posicao_percentual'], 1, ',', '.') ?>%</td>
+                                <td><?= number_format((float) $trem['posicao_percentual'], 1, ',', '.') ?>%</td>
                                 <td>
                                     <span class="badge <?= e(classeBadgeTrem($trem['status'])) ?>">
                                         <?= e($trem['status']) ?>
@@ -336,14 +300,14 @@ function e($valor): string {
                                     <form method="post" class="d-flex flex-wrap gap-1">
                                         <input type="hidden" name="acao" value="mudar_status">
                                         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                                        <input type="hidden" name="id" value="<?= (int)$trem['id'] ?>">
+                                        <input type="hidden" name="id" value="<?= (int) $trem['id'] ?>">
 
                                         <?php
                                             $opcoes = [
-                                                ['valor' => 'Em operação',   'label' => 'Em operação',   'icone' => 'fa-circle-play',         'classe' => 'success'],
-                                                ['valor' => 'Parado',        'label' => 'Parado',        'icone' => 'fa-circle-stop',         'classe' => 'danger'],
-                                                ['valor' => 'Em manutenção', 'label' => 'Manutenção',    'icone' => 'fa-screwdriver-wrench',  'classe' => 'secondary'],
-                                                ['valor' => 'Atrasado',      'label' => 'Atrasado',      'icone' => 'fa-clock',               'classe' => 'warning'],
+                                                ['valor' => 'Em operação',   'label' => 'Em operação', 'icone' => 'fa-circle-play',        'classe' => 'success'],
+                                                ['valor' => 'Parado',        'label' => 'Parado',      'icone' => 'fa-circle-stop',        'classe' => 'danger'],
+                                                ['valor' => 'Em manutenção', 'label' => 'Manutenção',  'icone' => 'fa-screwdriver-wrench', 'classe' => 'secondary'],
+                                                ['valor' => 'Atrasado',      'label' => 'Atrasado',    'icone' => 'fa-clock',              'classe' => 'warning'],
                                             ];
                                         ?>
                                         <?php foreach ($opcoes as $opcao): ?>
@@ -398,14 +362,7 @@ function e($valor): string {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="codigo" class="form-label">Código do trem <span class="text-danger">*</span></label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="codigo"
-                            name="codigo"
-                            maxlength="20"
-                            placeholder="Ex.: TR-0004"
-                            required>
+                        <input type="text" class="form-control" id="codigo" name="codigo" maxlength="20" placeholder="Ex.: TR-0004" required>
                         <small class="text-muted">Máximo 20 caracteres. Não pode repetir.</small>
                     </div>
 
@@ -424,7 +381,7 @@ function e($valor): string {
                         <select class="form-select" id="trecho_id" name="trecho_id">
                             <option value="">— Sem trecho —</option>
                             <?php foreach ($trechosDisponiveis as $tr): ?>
-                                <option value="<?= (int)$tr['id'] ?>">
+                                <option value="<?= (int) $tr['id'] ?>">
                                     <?= e($tr['codigo']) ?>
                                     <?= $tr['status'] ? ' (' . e($tr['status']) . ')' : '' ?>
                                 </option>
@@ -437,7 +394,7 @@ function e($valor): string {
                         <select class="form-select" id="rota_id" name="rota_id">
                             <option value="">— Sem rota —</option>
                             <?php foreach ($rotasDisponiveis as $ro): ?>
-                                <option value="<?= (int)$ro['id'] ?>">
+                                <option value="<?= (int) $ro['id'] ?>">
                                     <?= e($ro['codigo']) ?> — <?= e($ro['nome']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -446,15 +403,7 @@ function e($valor): string {
 
                     <div class="mb-2">
                         <label for="posicao_percentual" class="form-label">Posição no trecho (%)</label>
-                        <input
-                            type="number"
-                            class="form-control"
-                            id="posicao_percentual"
-                            name="posicao_percentual"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            value="50">
+                        <input type="number" class="form-control" id="posicao_percentual" name="posicao_percentual" min="0" max="100" step="0.01" value="50">
                         <small class="text-muted">De 0 a 100. Padrão: 50.</small>
                     </div>
                 </div>
@@ -469,7 +418,6 @@ function e($valor): string {
         </div>
     </div>
 </div>
-
 <?php endif; ?>
 
 <footer class="bg-dark text-white py-2">
@@ -479,6 +427,7 @@ function e($valor): string {
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../Js/main.js"></script>
 
 <?php if ($tipoMensagem === 'danger' && $mensagem !== ''): ?>
 <script>

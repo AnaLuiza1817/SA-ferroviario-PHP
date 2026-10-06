@@ -12,25 +12,15 @@ function totalConsulta(mysqli $conexao, string $sql): int
     if (!$resultado) {
         return 0;
     }
-
     $dados = $resultado->fetch_assoc();
     return (int) ($dados['total'] ?? 0);
 }
 
-$totalUsuarios = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE deleted_at IS NULL");
-$usuariosAtivos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL");
-$novosHoje = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE DATE(criado_em) = CURDATE() AND deleted_at IS NULL");
-
-$novosMesAtual = totalConsulta(
-    $conexao,
-    "SELECT COUNT(*) AS total FROM usuarios WHERE criado_em >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL"
-);
-
-$novosMesAnterior = totalConsulta(
-    $conexao,
-    "SELECT COUNT(*) AS total FROM usuarios
-     WHERE criado_em >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01') AND criado_em < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL"
-);
+$totalUsuarios     = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE deleted_at IS NULL");
+$usuariosAtivos    = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL");
+$novosHoje         = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE DATE(criado_em) = CURDATE() AND deleted_at IS NULL");
+$novosMesAtual     = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE criado_em >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL");
+$novosMesAnterior  = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE criado_em >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01') AND criado_em < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL");
 
 $crescimento = $novosMesAnterior > 0
     ? (($novosMesAtual - $novosMesAnterior) / $novosMesAnterior) * 100
@@ -38,30 +28,30 @@ $crescimento = $novosMesAnterior > 0
 
 $taxaAtivos = $totalUsuarios > 0 ? ($usuariosAtivos / $totalUsuarios) * 100 : 0;
 
-$totalTrens = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens");
-$trensAtivos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens WHERE status = 'Em operação'");
-$ocorrenciasAtivas = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM ocorrencias WHERE status <> 'Resolvida'");
-$manutencoesAtivas = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM manutencoes WHERE status = 'Em andamento'");
-$sensoresAlerta = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM sensores WHERE status IN ('Alerta', 'Atenção')");
-$trechosManutencao = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trechos WHERE status = 'Em manutenção'");
+$totalTrens         = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens");
+$trensAtivos        = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens WHERE status = 'Em operação'");
+$ocorrenciasAtivas  = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM ocorrencias WHERE status <> 'Resolvida'");
+$manutencoesAtivas  = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM manutencoes WHERE status = 'Em andamento'");
+$sensoresAlerta     = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM sensores WHERE status IN ('Alerta', 'Atenção')");
+$trechosManutencao  = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trechos WHERE status = 'Em manutenção'");
 
 $estatisticas = [
-    ['icone' => 'fa-train', 'valor' => $totalTrens, 'label' => 'Trens cadastrados', 'cor1' => '#0d6efd', 'cor2' => '#4f9cff'],
-    ['icone' => 'fa-circle-check', 'valor' => $trensAtivos, 'label' => 'Trens em operação', 'cor1' => '#198754', 'cor2' => '#3dbb7a'],
-    ['icone' => 'fa-triangle-exclamation', 'valor' => $ocorrenciasAtivas, 'label' => 'Ocorrências ativas', 'cor1' => '#fd7e14', 'cor2' => '#ffad5c'],
-    ['icone' => 'fa-screwdriver-wrench', 'valor' => $manutencoesAtivas, 'label' => 'Manutenções em andamento', 'cor1' => '#6f42c1', 'cor2' => '#a77bd7'],
-    ['icone' => 'fa-satellite-dish', 'valor' => $sensoresAlerta, 'label' => 'Sensores em atenção', 'cor1' => '#dc3545', 'cor2' => '#ed7180'],
-    ['icone' => 'fa-road', 'valor' => $trechosManutencao, 'label' => 'Trechos em manutenção', 'cor1' => '#495057', 'cor2' => '#868e96'],
-    ['icone' => 'fa-user-check', 'valor' => $usuariosAtivos, 'label' => 'Usuários ativos', 'cor1' => '#20c997', 'cor2' => '#63e6be'],
-    ['icone' => 'fa-chart-line', 'valor' => ($crescimento >= 0 ? '+' : '') . number_format($crescimento, 0, ',', '.') . '%', 'label' => 'Crescimento de usuários', 'cor1' => '#17a2b8', 'cor2' => '#5bc0de'],
+    ['icone' => 'fa-train',              'valor' => $totalTrens,        'label' => 'Trens cadastrados',            'cor1' => '#0d6efd', 'cor2' => '#4f9cff'],
+    ['icone' => 'fa-circle-check',       'valor' => $trensAtivos,       'label' => 'Trens em operação',            'cor1' => '#198754', 'cor2' => '#3dbb7a'],
+    ['icone' => 'fa-triangle-exclamation','valor' => $ocorrenciasAtivas,'label' => 'Ocorrências ativas',           'cor1' => '#fd7e14', 'cor2' => '#ffad5c'],
+    ['icone' => 'fa-screwdriver-wrench', 'valor' => $manutencoesAtivas, 'label' => 'Manutenções em andamento',     'cor1' => '#6f42c1', 'cor2' => '#a77bd7'],
+    ['icone' => 'fa-satellite-dish',     'valor' => $sensoresAlerta,    'label' => 'Sensores em atenção',          'cor1' => '#dc3545', 'cor2' => '#ed7180'],
+    ['icone' => 'fa-road',               'valor' => $trechosManutencao, 'label' => 'Trechos em manutenção',        'cor1' => '#495057', 'cor2' => '#868e96'],
+    ['icone' => 'fa-user-check',         'valor' => $usuariosAtivos,    'label' => 'Usuários ativos',              'cor1' => '#20c997', 'cor2' => '#63e6be'],
+    ['icone' => 'fa-chart-line',         'valor' => ($crescimento >= 0 ? '+' : '') . number_format($crescimento, 0, ',', '.') . '%', 'label' => 'Crescimento de usuários', 'cor1' => '#17a2b8', 'cor2' => '#5bc0de'],
 ];
 
 $recursos = [
-    ['icone' => 'fa-users', 'titulo' => 'Gestão de Usuários', 'texto' => 'Cadastre, edite, exclua e visualize os usuários do sistema.', 'link' => 'usuario.php', 'label' => 'Acessar usuários'],
-    ['icone' => 'fa-train', 'titulo' => 'Trens', 'texto' => 'Gerencie o status operacional de cada trem: em operação, parado, em manutenção ou atrasado.', 'link' => 'trens.php', 'label' => 'Acessar trens'],
-    ['icone' => 'fa-map-location-dot', 'titulo' => 'Mapa Ferroviário', 'texto' => 'Visualize estações, trechos, trens, sensores, AMVs, ocorrências e alertas em um mapa interativo.', 'link' => 'mapa.php', 'label' => 'Abrir mapa'],
-    ['icone' => 'fa-chart-pie', 'titulo' => 'Gráficos', 'texto' => 'Analise manutenções por mês e ocorrências por trem com dados vindos do banco.', 'link' => 'grafico.php', 'label' => 'Ver gráficos'],
-    ['icone' => 'fa-satellite-dish', 'titulo' => 'Sensores', 'texto' => 'Consulte os sensores ferroviários e seus estados operacionais.', 'link' => 'sensores.php', 'label' => 'Acessar sensores'],
+    ['icone' => 'fa-users',              'titulo' => 'Gestão de Usuários',  'texto' => 'Cadastre, edite, exclua e visualize os usuários do sistema.', 'link' => 'usuario.php',  'label' => 'Acessar usuários'],
+    ['icone' => 'fa-train',              'titulo' => 'Trens',               'texto' => 'Gerencie o status operacional de cada trem.',                  'link' => 'trens.php',    'label' => 'Acessar trens'],
+    ['icone' => 'fa-map-location-dot',   'titulo' => 'Mapa Ferroviário',    'texto' => 'Visualize estações, trechos, trens, sensores e alertas.',      'link' => 'mapa.php',     'label' => 'Abrir mapa'],
+    ['icone' => 'fa-chart-pie',          'titulo' => 'Gráficos',            'texto' => 'Analise manutenções e ocorrências com dados do banco.',        'link' => 'grafico.php',  'label' => 'Ver gráficos'],
+    ['icone' => 'fa-satellite-dish',     'titulo' => 'Sensores',            'texto' => 'Consulte os sensores ferroviários e seus estados.',            'link' => 'sensores.php', 'label' => 'Acessar sensores'],
 ];
 
 $paginaAtual = basename($_SERVER['PHP_SELF']);
@@ -70,6 +60,9 @@ function isAtiva(string $pagina, string $paginaAtual): string
 {
     return $pagina === $paginaAtual ? 'active' : '';
 }
+
+$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
+$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -93,10 +86,51 @@ function isAtiva(string $pagina, string $paginaAtual): string
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
+
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+
+                <?php if ($podeVerUsuarios): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php">
+                        <i class="fas fa-users me-1"></i>Usuários
+                    </a>
+                </li>
                 <?php endif; ?>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php">
+                        <i class="fas fa-train me-1"></i>Trens
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php">
+                        <i class="fas fa-map me-1"></i>Mapa
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php">
+                        <i class="fas fa-chart-bar me-1"></i>Gráfico
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php">
+                        <i class="fas fa-satellite-dish me-1"></i>Sensores
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">
+                        <i class="fas fa-right-from-bracket me-1"></i>Sair
+                    </a>
+                </li>
+
             </ul>
         </div>
     </div>
@@ -146,7 +180,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
         </div>
         <div class="row g-4">
             <?php foreach ($recursos as $recurso): ?>
-                <?php if ($recurso['link'] === 'usuario.php' && !in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) continue; ?>
+                <?php if ($recurso['link'] === 'usuario.php' && !$podeVerUsuarios) continue; ?>
                 <div class="col-lg-4 col-md-6">
                     <div class="card h-100 resource-card border-0 shadow-sm">
                         <div class="card-body text-center p-4">

@@ -12,39 +12,39 @@
     });
 
     function inicializarTabelaUsuarios() {
-        const tabela = document.getElementById('tabelaUsuarios');
+    const tabela = document.getElementById('tabelaUsuarios');
 
-        if (
-            !tabela ||
-            typeof window.jQuery === 'undefined' ||
-            typeof window.jQuery.fn.DataTable === 'undefined'
-        ) {
-            return;
-        }
-
-        if (window.jQuery.fn.DataTable.isDataTable('#tabelaUsuarios')) {
-            window.jQuery('#tabelaUsuarios').DataTable().destroy();
-        }
-
-        window.jQuery('#tabelaUsuarios').DataTable({
-            language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
-            },
-            pageLength: 5,
-            responsive: true,
-            order: [[0, 'asc']],
-            columnDefs: [
-                {
-                    orderable: true,
-                    targets: [0, 1, 2, 3, 4, 5]
-                },
-                {
-                    orderable: false,
-                    targets: [6]
-                }
-            ]
-        });
+    if (
+        !tabela ||
+        typeof window.jQuery === 'undefined' ||
+        typeof window.jQuery.fn.DataTable === 'undefined'
+    ) {
+        return;
     }
+
+    if (window.jQuery.fn.DataTable.isDataTable('#tabelaUsuarios')) {
+        window.jQuery('#tabelaUsuarios').DataTable().destroy();
+    }
+
+    window.jQuery('#tabelaUsuarios').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
+        },
+        pageLength: 5,
+        responsive: true,
+        order: [[0, 'asc']],
+        columnDefs: [
+            {
+                orderable: true,
+                targets: [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                orderable: false,
+                targets: [7]
+            }
+        ]
+    });
+}
 
     function inicializarValidacaoFormularios() {
         const formularios = document.querySelectorAll(

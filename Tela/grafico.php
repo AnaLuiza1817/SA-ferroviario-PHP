@@ -1,14 +1,12 @@
 <?php
 require_once "auth.php";
 requireLogin();
-
 require_once "../infra/conexao.php";
 
 $mensagem = '';
 $tipoMensagem = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_manutencao') {
-
     validarCsrf();
 
     $tremId     = filter_input(INPUT_POST, 'trem_id',   FILTER_VALIDATE_INT);
@@ -69,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         $errosCadastro[] = 'A descrição deve ter no máximo 255 caracteres.';
     }
 
-    $tremId   = ($tremId   && $tremId   > 0) ? $tremId   : null;
+    $tremId   = ($tremId && $tremId > 0) ? $tremId : null;
     $trechoId = ($trechoId && $trechoId > 0) ? $trechoId : null;
     $inicioSql = $inicioObj ? $inicioObj->format('Y-m-d H:i:s') : null;
-    $fimSql    = $fimObj    ? $fimObj->format('Y-m-d H:i:s')    : null;
+    $fimSql    = $fimObj ? $fimObj->format('Y-m-d H:i:s') : null;
     $descricaoSql = ($descricao === '') ? null : $descricao;
 
     if (!$errosCadastro) {
@@ -85,24 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         if (!$stmt) {
             $errosCadastro[] = 'Não foi possível preparar o cadastro.';
         } else {
-            $stmt->bind_param(
-                "iissssss",
-                $tremId,
-                $trechoId,
-                $componente,
-                $ordem,
-                $status,
-                $inicioSql,
-                $fimSql,
-                $descricaoSql
-            );
-
+            $stmt->bind_param("iissssss", $tremId, $trechoId, $componente, $ordem, $status, $inicioSql, $fimSql, $descricaoSql);
             if ($stmt->execute()) {
                 $stmt->close();
                 header('Location: grafico.php?sucesso=cadastro');
                 exit;
             }
-
             $errosCadastro[] = 'Não foi possível cadastrar a manutenção.';
             $stmt->close();
         }
@@ -125,7 +111,6 @@ function buscarTodos(mysqli $conexao, string $sql): array
     if (!$resultado) {
         return [];
     }
-
     $dados = [];
     while ($linha = $resultado->fetch_assoc()) {
         $dados[] = $linha;
@@ -151,19 +136,14 @@ function buscarPorTrem(mysqli $conexao, string $sql, int $tremId): array
 }
 
 $anosDisponiveis = [];
-$resAnos = $conexao->query(
-    "SELECT DISTINCT YEAR(inicio) AS ano
-     FROM manutencoes
-     ORDER BY ano"
-);
+$resAnos = $conexao->query("SELECT DISTINCT YEAR(inicio) AS ano FROM manutencoes ORDER BY ano");
 if ($resAnos) {
     while ($linha = $resAnos->fetch_assoc()) {
-        $anosDisponiveis[] = (int)$linha['ano'];
+        $anosDisponiveis[] = (int) $linha['ano'];
     }
 }
 
 $anos = $anosDisponiveis;
-
 $manutencoesPorAno = [];
 foreach ($anos as $ano) {
     $manutencoesPorAno[$ano] = array_fill(0, 12, 0);
@@ -185,10 +165,10 @@ if ($anos) {
         $stmt->execute();
         $resultado = $stmt->get_result();
         while ($linha = $resultado->fetch_assoc()) {
-            $ano = (int)$linha['ano'];
-            $mes = (int)$linha['mes'];
+            $ano = (int) $linha['ano'];
+            $mes = (int) $linha['mes'];
             if (isset($manutencoesPorAno[$ano])) {
-                $manutencoesPorAno[$ano][$mes - 1] = (int)$linha['total'];
+                $manutencoesPorAno[$ano][$mes - 1] = (int) $linha['total'];
             }
         }
         $stmt->close();
@@ -207,35 +187,24 @@ $ocorrenciasPorTrem = buscarTodos(
 );
 
 $detalhesTrens = [];
-
 foreach ($ocorrenciasPorTrem as $trem) {
     $tremId = (int) $trem['id'];
 
     $tipos = buscarPorTrem(
         $conexao,
-        "SELECT tipo, COUNT(*) AS total
-         FROM ocorrencias
-         WHERE trem_id = ?
-         GROUP BY tipo
-         ORDER BY total DESC",
+        "SELECT tipo, COUNT(*) AS total FROM ocorrencias WHERE trem_id = ? GROUP BY tipo ORDER BY total DESC",
         $tremId
     );
 
     $ocorrencias = buscarPorTrem(
         $conexao,
-        "SELECT descricao, tipo, status, ocorrido_em
-         FROM ocorrencias
-         WHERE trem_id = ?
-         ORDER BY ocorrido_em DESC",
+        "SELECT descricao, tipo, status, ocorrido_em FROM ocorrencias WHERE trem_id = ? ORDER BY ocorrido_em DESC",
         $tremId
     );
 
     $manutencoes = buscarPorTrem(
         $conexao,
-        "SELECT componente, ordem_manutencao, status, inicio, fim, descricao
-         FROM manutencoes
-         WHERE trem_id = ?
-         ORDER BY inicio DESC",
+        "SELECT componente, ordem_manutencao, status, inicio, fim, descricao FROM manutencoes WHERE trem_id = ? ORDER BY inicio DESC",
         $tremId
     );
 
@@ -268,16 +237,8 @@ if ($resTrechos) {
 
 $meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 $paginaAtual = basename($_SERVER['PHP_SELF']);
-
-function isAtiva(string $pagina, string $paginaAtual): string
-{
-    return $pagina === $paginaAtual ? 'active' : '';
-}
-
-function e($valor): string
-{
-    return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
-}
+$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
+$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -301,10 +262,43 @@ function e($valor): string
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-                <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <?php if ($podeVerUsuarios): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php">
+                        <i class="fas fa-users me-1"></i>Usuários
+                    </a>
+                </li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php">
+                        <i class="fas fa-train me-1"></i>Trens
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php">
+                        <i class="fas fa-map me-1"></i>Mapa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php">
+                        <i class="fas fa-chart-bar me-1"></i>Gráfico
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php">
+                        <i class="fas fa-satellite-dish me-1"></i>Sensores
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">
+                        <i class="fas fa-right-from-bracket me-1"></i>Sair
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -335,7 +329,7 @@ function e($valor): string
                         <?php if ($anos): ?>
                         <div class="d-flex gap-2 flex-wrap">
                             <?php foreach ($anos as $ano): ?>
-                                <button type="button" class="btn btn-sm btn-outline-primary grafico-toggle" data-ano="<?= (int)$ano ?>"><?= (int)$ano ?></button>
+                                <button type="button" class="btn btn-sm btn-outline-primary grafico-toggle" data-ano="<?= (int) $ano ?>"><?= (int) $ano ?></button>
                             <?php endforeach; ?>
                         </div>
                         <?php endif; ?>
@@ -416,7 +410,7 @@ function e($valor): string
                             <select class="form-select" id="trem_id" name="trem_id">
                                 <option value="">— Sem trem —</option>
                                 <?php foreach ($trensDisponiveis as $tr): ?>
-                                    <option value="<?= (int)$tr['id'] ?>"><?= e($tr['codigo']) ?></option>
+                                    <option value="<?= (int) $tr['id'] ?>"><?= e($tr['codigo']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -426,7 +420,7 @@ function e($valor): string
                             <select class="form-select" id="trecho_id" name="trecho_id">
                                 <option value="">— Sem trecho —</option>
                                 <?php foreach ($trechosDisponiveis as $tr): ?>
-                                    <option value="<?= (int)$tr['id'] ?>">
+                                    <option value="<?= (int) $tr['id'] ?>">
                                         <?= e($tr['codigo']) ?>
                                         <?= $tr['status'] ? ' (' . e($tr['status']) . ')' : '' ?>
                                     </option>
