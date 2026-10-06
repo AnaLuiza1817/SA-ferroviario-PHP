@@ -216,4 +216,3 @@ VALUES
 ON DUPLICATE KEY UPDATE
   nome     = VALUES(nome),
   telefone = VALUES(telefone);
-
