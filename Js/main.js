@@ -11,7 +11,7 @@
         inicializarMapa();
     });
 
-    function inicializarTabelaUsuarios() {
+   function inicializarTabelaUsuarios() {
     const tabela = document.getElementById('tabelaUsuarios');
 
     if (
@@ -36,11 +36,11 @@
         columnDefs: [
             {
                 orderable: true,
-                targets: [0, 1, 2, 3, 4, 5, 6]
+                targets: [0, 1, 2, 3, 4, 5]
             },
             {
                 orderable: false,
-                targets: [7]
+                targets: [6]
             }
         ]
     });

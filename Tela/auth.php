@@ -111,7 +111,6 @@ function badgeStatusUsuario(string $status): string
     return $status === 'Ativo' ? 'bg-success' : 'bg-secondary';
 }
 
-
 if (!function_exists('e')) {
     function e($valor): string
     {

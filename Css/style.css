@@ -87,7 +87,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* GRÁFICOS */
 .chart-container {
     position: relative;
     height: 360px;
@@ -97,7 +96,6 @@ body {
     height: 300px;
 }
 
-/* PAINÉIS */
 .empty-panel {
     min-height: 180px;
     padding: 1rem;
@@ -330,13 +328,11 @@ body {
     background: var(--hyper-azul);
 }
 
-
 .page-header {
     background: linear-gradient(135deg, var(--hyper-azul-escuro), var(--hyper-azul));
     color: #fff;
     border-radius: 0 0 28px 28px;
 }
-
 
 .sensor-card {
     border: 0;
@@ -395,7 +391,6 @@ body {
     color: var(--hyper-azul-escuro);
 }
 
-/* TABELAS */
 .table-wrap {
     border-radius: 18px;
     overflow: hidden;
@@ -411,7 +406,6 @@ body {
 .table tbody td {
     vertical-align: middle;
 }
-
 
 .btn-primary {
     --bs-btn-bg: var(--hyper-azul);
@@ -483,10 +477,12 @@ body {
     font-size: .78rem;
     font-weight: 700;
 }
+
 .btn-group-status .btn.active {
     font-weight: 700;
     box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.25);
 }
+
 .trem-ponto {
     cursor: grab;
 }
@@ -518,4 +514,16 @@ body {
 .mapa-viewport.arrastando-trem .alerta-ponto,
 .mapa-viewport.arrastando-trem .trecho-rotulo {
     pointer-events: none;
+}
+
+.avatar-usuario {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #eaf2ff;
+    color: var(--hyper-azul-escuro);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
