@@ -10,16 +10,26 @@ if (!empty($_SESSION['usuario_logado'])) {
     exit;
 }
 
-$erro = "";
-$sucesso = ($_GET["cadastro"] ?? "") === "sucesso";
+$erro            = "";
+$sucesso         = ($_GET["cadastro"] ?? "") === "sucesso";
+$usuarioDigitado = "";
+$senhaVazia      = false;
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $usuario = strtolower(trim($_POST["usuario"] ?? ""));
-    $senha   = $_POST["senha"] ?? "";
 
-    if ($usuario === "" || $senha === "") {
-        $erro = "Preencha o usuário e a senha.";
+    $usuario         = strtolower(trim($_POST["usuario"] ?? ""));
+    $senha           = $_POST["senha"] ?? "";
+    $usuarioDigitado = $usuario;
+    $senhaVazia      = ($senha === "");
+
+    if ($usuario === "" && $senha === "") {
+        $erro = "Preencha o usuário e a senha para continuar.";
+    } elseif ($usuario === "") {
+        $erro = "Informe o usuário ou e-mail.";
+    } elseif ($senha === "") {
+        $erro = "Informe a senha.";
     } else {
+
         $stmt = $conexao->prepare(
             "SELECT id, nome, email, senha, tipo, status
              FROM usuarios
@@ -29,29 +39,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
              LIMIT 1"
         );
 
-        if ($stmt) {
+        if (!$stmt) {
+            $erro = "Erro interno. Tente novamente mais tarde.";
+        } else {
             $stmt->bind_param("ss", $usuario, $usuario);
             $stmt->execute();
             $dados = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
             if ($dados && !empty($dados["senha"]) && password_verify($senha, $dados["senha"])) {
+
                 if (password_needs_rehash($dados["senha"], PASSWORD_DEFAULT)) {
                     $novoHash = password_hash($senha, PASSWORD_DEFAULT);
                     $up = $conexao->prepare("UPDATE usuarios SET senha = ? WHERE id = ?");
-                    $up->bind_param("si", $novoHash, $dados["id"]);
-                    $up->execute();
-                    $up->close();
+                    if ($up) {
+                        $up->bind_param("si", $novoHash, $dados["id"]);
+                        $up->execute();
+                        $up->close();
+                    }
                 }
 
                 session_regenerate_id(true);
 
                 $_SESSION["usuario_logado"] = true;
-                $_SESSION["usuario_id"]     = (int)$dados["id"];
+                $_SESSION["usuario_id"]     = (int) $dados["id"];
                 $_SESSION["usuario_nome"]   = $dados["nome"];
                 $_SESSION["usuario_email"]  = $dados["email"];
                 $_SESSION["usuario_tipo"]   = $dados["tipo"];
 
+                /* Registra último acesso */
                 $stmt = $conexao->prepare("UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?");
                 if ($stmt) {
                     $stmt->bind_param("i", $_SESSION["usuario_id"]);
@@ -62,9 +78,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: index.php");
                 exit;
             }
-        }
 
-        $erro = "Usuário ou senha inválidos.";
+            if ($dados) {
+                $erro = "Senha incorreta. Verifique e tente novamente.";
+            } else {
+                $erro = "Usuário ou senha incorretos.";
+            }
+        }
     }
 }
 ?>
@@ -84,6 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="col-md-5 col-lg-4">
             <div class="card shadow border-0 rounded-4">
                 <div class="card-body p-5">
+
                     <div class="text-center mb-4">
                         <i class="fas fa-chart-line text-primary fa-3x mb-3"></i>
                         <h2 class="fw-bold text-primary">Hyper Sense</h2>
@@ -91,33 +112,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
 
                     <?php if ($sucesso): ?>
-                        <div class="alert alert-success">
+                        <div class="alert alert-success" role="alert">
                             <i class="fas fa-circle-check me-2"></i>
                             Cadastro realizado com sucesso. Agora faça login.
                         </div>
                     <?php endif; ?>
 
                     <?php if ($erro !== ""): ?>
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger" role="alert">
                             <i class="fas fa-exclamation-circle me-2"></i>
                             <?= htmlspecialchars($erro, ENT_QUOTES, "UTF-8") ?>
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" id="formLogin">
+                    <form method="POST" id="formLogin" novalidate>
+
                         <div class="mb-3">
                             <label for="usuario" class="form-label">Usuário</label>
-                            <div class="input-group">
+                            <div class="input-group has-validation">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Digite seu usuário ou e-mail" required>
+                                <input type="text"
+                                       class="form-control <?= ($erro !== '' && $usuarioDigitado === '') ? 'is-invalid' : '' ?>"
+                                       id="usuario"
+                                       name="usuario"
+                                       placeholder="Digite seu usuário ou e-mail"
+                                       value="<?= htmlspecialchars($usuarioDigitado, ENT_QUOTES, 'UTF-8') ?>"
+                                       autocomplete="username"
+                                       required>
+                                <div class="invalid-feedback">
+                                    Informe o usuário ou e-mail.
+                                </div>
                             </div>
                         </div>
 
                         <div class="mb-4">
                             <label for="senha" class="form-label">Senha</label>
-                            <div class="input-group">
+                            <div class="input-group has-validation">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="senha" name="senha" placeholder="Digite sua senha" required>
+                                <input type="password"
+                                       class="form-control <?= ($erro !== '' && $senhaVazia) ? 'is-invalid' : '' ?>"
+                                       id="senha"
+                                       name="senha"
+                                       placeholder="Digite sua senha"
+                                       autocomplete="current-password"
+                                       required>
+                                <div class="invalid-feedback">
+                                    Informe a senha.
+                                </div>
                             </div>
                         </div>
 
@@ -132,10 +173,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             Criar conta
                         </a>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('formLogin').addEventListener('submit', function (evento) {
+    var usuario = document.getElementById('usuario');
+    var senha   = document.getElementById('senha');
+    var valido  = true;
+
+    usuario.classList.remove('is-invalid');
+    senha.classList.remove('is-invalid');
+
+    if (usuario.value.trim() === '') {
+        usuario.classList.add('is-invalid');
+        valido = false;
+    }
+
+    if (senha.value.trim() === '') {
+        senha.classList.add('is-invalid');
+        valido = false;
+    }
+
+    if (!valido) {
+        evento.preventDefault();
+        evento.stopPropagation();
+    }
+});
+</script>
 </body>
 </html>
