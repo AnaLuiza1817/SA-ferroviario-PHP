@@ -17,20 +17,19 @@ function totalConsulta(mysqli $conexao, string $sql): int
     return (int) ($dados['total'] ?? 0);
 }
 
-$totalUsuarios = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios");
-$usuariosAtivos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo'");
-$novosHoje = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE DATE(criado_em) = CURDATE()");
+$totalUsuarios = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE deleted_at IS NULL");
+$usuariosAtivos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL");
+$novosHoje = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE DATE(criado_em) = CURDATE() AND deleted_at IS NULL");
 
 $novosMesAtual = totalConsulta(
     $conexao,
-    "SELECT COUNT(*) AS total FROM usuarios WHERE criado_em >= DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+    "SELECT COUNT(*) AS total FROM usuarios WHERE criado_em >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL"
 );
 
 $novosMesAnterior = totalConsulta(
     $conexao,
     "SELECT COUNT(*) AS total FROM usuarios
-     WHERE criado_em >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
-     AND criado_em < DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+     WHERE criado_em >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01') AND criado_em < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND deleted_at IS NULL"
 );
 
 $crescimento = $novosMesAnterior > 0
@@ -96,12 +95,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -115,10 +109,6 @@ function isAtiva(string $pagina, string $paginaAtual): string
                 <span class="badge bg-primary-subtle text-primary mb-3">Painel operacional</span>
                 <h1 class="display-5 fw-bold text-primary">Sistema Ferroviário Hyper Sense</h1>
                 <p class="lead mb-4">Acompanhe a operação ferroviária, indicadores, sensores, ocorrências, manutenções e usuários em um único painel.</p>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="mapa.php" class="btn btn-primary btn-lg"><i class="fas fa-map me-2"></i>Abrir Mapa Ferroviário</a>
-                    <a href="grafico.php" class="btn btn-outline-primary btn-lg"><i class="fas fa-chart-column me-2"></i>Ver Gráficos</a>
-                </div>
             </div>
             <div class="col-lg-4 text-center">
                 <i class="fas fa-train-subway dashboard-hero-icon"></i>
@@ -156,6 +146,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
         </div>
         <div class="row g-4">
             <?php foreach ($recursos as $recurso): ?>
+                <?php if ($recurso['link'] === 'usuario.php' && !in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)) continue; ?>
                 <div class="col-lg-4 col-md-6">
                     <div class="card h-100 resource-card border-0 shadow-sm">
                         <div class="card-body text-center p-4">
@@ -174,12 +165,12 @@ function isAtiva(string $pagina, string $paginaAtual): string
 <section class="py-5 bg-light">
     <div class="container">
         <div class="row g-4">
-            <div class="col-lg-8">
+            <div class="col-12">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h4 class="mb-1">Visão operacional</h4>
+                                <h4 class="mb-1">Visão Operacional</h4>
                                 <p class="text-muted mb-0">Indicadores que merecem acompanhamento.</p>
                             </div>
                             <i class="fas fa-chart-line text-primary fs-3"></i>
@@ -192,28 +183,13 @@ function isAtiva(string $pagina, string $paginaAtual): string
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-4">
-                        <h4 class="mb-3">Acesso rápido</h4>
-                        <div class="d-grid gap-2">
-                            <a href="usuario.php" class="btn btn-primary"><i class="fas fa-users me-2"></i>Ver usuários</a>
-                            <a href="trens.php" class="btn btn-outline-primary"><i class="fas fa-train me-2"></i>Ver trens</a>
-                            <a href="sensores.php" class="btn btn-outline-secondary"><i class="fas fa-satellite-dish me-2"></i>Ver sensores</a>
-                            <a href="mapa.php" class="btn btn-outline-secondary"><i class="fas fa-map me-2"></i>Ver mapa</a>
-                        </div>
-                        <small class="text-muted d-block mt-3">Novos usuários hoje: <?= $novosHoje ?>.</small>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
 
-<footer class="bg-dark text-white py-4 mt-4">
+<footer class="bg-dark text-white py-2 mt-4">
     <div class="container text-center">
-        <p class="mb-1">&copy; <?= htmlspecialchars($anoAtual, ENT_QUOTES, 'UTF-8') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</p>
-        <small class="text-muted">Painel acadêmico de simulação operacional.</small>
+        <p class="mb-0">&copy; <?= htmlspecialchars($anoAtual, ENT_QUOTES, 'UTF-8') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</p>
     </div>
 </footer>
 

@@ -6,21 +6,19 @@ USE ferrorama_db;
 
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(150) NOT NULL,
+    nome VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL,
-    telefone VARCHAR(30) NULL,
+    telefone VARCHAR(20) NULL,
     tipo VARCHAR(50) NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
     senha VARCHAR(255) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME NULL,
-    deleted_at DATETIME NULL DEFAULT NULL,
-    email_ativo VARCHAR(150) GENERATED ALWAYS AS (IF(deleted_at IS NULL, email, NULL)) STORED,
-    UNIQUE KEY uk_usuarios_email_ativo (email_ativo),
-    INDEX idx_usuarios_deleted_at (deleted_at),
-    INDEX idx_usuarios_status (status),
-    INDEX idx_usuarios_tipo (tipo)
+    UNIQUE KEY uk_usuarios_email (email)
 );
+
+ALTER TABLE usuarios
+ADD COLUMN IF NOT EXISTS senha VARCHAR(255) NULL;
 
 CREATE TABLE IF NOT EXISTS estacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -148,6 +146,18 @@ CREATE TABLE IF NOT EXISTS alteracoes_rota (
     CONSTRAINT fk_alteracao_amv FOREIGN KEY (amv_id) REFERENCES amvs(id) ON DELETE SET NULL
 );
 
+CREATE OR REPLACE VIEW vw_usuarios_publicos AS
+SELECT
+    id,
+    nome,
+    email,
+    telefone,
+    tipo,
+    status,
+    criado_em,
+    ultimo_acesso
+FROM usuarios;
+
 INSERT IGNORE INTO estacoes (codigo, nome, ordem, posicao_x, posicao_y, status) VALUES
 ('EST-001', 'Central', 1, 90, 180, 'Normal'),
 ('EST-002', 'Industrial', 2, 300, 120, 'Normal'),
@@ -208,6 +218,7 @@ INSERT IGNORE INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv
 (2, 1, 2, 2, 'Desvio simulado devido à manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
 
 INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+<<<<<<< HEAD
 VALUES
   ('Gabriel Silva',  'gabriel@gmail.com',  '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
   ('Ana Souza',      'ana@gmail.com',      '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
@@ -216,3 +227,15 @@ VALUES
 ON DUPLICATE KEY UPDATE
   nome     = VALUES(nome),
   telefone = VALUES(telefone);
+=======
+SELECT 'Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'gabriel@gmail.com');
+
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'ana@gmail.com');
+
+INSERT INTO usuarios (nome, email, telefone, tipo, status, senha)
+SELECT 'Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(email) = 'arthur@gmail.com');
+>>>>>>> 967628682d7e66d65f5394166415559b157dc9d0

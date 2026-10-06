@@ -6,8 +6,10 @@ require_once "../infra/conexao.php";
 
 $mensagem = '';
 $tipoMensagem = 'success';
+$podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireOperationalControl();
     $acao = $_POST['acao'] ?? '';
 
     if ($acao === 'atualizar') {
@@ -136,12 +138,7 @@ function e($valor): string
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link <?= ativo('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
                 <?php if (in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true)): ?>
-                <li class="nav-item"><a class="nav-link <?= ativo('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= ativo('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= ativo('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
             <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
             </ul>
         </div>
@@ -258,9 +255,13 @@ function e($valor): string
                                     <?= $dataAtualizacao ? e(date('d/m/Y H:i', strtotime($dataAtualizacao))) : 'Não informado' ?>
                                 </td>
                                 <td>
+                                    <?php if ($podeGerenciar): ?>
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSensor<?= (int)$sensor['id'] ?>">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
+                                    <?php else: ?>
+                                    <span class="text-muted">Visualização</span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -272,7 +273,7 @@ function e($valor): string
     </div>
 </main>
 
-<?php if ($sensores): ?>
+<?php if ($podeGerenciar && $sensores): ?>
     <?php foreach ($sensores as $sensor): ?>
         <?php
             $leituraModal = (float)($sensor['leitura'] ?? 0);
@@ -312,7 +313,7 @@ function e($valor): string
     <?php endforeach; ?>
 <?php endif; ?>
 
-<footer class="bg-dark text-white py-4">
+<footer class="bg-dark text-white py-2">
     <div class="container text-center">
         <p class="mb-0">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão.</p>
     </div>

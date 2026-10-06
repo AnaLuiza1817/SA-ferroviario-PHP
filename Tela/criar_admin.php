@@ -63,7 +63,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-chart-line me-2"></i>Hyper Sense</a>
         <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a>
             <a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a>
         </div>
     </div>

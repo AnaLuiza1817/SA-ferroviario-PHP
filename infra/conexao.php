@@ -1,20 +1,18 @@
 <?php
 
-$host = "localhost";
+$host    = "localhost";
 $usuario = "root";
-$senha = "";
-$banco = "ferrorama_db";
+$senha   = "";
+$banco   = "ferrorama_db";
 
-$conexao = new mysqli(
-    $host,
-    $usuario,
-    $senha,
-    $banco
-);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+$conexao = new mysqli($host, $usuario, $senha, $banco);
 
 if ($conexao->connect_error) {
-    die("Erro na conexão: " . $conexao->connect_error);
+    error_log('Erro na conexão MySQL: ' . $conexao->connect_error);
+    http_response_code(500);
+    exit('Não foi possível conectar ao banco de dados.');
 }
 
 $conexao->set_charset("utf8mb4");
-?>
