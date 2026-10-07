@@ -1,21 +1,10 @@
-CREATE DATABASE IF NOT EXISTS ferrorama_db
+DROP DATABASE IF EXISTS ferrorama_db;
+
+CREATE DATABASE ferrorama_db
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 USE ferrorama_db;
-
-DROP TABLE IF EXISTS alteracoes_rota;
-DROP TABLE IF EXISTS alertas;
-DROP TABLE IF EXISTS amvs;
-DROP TABLE IF EXISTS sensores;
-DROP TABLE IF EXISTS manutencoes;
-DROP TABLE IF EXISTS ocorrencias;
-DROP TABLE IF EXISTS trens;
-DROP TABLE IF EXISTS rota_trechos;
-DROP TABLE IF EXISTS trechos;
-DROP TABLE IF EXISTS rotas;
-DROP TABLE IF EXISTS estacoes;
-DROP TABLE IF EXISTS usuarios;
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -157,13 +146,13 @@ CREATE TABLE alteracoes_rota (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES
-('Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Fernanda Lima', 'fernanda@gmail.com', '(47) 94444-4444', 'Administrador', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Cecilia Pereira', 'cecilia@gmail.com', '(47) 99176-3345', 'Usuario', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Liza Pereira', 'liza@gmail.com', '(47) 94444-5555', 'Usuario', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq'),
-('Marcos Oliveira', 'marcos@gmail.com', '(47) 97777-3333', 'Supervisor', 'Ativo', '$2y$10$1u1sYg6qZkXk8yHn3pWzUu5R4cQqS4bXWpQ2Xq2Xq2Xq2Xq2Xq2Xq');
+('Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe1HlWZ9EY7n7wN3aC4lLZ3Wq3b3xK1mO'),
+('Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe1HlWZ9EY7n7wN3aC4lLZ3Wq3b3xK1mO'),
+('Arthur Backes', 'arthur@gmail.com', '(47) 95555-5555', 'Administrador', 'Ativo', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe1HlWZ9EY7n7wN3aC4lLZ3Wq3b3xK1mO'),
+('Fernanda Lima', 'fernanda@gmail.com', '(47) 94444-4444', 'Administrador', 'Ativo', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe1HlWZ9EY7n7wN3aC4lLZ3Wq3b3xK1mO'),
+('Cecilia Pereira', 'cecilia@gmail.com', '(47) 99176-3345', 'Usuario', 'Ativo', '$2y$10$5rJ8bX2nQ7wM5bK1xL9cV4yU6jH0pD2sA8gZ3mN7vB5kX1qT9eR4cP'),
+('Liza Pereira', 'liza@gmail.com', '(47) 94444-5555', 'Usuario', 'Ativo', '$2y$10$5rJ8bX2nQ7wM5bK1xL9cV4yU6jH0pD2sA8gZ3mN7vB5kX1qT9eR4cP'),
+('Marcos Oliveira', 'marcos@gmail.com', '(47) 97777-3333', 'Supervisor', 'Ativo', '$2y$10$3F8tR2nQ7wM5bK1xL9cV4yU6jH0pD2sA8gZ3mN7vB5kX1qT9eR4cP');
 
 INSERT INTO estacoes (codigo, nome, ordem, posicao_x, posicao_y, status) VALUES
 ('EST-001', 'Central', 1, 90, 180, 'Normal'),
