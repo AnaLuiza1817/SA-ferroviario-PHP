@@ -1,12 +1,10 @@
 DROP DATABASE IF EXISTS ferrorama_db;
-CREATE DATABASE ferrorama_db 
-CHARACTER SET utf8mb4 
+
+CREATE DATABASE ferrorama_db
+CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 USE ferrorama_db;
-UPDATE usuarios SET senha = 'Admin@123' WHERE tipo = 'Administrador';
-UPDATE usuarios SET senha = 'User@321'  WHERE tipo = 'Usuario';
-UPDATE usuarios SET senha = 'Sup@1234'  WHERE tipo = 'Supervisor';
 
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
