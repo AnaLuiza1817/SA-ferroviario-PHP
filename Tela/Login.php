@@ -10,64 +10,31 @@ if (!empty($_SESSION['usuario_logado'])) {
     exit;
 }
 
-$erro            = "";
-$sucesso         = ($_GET["cadastro"] ?? "") === "sucesso";
-$usuarioDigitado = "";
-$senhaVazia      = false;
+$erro = "";
+$sucesso = ($_GET["cadastro"] ?? "") === "sucesso";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $usuario = trim($_POST["usuario"] ?? "");
+    $senha = $_POST["senha"] ?? "";
 
-    $usuario         = strtolower(trim($_POST["usuario"] ?? ""));
-    $senha           = $_POST["senha"] ?? "";
-    $usuarioDigitado = $usuario;
-    $senhaVazia      = ($senha === "");
-
-    if ($usuario === "" && $senha === "") {
-        $erro = "Preencha o usuário e a senha para continuar.";
-    } elseif ($usuario === "") {
-        $erro = "Informe o usuário ou e-mail.";
-    } elseif ($senha === "") {
-        $erro = "Informe a senha.";
+    if ($usuario === "" || $senha === "") {
+        $erro = "Preencha o usuário e a senha.";
     } else {
-
-        $stmt = $conexao->prepare(
-            "SELECT id, nome, email, senha, tipo, status
-             FROM usuarios
-             WHERE (LOWER(email) = ? OR LOWER(nome) = ?)
-               AND status = 'Ativo'
-               AND deleted_at IS NULL
-             LIMIT 1"
-        );
-
-        if (!$stmt) {
-            $erro = "Erro interno. Tente novamente mais tarde.";
-        } else {
+        $stmt = $conexao->prepare("SELECT id, nome, email, senha, tipo, status FROM usuarios WHERE (email = ? OR nome = ?) AND status = 'Ativo' LIMIT 1");
+        if ($stmt) {
             $stmt->bind_param("ss", $usuario, $usuario);
             $stmt->execute();
             $dados = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
-            if ($dados && !empty($dados["senha"]) && password_verify($senha, $dados["senha"])) {
-
-                if (password_needs_rehash($dados["senha"], PASSWORD_DEFAULT)) {
-                    $novoHash = password_hash($senha, PASSWORD_DEFAULT);
-                    $up = $conexao->prepare("UPDATE usuarios SET senha = ? WHERE id = ?");
-                    if ($up) {
-                        $up->bind_param("si", $novoHash, $dados["id"]);
-                        $up->execute();
-                        $up->close();
-                    }
-                }
-
+            if ($dados && $senha === $dados["senha"]) {
                 session_regenerate_id(true);
-
                 $_SESSION["usuario_logado"] = true;
-                $_SESSION["usuario_id"]     = (int) $dados["id"];
-                $_SESSION["usuario_nome"]   = $dados["nome"];
-                $_SESSION["usuario_email"]  = $dados["email"];
-                $_SESSION["usuario_tipo"]   = $dados["tipo"];
+                $_SESSION["usuario_id"] = (int)$dados["id"];
+                $_SESSION["usuario_nome"] = $dados["nome"];
+                $_SESSION["usuario_email"] = $dados["email"];
+                $_SESSION["usuario_tipo"] = $dados["tipo"];
 
-                /* Registra último acesso */
                 $stmt = $conexao->prepare("UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?");
                 if ($stmt) {
                     $stmt->bind_param("i", $_SESSION["usuario_id"]);
@@ -78,132 +45,63 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: index.php");
                 exit;
             }
-
-            if ($dados) {
-                $erro = "Senha incorreta. Verifique e tente novamente.";
-            } else {
-                $erro = "Usuário ou senha incorretos.";
-            }
         }
+        $erro = "Usuário ou senha inválidos.";
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login | Hyper Sense</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="../Css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hyper Sense</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../Css/style.css">
 </head>
+
 <body class="bg-light">
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
-        <div class="col-md-5 col-lg-4">
-            <div class="card shadow border-0 rounded-4">
-                <div class="card-body p-5">
-
-                    <div class="text-center mb-4">
-                        <i class="fas fa-chart-line text-primary fa-3x mb-3"></i>
-                        <h2 class="fw-bold text-primary">Hyper Sense</h2>
-                        <p class="text-muted">Faça login para acessar o sistema</p>
-                    </div>
-
-                    <?php if ($sucesso): ?>
-                        <div class="alert alert-success" role="alert">
-                            <i class="fas fa-circle-check me-2"></i>
-                            Cadastro realizado com sucesso. Agora faça login.
+    <div class="container">
+        <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-chart-line text-primary fa-3x mb-3"></i>
+                            <h2 class="fw-bold text-primary">Hyper Sense</h2>
+                            <p class="text-muted">Faça login para acessar o sistema</p>
                         </div>
-                    <?php endif; ?>
 
-                    <?php if ($erro !== ""): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <?= htmlspecialchars($erro, ENT_QUOTES, "UTF-8") ?>
-                        </div>
-                    <?php endif; ?>
+                        <?php if ($sucesso): ?>
+                            <div class="alert alert-success">Cadastro realizado com sucesso. Agora faça login.</div>
+                        <?php endif; ?>
 
-                    <form method="POST" id="formLogin" novalidate>
+                        <?php if ($erro !== ""): ?>
+                            <div class="alert alert-danger"><?= htmlspecialchars($erro, ENT_QUOTES, "UTF-8") ?></div>
+                        <?php endif; ?>
 
-                        <div class="mb-3">
-                            <label for="usuario" class="form-label">Usuário</label>
-                            <div class="input-group has-validation">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input type="text"
-                                       class="form-control <?= ($erro !== '' && $usuarioDigitado === '') ? 'is-invalid' : '' ?>"
-                                       id="usuario"
-                                       name="usuario"
-                                       placeholder="Digite seu usuário ou e-mail"
-                                       value="<?= htmlspecialchars($usuarioDigitado, ENT_QUOTES, 'UTF-8') ?>"
-                                       autocomplete="username"
-                                       required>
-                                <div class="invalid-feedback">
-                                    Informe o usuário ou e-mail.
-                                </div>
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Usuário</label>
+                                <input type="text" class="form-control" name="usuario" placeholder="Digite seu e-mail" required>
                             </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="senha" class="form-label">Senha</label>
-                            <div class="input-group has-validation">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password"
-                                       class="form-control <?= ($erro !== '' && $senhaVazia) ? 'is-invalid' : '' ?>"
-                                       id="senha"
-                                       name="senha"
-                                       placeholder="Digite sua senha"
-                                       autocomplete="current-password"
-                                       required>
-                                <div class="invalid-feedback">
-                                    Informe a senha.
-                                </div>
+                            <div class="mb-4">
+                                <label class="form-label">Senha</label>
+                                <input type="password" class="form-control" name="senha" placeholder="Digite sua senha" required>
                             </div>
+                            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <a href="CadastroPublico.php" class="text-primary text-decoration-none fw-semibold">Criar conta</a>
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-right-to-bracket me-1"></i>Entrar
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <span class="text-muted">Ainda não possui uma conta?</span><br>
-                        <a href="CadastroPublico.php" class="text-primary text-decoration-none fw-semibold">
-                            Criar conta
-                        </a>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-document.getElementById('formLogin').addEventListener('submit', function (evento) {
-    var usuario = document.getElementById('usuario');
-    var senha   = document.getElementById('senha');
-    var valido  = true;
-
-    usuario.classList.remove('is-invalid');
-    senha.classList.remove('is-invalid');
-
-    if (usuario.value.trim() === '') {
-        usuario.classList.add('is-invalid');
-        valido = false;
-    }
-
-    if (senha.value.trim() === '') {
-        senha.classList.add('is-invalid');
-        valido = false;
-    }
-
-    if (!valido) {
-        evento.preventDefault();
-        evento.stopPropagation();
-    }
-});
-</script>
 </body>
+
 </html>

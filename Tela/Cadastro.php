@@ -30,12 +30,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!in_array($status, $statusPermitidos, true)) $erros[] = "Status invalido.";
 
     if (empty($erros)) {
-        $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
         $stmt = $conexao->prepare("INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES (?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             $erros[] = "Erro MySQL: " . $conexao->error;
         } else {
-            $stmt->bind_param("ssssss", $nome, $email, $telefone, $tipo, $status, $senhaHash);
+            $stmt->bind_param("ssssss", $nome, $email, $telefone, $tipo, $status, $senha);
             if ($stmt->execute()) {
                 $sucesso = "Usuario cadastrado com ID " . $stmt->insert_id . ".";
                 $nome = $email = $telefone = "";
@@ -69,36 +68,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
         </div>
     </nav>
-
     <main class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="display-6 fw-semibold"><i class="fas fa-user-plus text-primary me-2"></i>Novo Usuario</h1>
-                <p class="text-muted mb-0">Preencha os dados e clique em Cadastrar.</p>
+                <p class="text-muted mb-0">Preencha e clique em Cadastrar.</p>
             </div>
             <a href="usuario.php" class="btn btn-outline-secondary">Voltar</a>
         </div>
-
         <?php if ($sucesso !== ""): ?>
-            <div class="alert alert-success"><i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($sucesso, ENT_QUOTES, "UTF-8") ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars($sucesso, ENT_QUOTES, "UTF-8") ?></div>
         <?php endif; ?>
-
         <?php if (!empty($erros)): ?>
             <div class="alert alert-danger">
-                <strong>Erro:</strong>
-                <ul class="mb-0 mt-2">
+                <ul class="mb-0">
                     <?php foreach ($erros as $e): ?><li><?= htmlspecialchars($e, ENT_QUOTES, "UTF-8") ?></li><?php endforeach; ?>
                 </ul>
             </div>
         <?php endif; ?>
-
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body p-4">
-                <form method="post" novalidate>
+                <form method="post">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, "UTF-8") ?>">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nome completo</label>
+                            <label class="form-label">Nome</label>
                             <input type="text" class="form-control" name="nome" value="<?= htmlspecialchars($nome, ENT_QUOTES, "UTF-8") ?>" required>
                         </div>
                         <div class="col-md-6">
@@ -107,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Senha</label>
-                            <input type="password" class="form-control" name="senha" minlength="6" required>
+                            <input type="text" class="form-control" name="senha" minlength="6" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Telefone</label>
@@ -132,13 +126,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     <div class="d-flex gap-2 justify-content-end mt-4">
                         <a href="usuario.php" class="btn btn-outline-secondary">Cancelar</a>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Cadastrar</button>
+                        <button type="submit" class="btn btn-success">Cadastrar</button>
                     </div>
                 </form>
             </div>
         </div>
     </main>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

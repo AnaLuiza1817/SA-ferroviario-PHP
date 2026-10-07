@@ -12,17 +12,13 @@ function requireLogin(): void
         exit;
     }
 
-    $id = (int) $_SESSION['usuario_id'];
-    $stmt = $GLOBALS['conexao']->prepare(
-        "SELECT nome, email, tipo, status FROM usuarios WHERE id = ? LIMIT 1"
-    );
-
+    $id = (int)$_SESSION['usuario_id'];
+    $stmt = $GLOBALS['conexao']->prepare("SELECT nome, email, tipo, status FROM usuarios WHERE id = ? LIMIT 1");
     if (!$stmt) {
         session_destroy();
         header('Location: Login.php');
         exit;
     }
-
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $usuario = $stmt->get_result()->fetch_assoc();
@@ -35,9 +31,9 @@ function requireLogin(): void
         exit;
     }
 
-    $_SESSION['usuario_nome']  = $usuario['nome'];
+    $_SESSION['usuario_nome'] = $usuario['nome'];
     $_SESSION['usuario_email'] = $usuario['email'];
-    $_SESSION['usuario_tipo']  = $usuario['tipo'];
+    $_SESSION['usuario_tipo'] = $usuario['tipo'];
 }
 
 function requireAdmin(): void
@@ -50,16 +46,6 @@ function requireAdmin(): void
 }
 
 function requireUsuariosView(): void
-{
-    requireLogin();
-    $tipo = $_SESSION['usuario_tipo'] ?? '';
-    if (!in_array($tipo, ['Administrador', 'Supervisor'], true)) {
-        http_response_code(403);
-        exit('Acesso negado.');
-    }
-}
-
-function requireOperationalControl(): void
 {
     requireLogin();
     $tipo = $_SESSION['usuario_tipo'] ?? '';
@@ -83,75 +69,5 @@ function validarCsrf(): void
     if (!$token || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
         http_response_code(403);
         exit('Requisição inválida.');
-    }
-}
-
-function usuarioIniciais(string $nome): string
-{
-    $partes = preg_split('/\s+/', trim($nome)) ?: [];
-    $ini = '';
-    foreach (array_slice(array_filter($partes), 0, 2) as $p) {
-        $ini .= mb_strtoupper(mb_substr($p, 0, 1, 'UTF-8'), 'UTF-8');
-    }
-    return $ini !== '' ? $ini : '?';
-}
-
-function badgeTipoUsuario(string $tipo): string
-{
-    return match ($tipo) {
-        'Administrador' => 'bg-danger',
-        'Supervisor'    => 'bg-warning text-dark',
-        'Usuário'       => 'bg-info text-dark',
-        default         => 'bg-secondary',
-    };
-}
-
-function badgeStatusUsuario(string $status): string
-{
-    return $status === 'Ativo' ? 'bg-success' : 'bg-secondary';
-}
-
-if (!function_exists('e')) {
-    function e($valor): string
-    {
-        return htmlspecialchars((string) ($valor ?? ''), ENT_QUOTES, 'UTF-8');
-    }
-}
-
-if (!function_exists('isAtiva')) {
-    function isAtiva(string $pagina, string $paginaAtual): string
-    {
-        return $pagina === $paginaAtual ? 'active' : '';
-    }
-}
-
-if (!function_exists('classeBadgeTrem')) {
-    function classeBadgeTrem(string $status): string
-    {
-        return match ($status) {
-            'Em operação'   => 'badge-status-em-operacao',
-            'Parado'        => 'badge-status-parado',
-            'Em manutenção' => 'badge-status-manutencao',
-            'Atrasado'      => 'badge-status-atrasado',
-            default         => 'bg-secondary',
-        };
-    }
-}
-
-if (!function_exists('classeStatus')) {
-    function classeStatus(string $status): string
-    {
-        $status = mb_strtolower(trim($status), 'UTF-8');
-
-        if ($status === 'normal' || $status === 'ativo') {
-            return 'sensor-status-normal';
-        }
-        if ($status === 'atenção' || $status === 'atencao') {
-            return 'sensor-status-atencao';
-        }
-        if ($status === 'alerta') {
-            return 'sensor-status-alerta';
-        }
-        return 'sensor-status-default';
     }
 }
