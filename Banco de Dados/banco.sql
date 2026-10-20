@@ -191,38 +191,6 @@ INSERT INTO rota_trechos (rota_id, trecho_id, ordem) VALUES
 (2, 5, 2),
 (2, 4, 3);
 
-INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual, usuario_responsavel_id) VALUES
-('TR-0001', 'Em operação', 2, 1, 55, 2),
-('TR-0002', 'Parado', 3, 1, 35, 3),
-('TR-0003', 'Em operação', 4, 2, 70, 4);
-
-INSERT INTO ocorrencias (trem_id, trecho_id, tipo, descricao, status, ocorrido_em) VALUES
-(2, 3, 'Falha de equipamento', 'Falha detectada durante inspeção do trecho.', 'Aberta', '2026-09-15 09:30:00'),
-(1, 2, 'Atraso', 'Atraso operacional registrado no trecho.', 'Resolvida', '2026-09-10 14:10:00'),
-(3, 4, 'Sinalização', 'Alerta de sinalização no trecho.', 'Em análise', '2026-09-16 08:20:00');
-
-INSERT INTO manutencoes (trem_id, trecho_id, componente, ordem_manutencao, status, inicio, fim, descricao) VALUES
-(2, 3, 'Sistema de tração', 'OM-0001', 'Em andamento', '2026-09-15 10:00:00', NULL, 'Inspeção e reparo do sistema de tração.'),
-(1, 2, 'Freios', 'OM-0002', 'Concluída', '2026-08-12 08:00:00', '2026-08-12 16:00:00', 'Manutenção preventiva.'),
-(3, 4, 'Sinalização', 'OM-0003', 'Pendente', '2026-09-17 08:00:00', NULL, 'Avaliação do sistema de sinalização.');
-
-INSERT INTO sensores (codigo, tipo, trecho_id, status, leitura, limite, unidade, ultima_atualizacao) VALUES
-('SEN-001', 'Manutenção', 3, 'Alerta', 87, 80, '%', '2026-09-17 07:45:00'),
-('SEN-002', 'Temperatura', 2, 'Normal', 64, 80, 'C', '2026-09-17 07:50:00'),
-('SEN-003', 'Via', 4, 'Atenção', 78, 75, '%', '2026-09-17 07:55:00'),
-('SEN-004', 'Manutenção', 1, 'Normal', 42, 80, '%', '2026-09-17 08:00:00');
-
-INSERT INTO amvs (codigo, trecho_id, estado, status, ultima_atualizacao) VALUES
-('AMV-001', 2, 'Normal', 'Operacional', '2026-09-17 07:40:00'),
-('AMV-002', 4, 'Alternado', 'Operacional', '2026-09-17 07:42:00');
-
-INSERT INTO alertas (sensor_id, trem_id, trecho_id, nivel, mensagem, status, criado_em) VALUES
-(1, 2, 3, 'Alto', 'Sensor de manutenção acima do limite.', 'Ativo', '2026-09-17 07:45:00'),
-(3, 3, 4, 'Médio', 'Leitura do sensor acima do limite configurado.', 'Ativo', '2026-09-17 07:55:00');
-
-INSERT INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv_id, motivo, alterado_em) VALUES
-(2, 1, 2, 2, 'Desvio simulado devido à manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
-
 INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES
 ('Gabriel Silva', 'gabriel@gmail.com', '(47) 99999-1111', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
 ('Ana Souza', 'ana@gmail.com', '(47) 98888-2222', 'Administrador', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
@@ -278,3 +246,35 @@ INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES
 ('Talita Novaes', 'talita.novaes@gmail.com', '(47) 99218-0118', 'Supervisor', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
 ('Ubirajara Prado', 'ubirajara.prado@gmail.com', '(47) 99219-0119', 'Supervisor', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W'),
 ('Verônica Sales', 'veronica.sales@gmail.com', '(47) 99220-0120', 'Supervisor', 'Ativo', '$2y$12$QLY5V3Es2CxsdAWTt1/2NeIXVDF6Vz5GnMiT5DGR795qtOevbaJ2W');
+
+INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual, usuario_responsavel_id) VALUES
+('TR-0001', 'Em operação', 2, 1, 55, 2),
+('TR-0002', 'Parado', 3, 1, 35, 3),
+('TR-0003', 'Em operação', 4, 2, 70, 4);
+
+INSERT INTO ocorrencias (trem_id, trecho_id, tipo, descricao, status, ocorrido_em) VALUES
+(2, 3, 'Falha de equipamento', 'Falha detectada durante inspeção do trecho.', 'Aberta', '2026-09-15 09:30:00'),
+(1, 2, 'Atraso', 'Atraso operacional registrado no trecho.', 'Resolvida', '2026-09-10 14:10:00'),
+(3, 4, 'Sinalização', 'Alerta de sinalização no trecho.', 'Em análise', '2026-09-16 08:20:00');
+
+INSERT INTO manutencoes (trem_id, trecho_id, componente, ordem_manutencao, status, inicio, fim, descricao) VALUES
+(2, 3, 'Sistema de tração', 'OM-0001', 'Em andamento', '2026-09-15 10:00:00', NULL, 'Inspeção e reparo do sistema de tração.'),
+(1, 2, 'Freios', 'OM-0002', 'Concluída', '2026-08-12 08:00:00', '2026-08-12 16:00:00', 'Manutenção preventiva.'),
+(3, 4, 'Sinalização', 'OM-0003', 'Pendente', '2026-09-17 08:00:00', NULL, 'Avaliação do sistema de sinalização.');
+
+INSERT INTO sensores (codigo, tipo, trecho_id, status, leitura, limite, unidade, ultima_atualizacao) VALUES
+('SEN-001', 'Manutenção', 3, 'Alerta', 87, 80, '%', '2026-09-17 07:45:00'),
+('SEN-002', 'Temperatura', 2, 'Normal', 64, 80, 'C', '2026-09-17 07:50:00'),
+('SEN-003', 'Via', 4, 'Atenção', 78, 75, '%', '2026-09-17 07:55:00'),
+('SEN-004', 'Manutenção', 1, 'Normal', 42, 80, '%', '2026-09-17 08:00:00');
+
+INSERT INTO amvs (codigo, trecho_id, estado, status, ultima_atualizacao) VALUES
+('AMV-001', 2, 'Normal', 'Operacional', '2026-09-17 07:40:00'),
+('AMV-002', 4, 'Alternado', 'Operacional', '2026-09-17 07:42:00');
+
+INSERT INTO alertas (sensor_id, trem_id, trecho_id, nivel, mensagem, status, criado_em) VALUES
+(1, 2, 3, 'Alto', 'Sensor de manutenção acima do limite.', 'Ativo', '2026-09-17 07:45:00'),
+(3, 3, 4, 'Médio', 'Leitura do sensor acima do limite configurado.', 'Ativo', '2026-09-17 07:55:00');
+
+INSERT INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv_id, motivo, alterado_em) VALUES
+(2, 1, 2, 2, 'Desvio simulado devido à manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
