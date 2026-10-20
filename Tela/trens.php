@@ -3,74 +3,11 @@ require_once "auth.php";
 requireLogin();
 require_once "../infra/conexao.php";
 
-$mensagem = '';
-$tipoMensagem = 'success';
+$mensagem = $_SESSION['mensagem'] ?? '';
+$tipoMensagem = $_SESSION['tipo_mensagem'] ?? 'success';
+unset($_SESSION['mensagem'], $_SESSION['tipo_mensagem']);
+
 $podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_trem') {
-    requireOperationalControl();
-    validarCsrf();
-
-    $codigo   = trim($_POST['codigo'] ?? '');
-    $status   = trim($_POST['status'] ?? '');
-    $trechoId = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT);
-    $rotaId   = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
-    $posicao  = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
-
-    $statusPermitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
-    $errosCadastro = [];
-
-    if ($codigo === '') {
-        $errosCadastro[] = 'Informe o código do trem.';
-    } elseif (mb_strlen($codigo) > 20) {
-        $errosCadastro[] = 'O código deve ter no máximo 20 caracteres.';
-    }
-
-    if (!in_array($status, $statusPermitidos, true)) {
-        $errosCadastro[] = 'Selecione um status válido.';
-    }
-
-    if ($posicao === false || $posicao === null) {
-        $posicao = 50.0;
-    }
-    $posicao = max(0.0, min(100.0, (float) $posicao));
-    $trechoId = ($trechoId && $trechoId > 0) ? $trechoId : null;
-    $rotaId   = ($rotaId && $rotaId > 0) ? $rotaId : null;
-
-    if (!$errosCadastro) {
-        $stmt = $conexao->prepare(
-            "INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual)
-             VALUES (?, ?, ?, ?, ?)"
-        );
-
-        if (!$stmt) {
-            $errosCadastro[] = 'Não foi possível preparar o cadastro.';
-        } else {
-            $stmt->bind_param("ssiid", $codigo, $status, $trechoId, $rotaId, $posicao);
-
-            if ($stmt->execute()) {
-                $stmt->close();
-                header('Location: trens.php?sucesso=cadastro');
-                exit;
-            }
-
-            $errosCadastro[] = $stmt->errno === 1062
-                ? 'Já existe um trem com esse código.'
-                : 'Não foi possível cadastrar o trem.';
-            $stmt->close();
-        }
-    }
-
-    if ($errosCadastro) {
-        $mensagem = implode(' ', $errosCadastro);
-        $tipoMensagem = 'danger';
-    }
-}
-
-if (($_GET['sucesso'] ?? '') === 'cadastro') {
-    $mensagem = 'Trem cadastrado com sucesso!';
-    $tipoMensagem = 'success';
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_status') {
     requireOperationalControl();
@@ -84,16 +21,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'mudar_s
         $stmt = $conexao->prepare('UPDATE trens SET status = ? WHERE id = ?');
         $stmt->bind_param('si', $novoStatus, $id);
         if ($stmt->execute()) {
-            $mensagem = 'Status do trem atualizado para "' . $novoStatus . '".';
+            $_SESSION['mensagem'] = 'Status do trem atualizado para "' . $novoStatus . '".';
         } else {
-            $mensagem = 'Não foi possível atualizar o status.';
-            $tipoMensagem = 'danger';
+            $_SESSION['mensagem'] = 'Não foi possível atualizar o status.';
+            $_SESSION['tipo_mensagem'] = 'danger';
         }
         $stmt->close();
     } else {
-        $mensagem = 'Dados inválidos para atualização.';
-        $tipoMensagem = 'danger';
+        $_SESSION['mensagem'] = 'Dados inválidos para atualização.';
+        $_SESSION['tipo_mensagem'] = 'danger';
     }
+    header('Location: trens.php');
+    exit;
 }
 
 $sql = "
@@ -102,10 +41,12 @@ $sql = "
         COALESCE(tr.codigo, '—') AS trecho_codigo,
         COALESCE(tr.status, '—') AS trecho_status,
         COALESCE(r.codigo, '—')  AS rota_codigo,
-        COALESCE(r.nome, '—')    AS rota_nome
+        COALESCE(r.nome, '—')    AS rota_nome,
+        u.nome AS usuario_responsavel
     FROM trens t
     LEFT JOIN trechos tr ON tr.id = t.trecho_id
     LEFT JOIN rotas   r  ON r.id  = t.rota_id
+    LEFT JOIN usuarios u ON u.id  = t.usuario_responsavel_id
     ORDER BY t.codigo
 ";
 
@@ -132,22 +73,6 @@ foreach ($trens as $trem) {
     }
 }
 
-$trechosDisponiveis = [];
-$resTrechos = $conexao->query("SELECT id, codigo, status FROM trechos ORDER BY codigo");
-if ($resTrechos) {
-    while ($linha = $resTrechos->fetch_assoc()) {
-        $trechosDisponiveis[] = $linha;
-    }
-}
-
-$rotasDisponiveis = [];
-$resRotas = $conexao->query("SELECT id, codigo, nome FROM rotas ORDER BY codigo");
-if ($resRotas) {
-    while ($linha = $resRotas->fetch_assoc()) {
-        $rotasDisponiveis[] = $linha;
-    }
-}
-
 $paginaAtual = basename($_SERVER['PHP_SELF']);
 $tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
 $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
@@ -169,7 +94,7 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
         <a class="navbar-brand fw-bold" href="index.php">
             <i class="fas fa-train-subway me-2"></i>Hyper Sense
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegação">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
@@ -179,6 +104,7 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                 <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
                 <?php endif; ?>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
+                <li class="nav-item"><a class="nav-link <?= isAtiva('rotas.php', $paginaAtual) ?>" href="rotas.php"><i class="fas fa-route me-1"></i>Rotas</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
                 <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
@@ -192,12 +118,11 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
     <div class="container">
         <span class="badge bg-light text-primary mb-3">Controle operacional</span>
         <h1 class="fw-bold">Trens</h1>
-        <p class="mb-0"><?= $podeGerenciar ? 'Gerencie o status de cada trem. As alterações refletem imediatamente no mapa.' : 'Consulte o status dos trens.' ?></p>
+        <p class="mb-0"><?= $podeGerenciar ? 'Gerencie o status de cada trem.' : 'Consulte o status dos trens.' ?></p>
     </div>
 </header>
 
 <main class="container pb-5">
-
     <?php if ($mensagem !== ''): ?>
         <div class="alert alert-<?= e($tipoMensagem) ?> alert-dismissible fade show" role="alert">
             <?= e($mensagem) ?>
@@ -252,9 +177,9 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                     <p class="text-muted mb-0">Consulte os trens e seus estados operacionais.</p>
                 </div>
                 <?php if ($podeGerenciar): ?>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdicionarTrem">
+                <a href="Cadastro_Trem.php" class="btn btn-success">
                     <i class="fas fa-plus me-1"></i>Adicionar trem
-                </button>
+                </a>
                 <?php endif; ?>
             </div>
 
@@ -265,15 +190,18 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                             <th>Código</th>
                             <th>Trecho</th>
                             <th>Rota</th>
+                            <th>Responsável</th>
                             <th>Posição</th>
                             <th>Status atual</th>
+                            <?php if ($podeGerenciar): ?>
                             <th style="min-width: 340px;">Alterar status</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$trens): ?>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">Nenhum trem cadastrado.</td>
+                            <td colspan="<?= $podeGerenciar ? '7' : '6' ?>" class="text-center py-5 text-muted">Nenhum trem cadastrado.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($trens as $trem): ?>
@@ -289,14 +217,15 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                                     <span class="fw-semibold"><?= e($trem['rota_codigo']) ?></span>
                                     <br><small class="text-muted"><?= e($trem['rota_nome']) ?></small>
                                 </td>
+                                <td><?= e($trem['usuario_responsavel'] ?? 'Não atribuído') ?></td>
                                 <td><?= number_format((float) $trem['posicao_percentual'], 1, ',', '.') ?>%</td>
                                 <td>
                                     <span class="badge <?= e(classeBadgeTrem($trem['status'])) ?>">
                                         <?= e($trem['status']) ?>
                                     </span>
                                 </td>
+                                <?php if ($podeGerenciar): ?>
                                 <td>
-                                    <?php if ($podeGerenciar): ?>
                                     <form method="post" class="d-flex flex-wrap gap-1">
                                         <input type="hidden" name="acao" value="mudar_status">
                                         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -323,10 +252,8 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                                             </button>
                                         <?php endforeach; ?>
                                     </form>
-                                    <?php else: ?>
-                                    <span class="text-muted">Visualização</span>
-                                    <?php endif; ?>
                                 </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -335,90 +262,7 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
             </div>
         </div>
     </div>
-
-    <div class="alert alert-info mt-4" role="alert">
-        <i class="fas fa-info-circle me-2"></i>
-        Visualizando <strong><?= $totalTrens ?></strong> trens cadastrados.
-        As mudanças refletem no mapa automaticamente.
-    </div>
-
 </main>
-
-<?php if ($podeGerenciar): ?>
-<div class="modal fade" id="modalAdicionarTrem" tabindex="-1" aria-labelledby="modalAdicionarTremLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" novalidate>
-                <input type="hidden" name="acao" value="cadastrar_trem">
-                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalAdicionarTremLabel">
-                        <i class="fas fa-plus me-2"></i>Adicionar trem
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="codigo" class="form-label">Código do trem <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="codigo" name="codigo" maxlength="20" placeholder="Ex.: TR-0004" required>
-                        <small class="text-muted">Máximo 20 caracteres. Não pode repetir.</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="Em operação" selected>Em operação</option>
-                            <option value="Parado">Parado</option>
-                            <option value="Em manutenção">Em manutenção</option>
-                            <option value="Atrasado">Atrasado</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="trecho_id" class="form-label">Trecho (opcional)</label>
-                        <select class="form-select" id="trecho_id" name="trecho_id">
-                            <option value="">— Sem trecho —</option>
-                            <?php foreach ($trechosDisponiveis as $tr): ?>
-                                <option value="<?= (int) $tr['id'] ?>">
-                                    <?= e($tr['codigo']) ?>
-                                    <?= $tr['status'] ? ' (' . e($tr['status']) . ')' : '' ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="rota_id" class="form-label">Rota (opcional)</label>
-                        <select class="form-select" id="rota_id" name="rota_id">
-                            <option value="">— Sem rota —</option>
-                            <?php foreach ($rotasDisponiveis as $ro): ?>
-                                <option value="<?= (int) $ro['id'] ?>">
-                                    <?= e($ro['codigo']) ?> — <?= e($ro['nome']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-2">
-                        <label for="posicao_percentual" class="form-label">Posição no trecho (%)</label>
-                        <input type="number" class="form-control" id="posicao_percentual" name="posicao_percentual" min="0" max="100" step="0.01" value="50">
-                        <small class="text-muted">De 0 a 100. Padrão: 50.</small>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save me-1"></i>Salvar trem
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 <footer class="bg-dark text-white py-2">
     <div class="container text-center">
@@ -428,18 +272,5 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
-
-<?php if ($tipoMensagem === 'danger' && $mensagem !== ''): ?>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var modalEl = document.getElementById('modalAdicionarTrem');
-        if (modalEl && window.bootstrap) {
-            var modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        }
-    });
-</script>
-<?php endif; ?>
-
 </body>
 </html>

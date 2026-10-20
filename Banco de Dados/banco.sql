@@ -16,6 +16,7 @@ CREATE TABLE usuarios (
     senha VARCHAR(255) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME NULL,
+    deleted_at DATETIME NULL,
     UNIQUE KEY uk_usuarios_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -33,7 +34,11 @@ CREATE TABLE rotas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     nome VARCHAR(100) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'Ativa'
+    status VARCHAR(20) NOT NULL DEFAULT 'Ativa',
+    descricao TEXT NULL,
+    distancia_km DECIMAL(8,2) NULL,
+    tempo_estimado VARCHAR(50) NULL,
+    data_criacao DATE NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE trechos (
@@ -59,12 +64,14 @@ CREATE TABLE rota_trechos (
 CREATE TABLE trens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
-    status VARCHAR(30) NOT NULL DEFAULT 'Em operacao',
+    status VARCHAR(30) NOT NULL DEFAULT 'Em operação',
     trecho_id INT NULL,
     rota_id INT NULL,
     posicao_percentual DECIMAL(5,2) NOT NULL DEFAULT 50,
+    usuario_responsavel_id INT NULL,
     CONSTRAINT fk_trem_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL,
-    CONSTRAINT fk_trem_rota FOREIGN KEY (rota_id) REFERENCES rotas(id) ON DELETE SET NULL
+    CONSTRAINT fk_trem_rota FOREIGN KEY (rota_id) REFERENCES rotas(id) ON DELETE SET NULL,
+    CONSTRAINT fk_trem_usuario FOREIGN KEY (usuario_responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE ocorrencias (
@@ -160,49 +167,49 @@ INSERT INTO estacoes (codigo, nome, ordem, posicao_x, posicao_y, status) VALUES
 ('EST-004', 'Oficinas', 4, 740, 120, 'Atencao'),
 ('EST-005', 'Terminal', 5, 950, 180, 'Normal');
 
-INSERT INTO rotas (codigo, nome, status) VALUES
-('ROT-001', 'Linha Principal', 'Ativa'),
-('ROT-002', 'Linha Alternativa', 'Ativa');
+INSERT INTO rotas (codigo, nome, status, descricao, distancia_km, tempo_estimado, data_criacao) VALUES
+('ROT-001', 'Linha Principal', 'Ativa', 'Rota principal que liga o centro ao terminal.', 31.60, '45 min', '2026-01-10'),
+('ROT-002', 'Linha Alternativa', 'Ativa', 'Rota de desvio passando pelas oficinas.', 28.30, '50 min', '2026-02-15');
 
 INSERT INTO trechos (codigo, origem_id, destino_id, status, distancia_km) VALUES
 ('TRC-001', 1, 2, 'Normal', 8.50),
 ('TRC-002', 2, 3, 'Normal', 7.20),
-('TRC-003', 3, 4, 'Em manutencao', 6.80),
-('TRC-004', 4, 5, 'Atencao', 9.10),
+('TRC-003', 3, 4, 'Em manutenção', 6.80),
+('TRC-004', 4, 5, 'Atenção', 9.10),
 ('TRC-005', 2, 4, 'Normal', 10.40);
 
 INSERT INTO rota_trechos (rota_id, trecho_id, ordem) VALUES
 (1, 1, 1),(1, 2, 2),(1, 3, 3),(1, 4, 4),
 (2, 1, 1),(2, 5, 2),(2, 4, 3);
 
-INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual) VALUES
-('TR-0001', 'Em operacao', 2, 1, 55),
-('TR-0002', 'Parado', 3, 1, 35),
-('TR-0003', 'Em operacao', 4, 2, 70);
+INSERT INTO trens (codigo, status, trecho_id, rota_id, posicao_percentual, usuario_responsavel_id) VALUES
+('TR-0001', 'Em operação', 2, 1, 55, 2),
+('TR-0002', 'Parado', 3, 1, 35, 3),
+('TR-0003', 'Em operação', 4, 2, 70, 4);
 
 INSERT INTO ocorrencias (trem_id, trecho_id, tipo, descricao, status, ocorrido_em) VALUES
-(2, 3, 'Falha de equipamento', 'Falha detectada durante inspecao do trecho.', 'Aberta', '2026-09-15 09:30:00'),
+(2, 3, 'Falha de equipamento', 'Falha detectada durante inspeção do trecho.', 'Aberta', '2026-09-15 09:30:00'),
 (1, 2, 'Atraso', 'Atraso operacional registrado no trecho.', 'Resolvida', '2026-09-10 14:10:00'),
-(3, 4, 'Sinalizacao', 'Alerta de sinalizacao no trecho.', 'Em analise', '2026-09-16 08:20:00');
+(3, 4, 'Sinalização', 'Alerta de sinalização no trecho.', 'Em analise', '2026-09-16 08:20:00');
 
 INSERT INTO manutencoes (trem_id, trecho_id, componente, ordem_manutencao, status, inicio, fim, descricao) VALUES
-(2, 3, 'Sistema de tracao', 'OM-0001', 'Em andamento', '2026-09-15 10:00:00', NULL, 'Inspecao e reparo do sistema de tracao.'),
-(1, 2, 'Freios', 'OM-0002', 'Concluida', '2026-08-12 08:00:00', '2026-08-12 16:00:00', 'Manutencao preventiva.'),
-(3, 4, 'Sinalizacao', 'OM-0003', 'Pendente', '2026-09-17 08:00:00', NULL, 'Avaliacao do sistema de sinalizacao.');
+(2, 3, 'Sistema de tração', 'OM-0001', 'Em andamento', '2026-09-15 10:00:00', NULL, 'Inspeção e reparo do sistema de tração.'),
+(1, 2, 'Freios', 'OM-0002', 'Concluída', '2026-08-12 08:00:00', '2026-08-12 16:00:00', 'Manutenção preventiva.'),
+(3, 4, 'Sinalização', 'OM-0003', 'Pendente', '2026-09-17 08:00:00', NULL, 'Avaliação do sistema de sinalização.');
 
 INSERT INTO sensores (codigo, tipo, trecho_id, status, leitura, limite, unidade, ultima_atualizacao) VALUES
-('SEN-001', 'Manutencao', 3, 'Alerta', 87, 80, '%', '2026-09-17 07:45:00'),
+('SEN-001', 'Manutenção', 3, 'Alerta', 87, 80, '%', '2026-09-17 07:45:00'),
 ('SEN-002', 'Temperatura', 2, 'Normal', 64, 80, 'C', '2026-09-17 07:50:00'),
-('SEN-003', 'Via', 4, 'Atencao', 78, 75, '%', '2026-09-17 07:55:00'),
-('SEN-004', 'Manutencao', 1, 'Normal', 42, 80, '%', '2026-09-17 08:00:00');
+('SEN-003', 'Via', 4, 'Atenção', 78, 75, '%', '2026-09-17 07:55:00'),
+('SEN-004', 'Manutenção', 1, 'Normal', 42, 80, '%', '2026-09-17 08:00:00');
 
 INSERT INTO amvs (codigo, trecho_id, estado, status, ultima_atualizacao) VALUES
 ('AMV-001', 2, 'Normal', 'Operacional', '2026-09-17 07:40:00'),
 ('AMV-002', 4, 'Alternado', 'Operacional', '2026-09-17 07:42:00');
 
 INSERT INTO alertas (sensor_id, trem_id, trecho_id, nivel, mensagem, status, criado_em) VALUES
-(1, 2, 3, 'Alto', 'Sensor de manutencao acima do limite.', 'Ativo', '2026-09-17 07:45:00'),
+(1, 2, 3, 'Alto', 'Sensor de manutenção acima do limite.', 'Ativo', '2026-09-17 07:45:00'),
 (3, 3, 4, 'Medio', 'Leitura do sensor acima do limite configurado.', 'Ativo', '2026-09-17 07:55:00');
 
 INSERT INTO alteracoes_rota (trem_id, rota_anterior_id, rota_nova_id, amv_id, motivo, alterado_em) VALUES
-(2, 1, 2, 2, 'Desvio simulado devido a manutencao do trecho TRC-003.', '2026-09-17 08:10:00');
+(2, 1, 2, 2, 'Desvio simulado devido a manutenção do trecho TRC-003.', '2026-09-17 08:10:00');
