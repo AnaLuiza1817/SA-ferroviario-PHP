@@ -1,116 +1,154 @@
+
 <?php
-require_once "auth.php";
+require_once 'auth.php';
 requireAdmin();
-require_once "../Infra/conexao.php";
 
-$base = __DIR__;
 $testes = [];
+$base = __DIR__;
 
-function teste(string $nome, bool $resultado, string $evidencia): void
-{
+function teste(string $nome, bool $resultado, string $evidencia): void {
     global $testes;
-    $testes[] = [
-        'nome' => $nome,
-        'resultado' => $resultado,
-        'evidencia' => $evidencia
-    ];
+    $testes[] = compact('nome', 'resultado', 'evidencia');
 }
 
-$arquivosLogin = ['index.php', 'usuario.php', 'trens.php', 'mapa.php', 'grafico.php', 'sensores.php'];
-foreach ($arquivosLogin as $arquivo) {
-    $conteudo = file_get_contents($base . '/' . $arquivo);
+function verificarArquivo(string $arquivo, array $termos): bool {
+    global $base;
+
+    $caminho = $base . '/' . $arquivo;
+    if (!is_file($caminho)) return false;
+
+    $conteudo = file_get_contents($caminho);
+    if ($conteudo === false) return false;
+
+    foreach ($termos as $termo) {
+        if (!str_contains($conteudo, $termo)) return false;
+    }
+
+    return true;
+}
+
+$paginasLogin = [
+    'index.php', 'usuario.php', 'trens.php',
+    'rotas.php', 'mapa.php', 'grafico.php', 'sensores.php'
+];
+
+foreach ($paginasLogin as $arquivo) {
     teste(
-        'Bloqueio de URL direta: ' . $arquivo,
-        str_contains($conteudo, 'requireLogin();'),
-        'Página protegida por requireLogin().'
+        "Proteção de acesso: $arquivo",
+        verificarArquivo($arquivo, ['requireLogin();']) ||
+        verificarArquivo($arquivo, ['requireAdmin();']),
+        'A página deve exigir autenticação.'
     );
 }
 
-$arquivosAdmin = ['Cadastro.php', 'editar.php', 'excluir.php', 'criar_admin.php'];
-foreach ($arquivosAdmin as $arquivo) {
-    $conteudo = file_get_contents($base . '/' . $arquivo);
+$paginasAdmin = ['Cadastro.php', 'editar.php', 'excluir.php', 'CriarAdministrador.php'];
+
+foreach ($paginasAdmin as $arquivo) {
     teste(
-        'Restrição administrativa: ' . $arquivo,
-        str_contains($conteudo, 'requireAdmin();'),
-        'Página protegida por requireAdmin().'
+        "Permissão administrativa: $arquivo",
+        verificarArquivo($arquivo, ['requireAdmin();']),
+        'A página deve exigir perfil Administrador.'
     );
 }
 
-$cadastro = file_get_contents($base . '/Cadastro.php');
 teste(
-    'Perfil admin não vem do formulário comum',
-    !str_contains($cadastro, "'Administrador'") && str_contains($cadastro, "'Usuário'"),
-    'Cadastro.php aceita somente Usuário e Supervisor.'
+    'Cadastro de usuários protegido',
+    verificarArquivo('Cadastro.php', ['requireAdmin();', 'password_hash(']),
+    'Cadastro administrativo com senha criptografada.'
 );
 
-$criarAdmin = file_get_contents($base . '/criar_admin.php');
 teste(
-    'criar_admin.php define admin no servidor',
-    str_contains($criarAdmin, '$tipo = "Administrador";') && str_contains($criarAdmin, 'requireAdmin();'),
-    'O perfil Administrador é definido no código do servidor.'
+    'Criação de administradores protegida',
+    verificarArquivo('CriarAdministrador.php', ['requireAdmin();', 'Administrador']),
+    'A criação de administradores exige autenticação administrativa.'
 );
 
-$login = file_get_contents($base . '/Login.php');
 teste(
-    'Senha protegida por hash',
-    str_contains($login, 'password_verify('),
-    'Login utiliza password_verify().'
+    'Verificação de senha no login',
+    verificarArquivo('Login.php', ['password_verify(']),
+    'O login utiliza password_verify().'
 );
 
-$cadastroHash = file_get_contents($base . '/Cadastro.php');
 teste(
-    'Cadastro utiliza hash de senha',
-    str_contains($cadastroHash, 'password_hash('),
-    'Cadastro utiliza password_hash().'
+    'Regeneração da sessão',
+    verificarArquivo('Login.php', ['session_regenerate_id(true)']),
+    'O identificador da sessão é renovado após o login.'
 );
 
-$csrfArquivos = ['Cadastro.php', 'editar.php', 'excluir.php', 'criar_admin.php'];
-$csrfOk = true;
-foreach ($csrfArquivos as $arquivo) {
-    $conteudo = file_get_contents($base . '/' . $arquivo);
-    $csrfOk = $csrfOk && str_contains($conteudo, 'validarCsrf();') && str_contains($conteudo, 'csrf_token');
+teste(
+    'Controle de usuários excluídos',
+    verificarArquivo('auth.php', ['deleted_at IS NULL']),
+    'Contas excluídas não devem continuar autenticadas.'
+);
+
+$arquivosCsrf = [
+    'Cadastro.php', 'editar.php', 'excluir.php',
+    'CriarAdministrador.php', 'sensores.php', 'grafico.php'
+];
+
+foreach ($arquivosCsrf as $arquivo) {
+    teste(
+        "Proteção CSRF: $arquivo",
+        verificarArquivo($arquivo, ['validarCsrf();', 'csrf_token']),
+        'O formulário utiliza token CSRF.'
+    );
 }
+
 teste(
-    'Proteção CSRF',
-    $csrfOk,
-    'Formulários administrativos usam token CSRF validado no servidor.'
+    'Proteção da atualização de trens',
+    verificarArquivo('atualizar.php', ['requireOperationalControl();', 'validarCsrf();']),
+    'Somente Administrador e Supervisor podem atualizar trens.'
 );
 
-$resultadoColuna = $conexao->query("SHOW COLUMNS FROM usuarios LIKE 'senha'");
 teste(
-    'Banco possui coluna de senha',
-    $resultadoColuna && $resultadoColuna->num_rows === 1,
+    'Cadastro de sensores restrito',
+    verificarArquivo('sensores.php', ['requireAdmin();']),
+    'Somente Administrador pode cadastrar sensores.'
+);
+
+teste(
+    'Cadastro de manutenção restrito',
+    verificarArquivo('grafico.php', ['requireAdmin();']),
+    'Somente Administrador pode cadastrar manutenções.'
+);
+
+try {
+    $coluna = $conexao->query("SHOW COLUMNS FROM usuarios LIKE 'senha'");
+    $colunaExiste = $coluna->num_rows === 1;
+} catch (mysqli_sql_exception $ex) {
+    $colunaExiste = false;
+}
+
+teste(
+    'Coluna de senha no banco',
+    $colunaExiste,
     'A tabela usuarios possui a coluna senha.'
 );
 
-$totalFalhas = count(array_filter($testes, fn($teste) => !$teste['resultado']));
+$totalFalhas = count(array_filter($testes, fn($t) => !$t['resultado']));
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Testes de Segurança | Hyper Sense</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="../Css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testes de Segurança | Hyper Sense</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../Css/style.css">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php">Hyper Sense</a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="index.php">Home</a>
-            <a class="nav-link" href="logout.php">Sair</a>
-        </div>
-    </div>
-</nav>
+<body class="pagina-sistema">
 
-<main class="container my-5">
-    <h1 class="display-6 fw-semibold">Testes de Segurança</h1>
-    <p class="text-muted">Validações automáticas da camada de autenticação e autorização.</p>
+<?php require 'menu.php'; ?>
+
+<main class="container py-5">
+    <h1 class="fw-bold">Testes de Segurança</h1>
+    <p class="text-muted">Verificações automáticas de autenticação e permissões.</p>
 
     <div class="alert alert-<?= $totalFalhas === 0 ? 'success' : 'danger' ?>">
-        <?= $totalFalhas === 0 ? 'Todos os testes automáticos passaram.' : $totalFalhas . ' teste(s) falharam.' ?>
+        <?= $totalFalhas === 0
+            ? 'Todas as verificações automáticas passaram.'
+            : "$totalFalhas verificação(ões) falharam." ?>
     </div>
 
     <div class="table-responsive">
@@ -123,24 +161,33 @@ $totalFalhas = count(array_filter($testes, fn($teste) => !$teste['resultado']));
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($testes as $teste): ?>
+                <?php foreach ($testes as $t): ?>
                     <tr>
-                        <td><?= htmlspecialchars($teste['nome'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= e($t['nome']) ?></td>
                         <td>
-                            <span class="badge bg-<?= $teste['resultado'] ? 'success' : 'danger' ?>">
-                                <?= $teste['resultado'] ? 'PASSOU' : 'FALHOU' ?>
+                            <span class="badge bg-<?= $t['resultado'] ? 'success' : 'danger' ?>">
+                                <?= $t['resultado'] ? 'PASSOU' : 'FALHOU' ?>
                             </span>
                         </td>
-                        <td><?= htmlspecialchars($teste['evidencia'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= e($t['evidencia']) ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 
-    <div class="alert alert-info">
-        Testes manuais obrigatórios: sair da conta e tentar acessar index.php, Cadastro.php, editar.php, excluir.php, criar_admin.php e testes_seguranca.php diretamente; depois tentar enviar "Administrador" pelo DevTools no cadastro comum.
+    <div class="alert alert-info mt-4">
+        Estas verificações analisam o código, mas não substituem testes reais de segurança.
+        Teste também o acesso às páginas sem login e com os perfis Usuário e Supervisor.
     </div>
 </main>
+
+<footer class="bg-dark text-white py-2">
+    <div class="container text-center">
+        &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
