@@ -1,35 +1,15 @@
 
 <?php
-require_once "auth.php";
+require_once 'auth.php';
 requireLogin();
 
-if (!function_exists('e')) {
-    function e($valor): string {
-        return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
-    }
-}
-
-if (!function_exists('isAtiva')) {
-    function isAtiva(string $pagina, string $atual): string {
-        return $pagina === $atual ? 'active' : '';
-    }
-}
-
-function buscarTodos(mysqli $conexao, string $sql): array
+function buscarMapa(mysqli $db, string $sql): array
 {
-    $resultado = $conexao->query($sql);
-    $dados = [];
-
-    if ($resultado) {
-        while ($linha = $resultado->fetch_assoc()) {
-            $dados[] = $linha;
-        }
-    }
-
-    return $dados;
+    $resultado = $db->query($sql);
+    return $resultado->fetch_all(MYSQLI_ASSOC);
 }
 
-$estacoes = buscarTodos(
+$estacoes = buscarMapa(
     $conexao,
     "SELECT id, codigo, nome, ordem,
             posicao_x, posicao_y, status
@@ -37,48 +17,44 @@ $estacoes = buscarTodos(
      ORDER BY ordem"
 );
 
-$trechos = buscarTodos(
+$trechos = buscarMapa(
     $conexao,
-    "SELECT
-        t.id, t.codigo, t.status, t.distancia_km,
-        o.codigo AS origem_codigo,
-        o.nome AS origem_nome,
-        o.posicao_x AS origem_x,
-        o.posicao_y AS origem_y,
-        d.codigo AS destino_codigo,
-        d.nome AS destino_nome,
-        d.posicao_x AS destino_x,
-        d.posicao_y AS destino_y
+    "SELECT t.id, t.codigo, t.status, t.distancia_km,
+            o.codigo AS origem_codigo,
+            o.nome AS origem_nome,
+            o.posicao_x AS origem_x,
+            o.posicao_y AS origem_y,
+            d.codigo AS destino_codigo,
+            d.nome AS destino_nome,
+            d.posicao_x AS destino_x,
+            d.posicao_y AS destino_y
      FROM trechos t
-     INNER JOIN estacoes o ON o.id = t.origem_id
-     INNER JOIN estacoes d ON d.id = t.destino_id
+     JOIN estacoes o ON o.id = t.origem_id
+     JOIN estacoes d ON d.id = t.destino_id
      ORDER BY t.id"
 );
 
-$rotas = buscarTodos(
+$rotas = buscarMapa(
     $conexao,
-    "SELECT
-        r.id, r.codigo, r.nome, r.status,
-        rt.trecho_id, rt.ordem
+    "SELECT r.id, r.codigo, r.nome, r.status,
+            rt.trecho_id, rt.ordem
      FROM rotas r
      LEFT JOIN rota_trechos rt ON rt.rota_id = r.id
      ORDER BY r.id, rt.ordem"
 );
 
-$trens = buscarTodos(
+$trens = buscarMapa(
     $conexao,
-    "SELECT
-        t.id, t.codigo, t.status,
-        t.trecho_id, t.rota_id,
-        t.posicao_percentual,
-        COALESCE(ar.rota_nova_id, t.rota_id) AS rota_ativa_id,
-        tr.codigo AS trecho_codigo,
-        r.codigo AS rota_codigo,
-        o.tipo AS ocorrencia_tipo,
-        o.descricao AS ocorrencia_descricao,
-        m.componente AS manutencao_componente,
-        m.ordem_manutencao,
-        m.status AS manutencao_status
+    "SELECT t.id, t.codigo, t.status, t.trecho_id,
+            t.rota_id, t.posicao_percentual,
+            COALESCE(ar.rota_nova_id, t.rota_id) AS rota_ativa_id,
+            tr.codigo AS trecho_codigo,
+            r.codigo AS rota_codigo,
+            o.tipo AS ocorrencia_tipo,
+            o.descricao AS ocorrencia_descricao,
+            m.componente AS manutencao_componente,
+            m.ordem_manutencao,
+            m.status AS manutencao_status
      FROM trens t
      LEFT JOIN trechos tr ON tr.id = t.trecho_id
      LEFT JOIN rotas r ON r.id = t.rota_id
@@ -100,61 +76,55 @@ $trens = buscarTodos(
      ORDER BY t.codigo"
 );
 
-$sensores = buscarTodos(
+$sensores = buscarMapa(
     $conexao,
-    "SELECT
-        s.id, s.codigo, s.tipo, s.status,
-        s.leitura, s.limite, s.unidade,
-        s.trecho_id,
-        t.codigo AS trecho_codigo
+    "SELECT s.id, s.codigo, s.tipo, s.status,
+            s.leitura, s.limite, s.unidade,
+            s.trecho_id, t.codigo AS trecho_codigo
      FROM sensores s
      LEFT JOIN trechos t ON t.id = s.trecho_id
      ORDER BY s.codigo"
 );
 
-$amvs = buscarTodos(
+$amvs = buscarMapa(
     $conexao,
-    "SELECT
-        a.id, a.codigo, a.estado, a.status,
-        a.trecho_id, t.codigo AS trecho_codigo
+    "SELECT a.id, a.codigo, a.estado, a.status,
+            a.trecho_id, t.codigo AS trecho_codigo
      FROM amvs a
      LEFT JOIN trechos t ON t.id = a.trecho_id
      ORDER BY a.codigo"
 );
 
-$ocorrencias = buscarTodos(
+$ocorrencias = buscarMapa(
     $conexao,
-    "SELECT
-        o.id, o.tipo, o.descricao, o.status,
-        o.ocorrido_em, o.trem_id,
-        tr.codigo AS trem_codigo,
-        o.trecho_id, t.codigo AS trecho_codigo
+    "SELECT o.id, o.tipo, o.descricao, o.status,
+            o.ocorrido_em, o.trem_id,
+            tr.codigo AS trem_codigo,
+            o.trecho_id, t.codigo AS trecho_codigo
      FROM ocorrencias o
      LEFT JOIN trens tr ON tr.id = o.trem_id
      LEFT JOIN trechos t ON t.id = o.trecho_id
      ORDER BY o.ocorrido_em DESC"
 );
 
-$manutencoes = buscarTodos(
+$manutencoes = buscarMapa(
     $conexao,
-    "SELECT
-        m.id, m.componente, m.ordem_manutencao,
-        m.status, m.inicio, m.fim,
-        m.trem_id, tr.codigo AS trem_codigo,
-        m.trecho_id, t.codigo AS trecho_codigo
+    "SELECT m.id, m.componente, m.ordem_manutencao,
+            m.status, m.inicio, m.fim,
+            m.trem_id, tr.codigo AS trem_codigo,
+            m.trecho_id, t.codigo AS trecho_codigo
      FROM manutencoes m
      LEFT JOIN trens tr ON tr.id = m.trem_id
      LEFT JOIN trechos t ON t.id = m.trecho_id
      ORDER BY m.inicio DESC"
 );
 
-$alertas = buscarTodos(
+$alertas = buscarMapa(
     $conexao,
-    "SELECT
-        a.id, a.nivel, a.mensagem, a.status,
-        a.sensor_id, s.codigo AS sensor_codigo,
-        a.trem_id, tr.codigo AS trem_codigo,
-        a.trecho_id, t.codigo AS trecho_codigo
+    "SELECT a.id, a.nivel, a.mensagem, a.status,
+            a.sensor_id, s.codigo AS sensor_codigo,
+            a.trem_id, tr.codigo AS trem_codigo,
+            a.trecho_id, t.codigo AS trecho_codigo
      FROM alertas a
      LEFT JOIN sensores s ON s.id = a.sensor_id
      LEFT JOIN trens tr ON tr.id = a.trem_id
@@ -162,9 +132,6 @@ $alertas = buscarTodos(
      WHERE a.status = 'Ativo'
      ORDER BY a.criado_em DESC"
 );
-
-$paginaAtual = basename($_SERVER['PHP_SELF']);
-$podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -178,53 +145,8 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
     <link rel="stylesheet" href="../Css/style.css">
 </head>
 
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark navbar-hyper">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php">
-            <i class="fas fa-train-subway me-2"></i>Hyper Sense
-        </a>
-
-        <button class="navbar-toggler" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbarMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarMain">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.php">Home</a>
-                </li>
-
-                <?php if ($podeVerUsuarios): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="usuario.php">Usuários</a>
-                </li>
-                <?php endif; ?>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="trens.php">Trens</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link active" href="mapa.php">Mapa</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="grafico.php">Gráfico</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="sensores.php">Sensores</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="logout.php">Sair</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<body class="pagina-sistema">
+<?php require 'menu.php'; ?>
 
 <main class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
@@ -233,7 +155,9 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                 Simulação acadêmica
             </span>
 
-            <h1 class="fw-bold mt-2 mb-1">Mapa Ferroviário</h1>
+            <h1 class="fw-bold mt-2 mb-1">
+                Mapa Ferroviário
+            </h1>
 
             <p class="text-muted mb-0">
                 Consulte a posição dos trens e clique para ver detalhes.
@@ -250,22 +174,25 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
             <div class="card border-0 map-card">
                 <div class="card-body p-2 p-md-3">
                     <div class="map-toolbar d-flex flex-wrap gap-2 align-items-center mb-2">
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                id="mapaZoomMais">
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            id="mapaZoomMais"
+                        >
                             <i class="fas fa-plus"></i>
                         </button>
 
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                id="mapaZoomMenos">
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            id="mapaZoomMenos"
+                        >
                             <i class="fas fa-minus"></i>
                         </button>
 
-                        <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
-                                id="mapaReset">
-                            <i class="fas fa-expand"></i> Ajustar
+                        <button
+                            class="btn btn-sm btn-outline-secondary"
+                            id="mapaReset"
+                        >
+                            <i class="fas fa-expand"></i>Ajustar
                         </button>
 
                         <span class="ms-auto small text-muted">
@@ -274,11 +201,12 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                     </div>
 
                     <div class="mapa-viewport" id="mapaViewport">
-                        <svg id="mapa-ferroviario"
-                             viewBox="0 0 1040 430"
-                             role="img"
-                             aria-label="Mapa ferroviário interativo">
-
+                        <svg
+                            id="mapa-ferroviario"
+                            viewBox="0 0 1040 430"
+                            role="img"
+                            aria-label="Mapa ferroviário interativo"
+                        >
                             <g id="mapaConteudo">
                                 <g id="camadaTrechos"></g>
                                 <g id="camadaRotas"></g>
@@ -293,33 +221,13 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                     </div>
 
                     <div class="map-legend mt-3">
-                        <span>
-                            <i class="legend-line normal"></i>Normal
-                        </span>
-
-                        <span>
-                            <i class="legend-line atencao"></i>Atenção
-                        </span>
-
-                        <span>
-                            <i class="legend-line manutencao"></i>Manutenção
-                        </span>
-
-                        <span>
-                            <i class="legend-line bloqueado"></i>Bloqueado
-                        </span>
-
-                        <span>
-                            <i class="legend-dot train"></i>Trem
-                        </span>
-
-                        <span>
-                            <i class="legend-dot sensor"></i>Sensor
-                        </span>
-
-                        <span>
-                            <i class="legend-square amv"></i>AMV
-                        </span>
+                        <span><i class="legend-line normal"></i>Normal</span>
+                        <span><i class="legend-line atencao"></i>Atenção</span>
+                        <span><i class="legend-line manutencao"></i>Manutenção</span>
+                        <span><i class="legend-line bloqueado"></i>Bloqueado</span>
+                        <span><i class="legend-dot train"></i>Trem</span>
+                        <span><i class="legend-dot sensor"></i>Sensor</span>
+                        <span><i class="legend-square amv"></i>AMV</span>
                     </div>
                 </div>
             </div>
@@ -331,7 +239,8 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3 class="h5 mb-0">Painel operacional</h3>
 
-                        <span class="badge text-bg-light border" id="painelTipo">
+                        <span class="badge text-bg-light border"
+                              id="painelTipo">
                             Visão geral
                         </span>
                     </div>
@@ -347,19 +256,19 @@ $podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
 
 <script>
 window.csrfToken = <?= json_encode(csrfToken()) ?>;
-window.podeControlarTrens = <?= json_encode($podeVerUsuarios) ?>;
-window.urlAtualizarTrem = "atualizar.php";
+window.podeControlarTrens = <?= json_encode(podeEditar()) ?>;
+window.urlAtualizarTrem = 'atualizar.php';
 
 window.dadosMapa = {
-    estacoes: <?= json_encode($estacoes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    trechos: <?= json_encode($trechos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    rotas: <?= json_encode($rotas, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    trens: <?= json_encode($trens, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    sensores: <?= json_encode($sensores, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    amvs: <?= json_encode($amvs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    ocorrencias: <?= json_encode($ocorrencias, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    manutencoes: <?= json_encode($manutencoes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>,
-    alertas: <?= json_encode($alertas, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
+    estacoes: <?= json_encode($estacoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    trechos: <?= json_encode($trechos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    rotas: <?= json_encode($rotas, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    trens: <?= json_encode($trens, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    sensores: <?= json_encode($sensores, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    amvs: <?= json_encode($amvs, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    ocorrencias: <?= json_encode($ocorrencias, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    manutencoes: <?= json_encode($manutencoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+    alertas: <?= json_encode($alertas, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 };
 </script>
 
