@@ -1,57 +1,66 @@
-<?php
-require_once "auth.php";
-requireOperationalControl();
 
-require_once "../infra/conexao.php";
+<?php
+require_once 'auth.php';
+requireOperationalControl();
 
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['ok' => false, 'erro' => 'Método inválido.']);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Método não permitido.'
+    ]);
     exit;
 }
 
 validarCsrf();
 
-$id       = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 $trechoId = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT);
-$posicao  = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
+$posicao = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT);
 
-if (!$id || $id <= 0 || !$trechoId || $trechoId <= 0 || $posicao === false || $posicao === null) {
+if (
+    !$id ||
+    !$trechoId ||
+    $posicao === false ||
+    $posicao === null ||
+    $posicao < 0 ||
+    $posicao > 100
+) {
     http_response_code(400);
-    echo json_encode(['ok' => false, 'erro' => 'Dados inválidos.']);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Dados inválidos.'
+    ]);
     exit;
 }
 
-$posicao = max(0.0, min(100.0, (float)$posicao));
+try {
+    $stmt = $conexao->prepare(
+        "UPDATE trens
+         SET trecho_id = ?, posicao_percentual = ?
+         WHERE id = ?"
+    );
 
-$stmt = $conexao->prepare(
-    "UPDATE trens
-     SET trecho_id = ?, posicao_percentual = ?
-     WHERE id = ?"
-);
+    $stmt->bind_param('idi', $trechoId, $posicao, $id);
+    $stmt->execute();
 
-if (!$stmt) {
-    http_response_code(500);
-    echo json_encode(['ok' => false, 'erro' => 'Falha ao preparar atualização.']);
-    exit;
-}
-
-$stmt->bind_param("idi", $trechoId, $posicao, $id);
-
-if (!$stmt->execute()) {
-    http_response_code(500);
-    echo json_encode(['ok' => false, 'erro' => 'Falha ao atualizar trem.']);
     $stmt->close();
-    exit;
+
+    echo json_encode([
+        'ok' => true,
+        'id' => $id,
+        'trecho_id' => $trechoId,
+        'posicao_percentual' => $posicao
+    ]);
+} catch (mysqli_sql_exception $ex) {
+    http_response_code(400);
+
+    echo json_encode([
+        'ok' => false,
+        'erro' => 'Não foi possível atualizar o trem.'
+    ]);
 }
-
-$stmt->close();
-
-echo json_encode([
-    'ok' => true,
-    'id' => $id,
-    'trecho_id' => $trechoId,
-    'posicao_percentual' => $posicao
-]);
