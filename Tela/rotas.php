@@ -8,6 +8,7 @@ $tipoMensagem = $_SESSION['tipo_mensagem'] ?? 'success';
 unset($_SESSION['mensagem'], $_SESSION['tipo_mensagem']);
 
 $podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
+
 $sql = "
     SELECT r.id, r.codigo, r.nome, r.status, r.descricao, r.distancia_km, r.tempo_estimado, r.data_criacao
     FROM rotas r
@@ -53,16 +54,48 @@ if (!function_exists('isAtiva')) {
         </button>
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
                 <?php if ($podeVerUsuarios): ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php"><i class="fas fa-users me-1"></i>Usuários</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php">
+                        <i class="fas fa-users me-1"></i>Usuários
+                    </a>
+                </li>
                 <?php endif; ?>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php"><i class="fas fa-train me-1"></i>Trens</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('rotas.php', $paginaAtual) ?>" href="rotas.php"><i class="fas fa-route me-1"></i>Rotas</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php"><i class="fas fa-map me-1"></i>Mapa</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php"><i class="fas fa-chart-bar me-1"></i>Gráfico</a></li>
-                <li class="nav-item"><a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php"><i class="fas fa-satellite-dish me-1"></i>Sensores</a></li>
-                <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php">
+                        <i class="fas fa-train me-1"></i>Trens
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('rotas.php', $paginaAtual) ?>" href="rotas.php">
+                        <i class="fas fa-route me-1"></i>Rotas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php">
+                        <i class="fas fa-map me-1"></i>Mapa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php">
+                        <i class="fas fa-chart-bar me-1"></i>Gráfico
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php">
+                        <i class="fas fa-satellite-dish me-1"></i>Sensores
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">
+                        <i class="fas fa-right-from-bracket me-1"></i>Sair
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -74,8 +107,6 @@ if (!function_exists('isAtiva')) {
             <h1 class="fw-bold">Gestão de Rotas</h1>
             <p class="text-muted mb-0">Visualize e gerencie as rotas ferroviárias cadastradas.</p>
         </div>
-        <?php if ($podeGerenciar): ?>
-        <?php endif; ?>
     </div>
 
     <?php if ($mensagem !== ''): ?>
@@ -98,15 +129,12 @@ if (!function_exists('isAtiva')) {
                             <th>Tempo Estimado</th>
                             <th>Data</th>
                             <th>Status</th>
-                            <?php if ($podeGerenciar): ?>
-                                <th>Ações</th>
-                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!$rotas): ?>
                             <tr>
-                                <td colspan="<?= $podeGerenciar ? '8' : '7' ?>" class="text-center py-5 text-muted">Nenhuma rota cadastrada.</td>
+                                <td colspan="7" class="text-center py-5 text-muted">Nenhuma rota cadastrada.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($rotas as $rota): ?>
@@ -122,14 +150,6 @@ if (!function_exists('isAtiva')) {
                                             <?= htmlspecialchars($rota['status']) ?>
                                         </span>
                                     </td>
-                                    <?php if ($podeGerenciar): ?>
-                                        <td>
-                                            
-                                      <?= (int)$rota['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a> 
-                                    <?= (int)$rota['id'] ?>
-                                            <span class="text-muted">Visualização</span>
-                                        </td>
-                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
