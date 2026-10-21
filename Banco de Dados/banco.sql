@@ -1,10 +1,10 @@
-CREATE DATABASE ferrorama_db
+CREATE DATABASE IF NOT EXISTS ferrorama_db
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 USE ferrorama_db;
 
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE usuarios (
     UNIQUE KEY uk_usuarios_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE estacoes (
+CREATE TABLE IF NOT EXISTS estacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     nome VARCHAR(100) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE estacoes (
     status VARCHAR(20) NOT NULL DEFAULT 'Normal'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE rotas (
+CREATE TABLE IF NOT EXISTS rotas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     nome VARCHAR(100) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE rotas (
     data_criacao DATE NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE trechos (
+CREATE TABLE IF NOT EXISTS trechos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     origem_id INT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE trechos (
     CONSTRAINT fk_trecho_destino FOREIGN KEY (destino_id) REFERENCES estacoes(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE rota_trechos (
+CREATE TABLE IF NOT EXISTS rota_trechos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     rota_id INT NOT NULL,
     trecho_id INT NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE rota_trechos (
     CONSTRAINT fk_rota_trecho_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE trens (
+CREATE TABLE IF NOT EXISTS trens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     status VARCHAR(30) NOT NULL DEFAULT 'Em operacao',
@@ -72,7 +72,7 @@ CREATE TABLE trens (
     CONSTRAINT fk_trem_usuario FOREIGN KEY (usuario_responsavel_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE ocorrencias (
+CREATE TABLE IF NOT EXISTS ocorrencias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     trem_id INT NULL,
     trecho_id INT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE ocorrencias (
     CONSTRAINT fk_ocorrencia_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE manutencoes (
+CREATE TABLE IF NOT EXISTS manutencoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     trem_id INT NULL,
     trecho_id INT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE manutencoes (
     CONSTRAINT fk_manutencao_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE sensores (
+CREATE TABLE IF NOT EXISTS sensores (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     tipo VARCHAR(60) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE sensores (
     CONSTRAINT fk_sensor_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE amvs (
+CREATE TABLE IF NOT EXISTS amvs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(20) NOT NULL UNIQUE,
     trecho_id INT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE amvs (
     CONSTRAINT fk_amv_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE alertas (
+CREATE TABLE IF NOT EXISTS alertas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sensor_id INT NULL,
     trem_id INT NULL,
@@ -135,7 +135,7 @@ CREATE TABLE alertas (
     CONSTRAINT fk_alerta_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE alteracoes_rota (
+CREATE TABLE IF NOT EXISTS alteracoes_rota (
     id INT AUTO_INCREMENT PRIMARY KEY,
     trem_id INT NOT NULL,
     rota_anterior_id INT NULL,

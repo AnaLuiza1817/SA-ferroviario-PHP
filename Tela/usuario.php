@@ -1,9 +1,9 @@
 <?php
 require_once "auth.php";
 requireUsuariosView();
-require_once "../Infra/conexao.php";
+require_once "../infra/conexao.php";
 
-$resultado = $conexao->query("SELECT id, nome, email, telefone, tipo, status FROM usuarios ORDER BY id ASC");
+$resultado = $conexao->query("SELECT id, nome, email, telefone, tipo, status FROM usuarios WHERE deleted_at IS NULL ORDER BY id ASC");
 $usuarios = [];
 if ($resultado) {
     while ($u = $resultado->fetch_assoc()) {
@@ -13,9 +13,11 @@ if ($resultado) {
 $totalUsuarios = count($usuarios);
 $paginaAtual = basename($_SERVER["PHP_SELF"]);
 
-function isAtiva(string $pagina, string $paginaAtual): string
-{
-    return $pagina === $paginaAtual ? "active" : "";
+if (!function_exists('isAtiva')) {
+    function isAtiva(string $pagina, string $paginaAtual): string
+    {
+        return $pagina === $paginaAtual ? "active" : "";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -27,6 +29,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
     <title>Usuarios | Hyper Sense</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="../Css/style.css">
 </head>
 
@@ -45,7 +48,7 @@ function isAtiva(string $pagina, string $paginaAtual): string
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="display-6 fw-semibold"><i class="fas fa-users text-primary me-2"></i>Usuarios do Sistema</h1>
-                <p class="text-muted mb-0">Total: <?= $totalUsuarios ?> usuarios.</p>
+                <p class="text-muted mb-0">Total: <span id="totalUsuariosSpan"><?= $totalUsuarios ?></span> usuarios.</p>
             </div>
             <?php if (($_SESSION['usuario_tipo'] ?? '') === 'Administrador'): ?>
                 <a href="Cadastro.php" class="btn btn-success"><i class="fas fa-plus me-1"></i>Novo Usuario</a>
@@ -54,7 +57,8 @@ function isAtiva(string $pagina, string $paginaAtual): string
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body p-4">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle">
+                    <!-- ID adicionado para o DataTables funcionar -->
+                    <table class="table table-hover table-striped align-middle" id="tabelaUsuarios">
                         <thead class="table-primary">
                             <tr>
                                 <th>ID</th>
@@ -106,6 +110,10 @@ function isAtiva(string $pagina, string $paginaAtual): string
             <p class="mb-0">&copy; <?= date("Y") ?> Hyper Sense - Modulo de Usuarios</p>
         </div>
     </footer>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="../Js/main.js"></script>
 </body>
 
 </html>

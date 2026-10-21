@@ -8,12 +8,9 @@ $tipoMensagem = $_SESSION['tipo_mensagem'] ?? 'success';
 unset($_SESSION['mensagem'], $_SESSION['tipo_mensagem']);
 
 $podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
-
 $sql = "
-    SELECT r.id, r.codigo, r.nome, r.status, r.descricao, r.distancia_km, r.tempo_estimado, r.data_criacao,
-           t.codigo AS trem_codigo
+    SELECT r.id, r.codigo, r.nome, r.status, r.descricao, r.distancia_km, r.tempo_estimado, r.data_criacao
     FROM rotas r
-    LEFT JOIN trens t ON t.rota_id = r.id
     ORDER BY r.codigo
 ";
 $resultado = $conexao->query($sql);
@@ -27,6 +24,12 @@ if ($resultado) {
 $paginaAtual = basename($_SERVER['PHP_SELF']);
 $tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
 $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
+
+if (!function_exists('isAtiva')) {
+    function isAtiva(string $pagina, string $paginaAtual): string {
+        return $pagina === $paginaAtual ? 'active' : '';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -72,13 +75,12 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
             <p class="text-muted mb-0">Visualize e gerencie as rotas ferroviárias cadastradas.</p>
         </div>
         <?php if ($podeGerenciar): ?>
-            <a href="cadastro_rota.php" class="btn btn-success"><i class="fas fa-plus me-1"></i>Nova Rota</a>
         <?php endif; ?>
     </div>
 
     <?php if ($mensagem !== ''): ?>
-        <div class="alert alert-<?= e($tipoMensagem) ?> alert-dismissible fade show" role="alert">
-            <?= e($mensagem) ?>
+        <div class="alert alert-<?= htmlspecialchars($tipoMensagem) ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($mensagem) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -91,7 +93,7 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                         <tr>
                             <th>Código</th>
                             <th>Nome</th>
-                            <th>Trem Vinculado</th>
+                            <th>Descrição</th>
                             <th>Distância</th>
                             <th>Tempo Estimado</th>
                             <th>Data</th>
@@ -109,27 +111,23 @@ $podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true)
                         <?php else: ?>
                             <?php foreach ($rotas as $rota): ?>
                                 <tr>
-                                    <td class="fw-bold"><?= e($rota['codigo']) ?></td>
-                                    <td><?= e($rota['nome']) ?></td>
-                                    <td>
-                                        <?php if ($rota['trem_codigo']): ?>
-                                            <span class="badge bg-primary"><?= e($rota['trem_codigo']) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">Nenhum</span>
-                                        <?php endif; ?>
-                                    </td>
+                                    <td class="fw-bold"><?= htmlspecialchars($rota['codigo']) ?></td>
+                                    <td><?= htmlspecialchars($rota['nome']) ?></td>
+                                    <td><?= htmlspecialchars($rota['descricao'] ?? '—') ?></td>
                                     <td><?= $rota['distancia_km'] !== null ? number_format((float)$rota['distancia_km'], 2, ',', '.') . ' km' : '—' ?></td>
-                                    <td><?= e($rota['tempo_estimado'] ?? '—') ?></td>
+                                    <td><?= htmlspecialchars($rota['tempo_estimado'] ?? '—') ?></td>
                                     <td><?= $rota['data_criacao'] ? date('d/m/Y', strtotime($rota['data_criacao'])) : '—' ?></td>
                                     <td>
                                         <span class="badge <?= $rota['status'] === 'Ativa' ? 'bg-success' : 'bg-secondary' ?>">
-                                            <?= e($rota['status']) ?>
+                                            <?= htmlspecialchars($rota['status']) ?>
                                         </span>
                                     </td>
                                     <?php if ($podeGerenciar): ?>
                                         <td>
-                                            <a href="editar_rota.php?id=<?= (int)$rota['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                            <a href="excluir_rota.php?id=<?= (int)$rota['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja realmente excluir esta rota?');"><i class="fas fa-trash"></i></a>
+                                            
+                                      <?= (int)$rota['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a> 
+                                    <?= (int)$rota['id'] ?>
+                                            <span class="text-muted">Visualização</span>
                                         </td>
                                     <?php endif; ?>
                                 </tr>
