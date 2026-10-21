@@ -2,16 +2,17 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Pragma: no-cache");
 }
+
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
 
 require_once __DIR__ . "/../infra/conexao.php";
 
 function requireLogin(): void
 {
     if (empty($_SESSION['usuario_logado']) || empty($_SESSION['usuario_id'])) {
-        header('Location: Login.php');
+        header("Location: Login.php");
         exit;
     }
 
@@ -24,12 +25,6 @@ function requireLogin(): void
          LIMIT 1"
     );
 
-    if (!$stmt) {
-        session_destroy();
-        header('Location: Login.php');
-        exit;
-    }
-
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $usuario = $stmt->get_result()->fetch_assoc();
@@ -38,7 +33,7 @@ function requireLogin(): void
     if (!$usuario || $usuario['status'] !== 'Ativo') {
         $_SESSION = [];
         session_destroy();
-        header('Location: Login.php');
+        header("Location: Login.php");
         exit;
     }
 
@@ -47,13 +42,37 @@ function requireLogin(): void
     $_SESSION['usuario_tipo'] = $usuario['tipo'];
 }
 
+function isAdmin(): bool
+{
+    return ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
+}
+
+function podeEditar(): bool
+{
+    return in_array(
+        $_SESSION['usuario_tipo'] ?? '',
+        ['Administrador', 'Supervisor'],
+        true
+    );
+}
+
 function requireAdmin(): void
 {
     requireLogin();
 
-    if (($_SESSION['usuario_tipo'] ?? '') !== 'Administrador') {
+    if (!isAdmin()) {
         http_response_code(403);
-        exit('Acesso negado.');
+        exit("Acesso negado.");
+    }
+}
+
+function requireOperationalControl(): void
+{
+    requireLogin();
+
+    if (!podeEditar()) {
+        http_response_code(403);
+        exit("Acesso negado.");
     }
 }
 
@@ -81,18 +100,15 @@ function validarCsrf(): void
         !hash_equals($_SESSION['csrf_token'], $token)
     ) {
         http_response_code(403);
-        exit('Requisição inválida.');
+        exit("Requisição inválida.");
     }
 }
 
-function requireOperationalControl(): void
+function e($valor): string
 {
-    requireLogin();
-
-    $tipo = $_SESSION['usuario_tipo'] ?? '';
-
-    if (!in_array($tipo, ['Administrador', 'Supervisor'], true)) {
-        http_response_code(403);
-        exit('Acesso negado.');
-    }
+    return htmlspecialchars(
+        (string)($valor ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
 }
