@@ -1,21 +1,32 @@
+
 <?php
 require_once "auth.php";
 requireLogin();
-require_once "../infra/conexao.php";
 
-$mensagem = $_SESSION['mensagem'] ?? '';
-$tipoMensagem = $_SESSION['tipo_mensagem'] ?? 'success';
-unset($_SESSION['mensagem'], $_SESSION['tipo_mensagem']);
+if (!function_exists('isAtiva')) {
+    function isAtiva(string $pagina, string $atual): string {
+        return $pagina === $atual ? 'active' : '';
+    }
+}
 
-$podeGerenciar = in_array(($_SESSION['usuario_tipo'] ?? ''), ['Administrador', 'Supervisor'], true);
+if (!function_exists('e')) {
+    function e($valor): string {
+        return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
+    }
+}
 
 $sql = "
-    SELECT r.id, r.codigo, r.nome, r.status, r.descricao, r.distancia_km, r.tempo_estimado, r.data_criacao
-    FROM rotas r
-    ORDER BY r.codigo
+    SELECT
+        id, codigo, nome, status,
+        descricao, distancia_km,
+        tempo_estimado, data_criacao
+    FROM rotas
+    ORDER BY codigo
 ";
+
 $resultado = $conexao->query($sql);
 $rotas = [];
+
 if ($resultado) {
     while ($linha = $resultado->fetch_assoc()) {
         $rotas[] = $linha;
@@ -23,14 +34,7 @@ if ($resultado) {
 }
 
 $paginaAtual = basename($_SERVER['PHP_SELF']);
-$tipoUsuario = $_SESSION['usuario_tipo'] ?? '';
-$podeVerUsuarios = in_array($tipoUsuario, ['Administrador', 'Supervisor'], true);
-
-if (!function_exists('isAtiva')) {
-    function isAtiva(string $pagina, string $paginaAtual): string {
-        return $pagina === $paginaAtual ? 'active' : '';
-    }
-}
+$podeVerUsuarios = ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -38,63 +42,58 @@ if (!function_exists('isAtiva')) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rotas | Hyper Sense</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../Css/style.css">
 </head>
-<body>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-hyper shadow-sm">
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-hyper">
     <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
             <i class="fas fa-train-subway me-2"></i>Hyper Sense
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('index.php', $paginaAtual) ?>" href="index.php">
-                        <i class="fas fa-home me-1"></i>Home
-                    </a>
+                    <a class="nav-link" href="index.php">Home</a>
                 </li>
+
                 <?php if ($podeVerUsuarios): ?>
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('usuario.php', $paginaAtual) ?>" href="usuario.php">
-                        <i class="fas fa-users me-1"></i>Usuários
-                    </a>
+                    <a class="nav-link" href="usuario.php">Usuários</a>
                 </li>
                 <?php endif; ?>
+
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('trens.php', $paginaAtual) ?>" href="trens.php">
-                        <i class="fas fa-train me-1"></i>Trens
-                    </a>
+                    <a class="nav-link" href="trens.php">Trens</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('rotas.php', $paginaAtual) ?>" href="rotas.php">
-                        <i class="fas fa-route me-1"></i>Rotas
-                    </a>
+                    <a class="nav-link active" href="rotas.php">Rotas</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('mapa.php', $paginaAtual) ?>" href="mapa.php">
-                        <i class="fas fa-map me-1"></i>Mapa
-                    </a>
+                    <a class="nav-link" href="mapa.php">Mapa</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('grafico.php', $paginaAtual) ?>" href="grafico.php">
-                        <i class="fas fa-chart-bar me-1"></i>Gráfico
-                    </a>
+                    <a class="nav-link" href="grafico.php">Gráfico</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link <?= isAtiva('sensores.php', $paginaAtual) ?>" href="sensores.php">
-                        <i class="fas fa-satellite-dish me-1"></i>Sensores
-                    </a>
+                    <a class="nav-link" href="sensores.php">Sensores</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="logout.php">
-                        <i class="fas fa-right-from-bracket me-1"></i>Sair
-                    </a>
+                    <a class="nav-link" href="logout.php">Sair</a>
                 </li>
             </ul>
         </div>
@@ -102,21 +101,15 @@ if (!function_exists('isAtiva')) {
 </nav>
 
 <main class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="fw-bold">Gestão de Rotas</h1>
-            <p class="text-muted mb-0">Visualize e gerencie as rotas ferroviárias cadastradas.</p>
-        </div>
+    <div class="mb-4">
+        <h1 class="fw-bold">Gestão de Rotas</h1>
+
+        <p class="text-muted mb-0">
+            Visualize as rotas ferroviárias cadastradas.
+        </p>
     </div>
 
-    <?php if ($mensagem !== ''): ?>
-        <div class="alert alert-<?= htmlspecialchars($tipoMensagem) ?> alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars($mensagem) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <div class="card border-0 shadow-sm table-wrap">
+    <div class="card border-0 table-wrap">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -131,27 +124,59 @@ if (!function_exists('isAtiva')) {
                             <th>Status</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <?php if (!$rotas): ?>
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">Nenhuma rota cadastrada.</td>
-                            </tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                Nenhuma rota cadastrada.
+                            </td>
+                        </tr>
                         <?php else: ?>
-                            <?php foreach ($rotas as $rota): ?>
-                                <tr>
-                                    <td class="fw-bold"><?= htmlspecialchars($rota['codigo']) ?></td>
-                                    <td><?= htmlspecialchars($rota['nome']) ?></td>
-                                    <td><?= htmlspecialchars($rota['descricao'] ?? '—') ?></td>
-                                    <td><?= $rota['distancia_km'] !== null ? number_format((float)$rota['distancia_km'], 2, ',', '.') . ' km' : '—' ?></td>
-                                    <td><?= htmlspecialchars($rota['tempo_estimado'] ?? '—') ?></td>
-                                    <td><?= $rota['data_criacao'] ? date('d/m/Y', strtotime($rota['data_criacao'])) : '—' ?></td>
-                                    <td>
-                                        <span class="badge <?= $rota['status'] === 'Ativa' ? 'bg-success' : 'bg-secondary' ?>">
-                                            <?= htmlspecialchars($rota['status']) ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <?php foreach ($rotas as $rota): ?>
+                        <tr>
+                            <td class="fw-bold">
+                                <?= e($rota['codigo']) ?>
+                            </td>
+
+                            <td>
+                                <?= e($rota['nome']) ?>
+                            </td>
+
+                            <td>
+                                <?= e($rota['descricao'] ?? '—') ?>
+                            </td>
+
+                            <td>
+                                <?= $rota['distancia_km'] !== null
+                                    ? number_format(
+                                        (float)$rota['distancia_km'],
+                                        2,
+                                        ',',
+                                        '.'
+                                    ) . ' km'
+                                    : '—' ?>
+                            </td>
+
+                            <td>
+                                <?= e($rota['tempo_estimado'] ?? '—') ?>
+                            </td>
+
+                            <td>
+                                <?= $rota['data_criacao']
+                                    ? e(date('d/m/Y', strtotime($rota['data_criacao'])))
+                                    : '—' ?>
+                            </td>
+
+                            <td>
+                                <span class="badge <?= $rota['status'] === 'Ativa'
+                                    ? 'bg-success'
+                                    : 'bg-secondary' ?>">
+                                    <?= e($rota['status']) ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -159,6 +184,14 @@ if (!function_exists('isAtiva')) {
         </div>
     </div>
 </main>
+
+<footer class="bg-dark text-white py-2 mt-5">
+    <div class="container text-center">
+        <p class="mb-0">
+            &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
+        </p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
