@@ -14,13 +14,11 @@ function requireLogin(): void
 
     $id = (int)$_SESSION['usuario_id'];
     $stmt = $GLOBALS['conexao']->prepare("SELECT nome, email, tipo, status FROM usuarios WHERE id = ? LIMIT 1");
-
     if (!$stmt) {
         session_destroy();
         header('Location: Login.php');
         exit;
     }
-
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $usuario = $stmt->get_result()->fetch_assoc();
@@ -41,7 +39,6 @@ function requireLogin(): void
 function requireAdmin(): void
 {
     requireLogin();
-
     if (($_SESSION['usuario_tipo'] ?? '') !== 'Administrador') {
         http_response_code(403);
         exit('Acesso negado.');
@@ -51,9 +48,7 @@ function requireAdmin(): void
 function requireUsuariosView(): void
 {
     requireLogin();
-
     $tipo = $_SESSION['usuario_tipo'] ?? '';
-
     if (!in_array($tipo, ['Administrador', 'Supervisor'], true)) {
         http_response_code(403);
         exit('Acesso negado.');
@@ -65,14 +60,12 @@ function csrfToken(): string
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
-
     return $_SESSION['csrf_token'];
 }
 
 function validarCsrf(): void
 {
     $token = $_POST['csrf_token'] ?? '';
-
     if (!$token || empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
         http_response_code(403);
         exit('Requisição inválida.');

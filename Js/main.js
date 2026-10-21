@@ -21,13 +21,21 @@
         }
         window.jQuery('#tabelaUsuarios').DataTable({
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json' },
-            pageLength: 5,
+            pageLength: 50,
+            lengthMenu: [[25, 50, 100, -1], [25, 50, 100, 'Todos']],
             responsive: true,
             order: [[0, 'asc']],
             columnDefs: [
                 { orderable: true, targets: [0, 1, 2, 3, 4, 5] },
                 { orderable: false, targets: [6] }
-            ]
+            ],
+            drawCallback: function () {
+                const info = this.api().page.info();
+                const span = document.getElementById('totalUsuariosSpan');
+                if (span) {
+                    span.textContent = info.recordsTotal;
+                }
+            }
         });
     }
 
@@ -48,8 +56,8 @@
         const formulario = document.getElementById('formExcluirUsuario');
         if (!formulario) return;
         formulario.addEventListener('submit', function (evento) {
-            const nome = formulario.dataset.nome || 'este usuário';
-            const confirmado = window.confirm('Tem certeza que deseja excluir "' + nome + '"?\n\nEsta ação não poderá ser desfeita.');
+            const nome = formulario.dataset.nome || 'este usuario';
+            const confirmado = window.confirm('Tem certeza que deseja excluir "' + nome + '"?\n\nEsta acao nao podera ser desfeita.');
             if (!confirmado) evento.preventDefault();
         });
     }
@@ -137,7 +145,7 @@
             data: {
                 labels: dadosOcorr.map(function (i) { return i.codigo; }),
                 datasets: [{
-                    label: 'Ocorrências',
+                    label: 'Ocorrencias',
                     data: dadosOcorr.map(function (i) { return Number(i.total_ocorrencias || 0); }),
                     borderWidth: 1
                 }]
@@ -167,21 +175,21 @@
         const trem = detalhesTrens[codigo];
         const tipos = trem.tipos.length
             ? trem.tipos.map(function (i) { return '<li>' + escaparHtml(i.tipo) + ': ' + i.total + '</li>'; }).join('')
-            : '<li>Nenhuma ocorrência registrada.</li>';
+            : '<li>Nenhuma ocorrencia registrada.</li>';
         const ocorrencias = trem.ocorrencias.length
             ? trem.ocorrencias.slice(0, 4).map(function (i) { return '<li><strong>' + escaparHtml(i.tipo) + ':</strong> ' + escaparHtml(i.descricao) + '</li>'; }).join('')
-            : '<li>Nenhuma ocorrência registrada.</li>';
+            : '<li>Nenhuma ocorrencia registrada.</li>';
         const manutencoes = trem.manutencoes.length
             ? trem.manutencoes.slice(0, 4).map(function (i) { return '<li><strong>' + escaparHtml(i.componente) + ':</strong> ' + escaparHtml(i.status) + ' (' + escaparHtml(i.ordem_manutencao) + ')</li>'; }).join('')
-            : '<li>Nenhuma manutenção registrada.</li>';
+            : '<li>Nenhuma manutencao registrada.</li>';
 
         painel.innerHTML =
             '<div class="detail-heading"><strong>' + escaparHtml(trem.codigo) + '</strong><span class="status-badge">' + escaparHtml(trem.status) + '</span></div>' +
             '<p><strong>Rota:</strong> ' + escaparHtml(trem.rota) + '</p>' +
-            '<p><strong>Total de ocorrências:</strong> ' + trem.total_ocorrencias + '</p>' +
-            '<h6>Tipos de ocorrência</h6><ul>' + tipos + '</ul>' +
-            '<h6>Ocorrências recentes</h6><ul>' + ocorrencias + '</ul>' +
-            '<h6>Manutenções</h6><ul>' + manutencoes + '</ul>';
+            '<p><strong>Total de ocorrencias:</strong> ' + trem.total_ocorrencias + '</p>' +
+            '<h6>Tipos de ocorrencia</h6><ul>' + tipos + '</ul>' +
+            '<h6>Ocorrencias recentes</h6><ul>' + ocorrencias + '</ul>' +
+            '<h6>Manutencoes</h6><ul>' + manutencoes + '</ul>';
     }
 
     function inicializarMapa() {
@@ -442,12 +450,12 @@
                 const ocorrencia = item.ocorrencia_tipo ? item.ocorrencia_tipo + ': ' + item.ocorrencia_descricao : 'Nenhuma registrada';
                 const manutencao = item.manutencao_componente ? item.manutencao_componente + ' - ' + item.manutencao_status : 'Nenhuma registrada';
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.codigo) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
-                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Não informado') + '</p>' +
+                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Nao informado') + '</p>' +
                     '<p><strong>Rota ativa:</strong> ' + escaparHtml(obterCodigoRota(rotaAtual)) + '</p>' +
-                    '<p><strong>Ocorrência:</strong> ' + escaparHtml(ocorrencia) + '</p>' +
-                    '<p><strong>Manutenção:</strong> ' + escaparHtml(manutencao) + '</p>' +
-                    '<p><strong>Último evento:</strong> ' + (item.ocorrencia_descricao ? escaparHtml(item.ocorrencia_descricao) : 'Sem evento registrado') + '</p>' +
-                    '<button type="button" class="btn btn-primary btn-sm w-100" id="simularAlteracaoRota"><i class="fas fa-route me-2"></i>Simular alteração de rota</button>';
+                    '<p><strong>Ocorrencia:</strong> ' + escaparHtml(ocorrencia) + '</p>' +
+                    '<p><strong>Manutencao:</strong> ' + escaparHtml(manutencao) + '</p>' +
+                    '<p><strong>Ultimo evento:</strong> ' + (item.ocorrencia_descricao ? escaparHtml(item.ocorrencia_descricao) : 'Sem evento registrado') + '</p>' +
+                    '<button type="button" class="btn btn-primary btn-sm w-100" id="simularAlteracaoRota"><i class="fas fa-route me-2"></i>Simular alteracao de rota</button>';
             }
             if (tipo === 'trecho') {
                 const sensores = dados.sensores.filter(function (s) { return Number(s.trecho_id) === Number(item.id); }).length;
@@ -455,7 +463,7 @@
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.codigo) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
                     '<p><strong>Origem:</strong> ' + escaparHtml(item.origem_nome) + '</p>' +
                     '<p><strong>Destino:</strong> ' + escaparHtml(item.destino_nome) + '</p>' +
-                    '<p><strong>Distância:</strong> ' + escaparHtml(item.distancia_km) + ' km</p>' +
+                    '<p><strong>Distancia:</strong> ' + escaparHtml(item.distancia_km) + ' km</p>' +
                     '<p><strong>Trens presentes:</strong> ' + (trens.length ? escaparHtml(trens.join(', ')) : 'Nenhum') + '</p>' +
                     '<p><strong>Sensores:</strong> ' + sensores + '</p>';
             }
@@ -466,37 +474,37 @@
             if (tipo === 'sensor') {
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.codigo) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
                     '<p><strong>Tipo:</strong> ' + escaparHtml(item.tipo) + '</p>' +
-                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Não informado') + '</p>' +
+                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Nao informado') + '</p>' +
                     '<p><strong>Leitura:</strong> ' + escaparHtml(item.leitura) + ' ' + escaparHtml(item.unidade || '') + '</p>' +
-                    '<p><strong>Limite:</strong> ' + escaparHtml(item.limite !== null && item.limite !== undefined ? item.limite : 'Não informado') + ' ' + escaparHtml(item.unidade || '') + '</p>';
+                    '<p><strong>Limite:</strong> ' + escaparHtml(item.limite !== null && item.limite !== undefined ? item.limite : 'Nao informado') + ' ' + escaparHtml(item.unidade || '') + '</p>';
             }
             if (tipo === 'amv') {
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.codigo) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
-                    '<p><strong>Estado:</strong> ' + escaparHtml(item.estado) + '</p><p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Não informado') + '</p>';
+                    '<p><strong>Estado:</strong> ' + escaparHtml(item.estado) + '</p><p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Nao informado') + '</p>';
             }
             if (tipo === 'ocorrencia') {
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.tipo) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
-                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Não informado') + '</p>' +
-                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Não informado') + '</p>' +
+                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Nao informado') + '</p>' +
+                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Nao informado') + '</p>' +
                     '<p>' + escaparHtml(item.descricao) + '</p>' +
                     '<p><strong>Data:</strong> ' + escaparHtml(item.ocorrido_em) + '</p>';
             }
             if (tipo === 'manutencao') {
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.ordem_manutencao) + '</strong><span class="status-badge">' + escaparHtml(item.status) + '</span></div>' +
                     '<p><strong>Componente:</strong> ' + escaparHtml(item.componente) + '</p>' +
-                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Não informado') + '</p>' +
-                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Não informado') + '</p>';
+                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Nao informado') + '</p>' +
+                    '<p><strong>Trecho:</strong> ' + escaparHtml(item.trecho_codigo || 'Nao informado') + '</p>';
             }
             if (tipo === 'alerta') {
                 return '<div class="detail-heading"><strong>Alerta</strong><span class="status-badge">' + escaparHtml(item.nivel) + '</span></div>' +
                     '<p>' + escaparHtml(item.mensagem) + '</p>' +
-                    '<p><strong>Sensor:</strong> ' + escaparHtml(item.sensor_codigo || 'Não informado') + '</p>' +
-                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Não informado') + '</p>';
+                    '<p><strong>Sensor:</strong> ' + escaparHtml(item.sensor_codigo || 'Nao informado') + '</p>' +
+                    '<p><strong>Trem:</strong> ' + escaparHtml(item.trem_codigo || 'Nao informado') + '</p>';
             }
             if (tipo === 'rota') {
                 return '<div class="detail-heading"><strong>' + escaparHtml(item.codigo) + '</strong></div><p>Rota destacada no mapa.</p>';
             }
-            return '<p>Informações não disponíveis.</p>';
+            return '<p>Informacoes nao disponiveis.</p>';
         }
 
         function simularAlteracaoRota(tremId) {
@@ -517,7 +525,7 @@
             estado.rotasAtivas[trem.id] = novaRota;
             const painel = document.getElementById('painelOperacional');
             if (painel) {
-                painel.innerHTML = '<div class="route-change"><strong>Alteração de rota simulada</strong><p>Rota antiga: ' + escaparHtml(obterCodigoRota(rotaAtual)) + '</p><p>Nova rota: ' + escaparHtml(obterCodigoRota(novaRota)) + '</p><p>O destaque do mapa foi atualizado.</p></div>';
+                painel.innerHTML = '<div class="route-change"><strong>Alteracao de rota simulada</strong><p>Rota antiga: ' + escaparHtml(obterCodigoRota(rotaAtual)) + '</p><p>Nova rota: ' + escaparHtml(obterCodigoRota(novaRota)) + '</p><p>O destaque do mapa foi atualizado.</p></div>';
             }
             desenharRotas();
             animarTremParaNovaRota(trem, novaRota);
@@ -631,10 +639,10 @@
             const painel = document.getElementById('painelOperacional');
             const painelTipo = document.getElementById('painelTipo');
             if (painel) {
-                painel.innerHTML = 'Selecione um elemento no mapa para visualizar suas informações.';
+                painel.innerHTML = 'Selecione um elemento no mapa para visualizar suas informacoes.';
             }
             if (painelTipo) {
-                painelTipo.textContent = 'Visão geral';
+                painelTipo.textContent = 'Visao geral';
             }
         });
 
