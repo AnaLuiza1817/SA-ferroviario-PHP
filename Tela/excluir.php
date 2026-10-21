@@ -1,12 +1,10 @@
+
 <?php
-require_once "auth.php";
+require_once 'auth.php';
 requireAdmin();
 
-require_once "../Infra/conexao.php";
-
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-if (!$id || $id <= 0) {
+if (!$id) {
     header('Location: usuario.php?erro=id_invalido');
     exit;
 }
@@ -14,69 +12,63 @@ if (!$id || $id <= 0) {
 $stmt = $conexao->prepare('SELECT id, nome, email, telefone, tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL');
 $stmt->bind_param('i', $id);
 $stmt->execute();
-$stmt->bind_result($usuarioId, $usuarioNome, $usuarioEmail, $usuarioTelefone, $usuarioTipo, $usuarioStatus);
+$usuario = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-if (!$stmt->fetch()) {
-    $stmt->close();
+if (!$usuario) {
     header('Location: usuario.php?erro=nao_encontrado');
     exit;
 }
 
-$usuario = [
-    'id' => (int)$usuarioId,
-    'nome' => (string)$usuarioNome,
-    'email' => (string)$usuarioEmail,
-    'telefone' => (string)$usuarioTelefone,
-    'tipo' => (string)$usuarioTipo,
-    'status' => (string)$usuarioStatus
-];
-$stmt->close();
+$erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validarCsrf();
-    $confirmacao = $_POST['confirmacao'] ?? '';
 
-    if ($confirmacao !== 'sim') {
+    if (($_POST['confirmacao'] ?? '') !== 'sim') {
         header('Location: usuario.php');
         exit;
     }
 
-    if ($usuario['id'] === (int)($_SESSION['usuario_id'] ?? 0)) {
-        $erro = 'Você não pode excluir a própria conta enquanto estiver conectado.';
-    } elseif ($usuario['tipo'] === 'Administrador') {
-        $stmtAdmins = $conexao->prepare("SELECT COUNT(*) FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo' AND deleted_at IS NULL");
-        if (!$stmtAdmins || !$stmtAdmins->execute()) {
-            $erro = 'Não foi possível validar a proteção das contas administrativas.';
-        } else {
-            $stmtAdmins->bind_result($totalAdmins);
-            $stmtAdmins->fetch();
-            $stmtAdmins->close();
-            if ((int)$totalAdmins <= 1) {
-                $erro = 'O último administrador ativo não pode ser excluído.';
-            }
-        }
-    }
-
-    if (!empty($erro)) {
+    if ($id === (int)$_SESSION['usuario_id']) {
+        $erro = 'Você não pode excluir sua própria conta.';
     } else {
-        $stmt = $conexao->prepare("UPDATE usuarios SET deleted_at = NOW(), status = 'Inativo' WHERE id = ? AND deleted_at IS NULL");
-        if (!$stmt) {
-            $erro = 'Não foi possível preparar a exclusão do usuário.';
-        } else {
+        try {
+            $conexao->begin_transaction();
+
+            $stmt = $conexao->prepare('SELECT tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
             $stmt->bind_param('i', $id);
-        }
-
-        if (!$erro && $stmt->execute() && $stmt->affected_rows === 1) {
+            $stmt->execute();
+            $atual = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-            header('Location: usuario.php?sucesso=exclusao');
-            exit;
-        }
 
-        if (!$erro) {
-            $erro = 'Não foi possível excluir o usuário. Ele pode já ter sido removido ou estar indisponível.';
-        }
-        if ($stmt) {
-            $stmt->close();
+            if (!$atual) {
+                $erro = 'Usuário não encontrado.';
+            } elseif ($atual['tipo'] === 'Administrador' && $atual['status'] === 'Ativo') {
+                $total = $conexao->query("SELECT COUNT(*) AS total FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo' AND deleted_at IS NULL FOR UPDATE")->fetch_assoc()['total'];
+                if ($total <= 1) $erro = 'O último administrador ativo não pode ser excluído.';
+            }
+
+            if (!$erro) {
+                $stmt = $conexao->prepare("UPDATE usuarios SET deleted_at = NOW(), status = 'Inativo' WHERE id = ? AND deleted_at IS NULL");
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $excluido = $stmt->affected_rows === 1;
+                $stmt->close();
+
+                if (!$excluido) $erro = 'Não foi possível excluir o usuário.';
+            }
+
+            if ($erro) {
+                $conexao->rollback();
+            } else {
+                $conexao->commit();
+                header('Location: usuario.php?sucesso=exclusao');
+                exit;
+            }
+        } catch (mysqli_sql_exception $ex) {
+            $conexao->rollback();
+            $erro = 'Não foi possível excluir o usuário.';
         }
     }
 }
@@ -87,60 +79,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excluir Usuário | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../Css/style.css">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-chart-line me-2"></i>Hyper Sense</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"><span class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse" id="navbarMain">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.php"><i class="fas fa-home me-1"></i>Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-right-from-bracket me-1"></i>Sair</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<body class="pagina-sistema">
+<?php require 'menu.php'; ?>
 
 <main class="container my-5">
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-body p-4 p-md-5 text-center">
-                    <div class="text-danger mb-3"><i class="fas fa-triangle-exclamation fa-4x"></i></div>
+            <div class="card border-0 rounded-4">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-triangle-exclamation fa-4x text-danger mb-3"></i>
                     <h1 class="h2">Excluir usuário?</h1>
-                    <p class="text-muted">Esta ação não poderá ser desfeita.</p>
+                    <p class="text-muted">O usuário perderá o acesso ao sistema.</p>
 
-                    <?php if (!empty($erro)): ?>
-                        <div class="alert alert-danger text-start"><?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?></div>
+                    <?php if ($erro): ?>
+                        <div class="alert alert-danger"><?= e($erro) ?></div>
                     <?php endif; ?>
 
                     <div class="card bg-light border-0 text-start my-4">
                         <div class="card-body">
-                            <p class="mb-2"><strong>ID:</strong> <?= $usuario['id'] ?></p>
-                            <p class="mb-2"><strong>Nome:</strong> <?= htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mb-2"><strong>E-mail:</strong> <?= htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mb-2"><strong>Telefone:</strong> <?= htmlspecialchars($usuario['telefone'], ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mb-2"><strong>Tipo:</strong> <?= htmlspecialchars($usuario['tipo'], ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mb-0"><strong>Status:</strong> <?= htmlspecialchars($usuario['status'], ENT_QUOTES, 'UTF-8') ?></p>
+                            <p><strong>ID:</strong> <?= (int)$usuario['id'] ?></p>
+                            <p><strong>Nome:</strong> <?= e($usuario['nome']) ?></p>
+                            <p><strong>E-mail:</strong> <?= e($usuario['email']) ?></p>
+                            <p><strong>Telefone:</strong> <?= e($usuario['telefone']) ?></p>
+                            <p><strong>Tipo:</strong> <?= e($usuario['tipo']) ?></p>
+                            <p class="mb-0"><strong>Status:</strong> <?= e($usuario['status']) ?></p>
                         </div>
                     </div>
 
-                    <form method="post" id="formExcluirUsuario" data-nome="<?= htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8') ?>">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
+                    <form method="post" id="formExcluirUsuario" data-nome="<?= e($usuario['nome']) ?>">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="confirmacao" value="sim">
                         <a href="usuario.php" class="btn btn-outline-secondary me-2">Cancelar</a>
-                        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Sim, excluir usuário</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Sim, excluir usuário
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<footer class="bg-dark text-white py-2">
+    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
 </body>
 </html>
