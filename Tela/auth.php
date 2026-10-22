@@ -1,4 +1,3 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -40,24 +39,31 @@ function podeEditar(): bool {
     return in_array($_SESSION['usuario_tipo'] ?? '', ['Administrador', 'Supervisor'], true);
 }
 
+function redirecionarAcessoNegado(): void {
+    $_SESSION['mensagem_erro'] = 'Acesso negado. Faça login com um perfil autorizado.';
+    header("Location: Login.php");
+    exit;
+}
+
 function requireAdmin(): void {
     requireLogin();
     if (!isAdmin()) {
-        http_response_code(403);
-        exit("Acesso negado.");
+        redirecionarAcessoNegado();
     }
 }
 
 function requireOperationalControl(): void {
     requireLogin();
     if (!podeEditar()) {
+        if (PHP_SAPI !== 'cli' && !headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso negado.']);
+            exit;
+        }
         http_response_code(403);
         exit("Acesso negado.");
     }
-}
-
-function requireUsuariosView(): void {
-    requireAdmin();
 }
 
 function csrfToken(): string {
@@ -74,4 +80,14 @@ function validarCsrf(): void {
 
 function e($valor): string {
     return htmlspecialchars((string)($valor ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+function mensagemFlash(string $tipo, string $texto): void {
+    $_SESSION['flash'] = ['tipo' => $tipo, 'texto' => $texto];
+}
+
+function consumirFlash(): ?array {
+    $flash = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $flash;
 }

@@ -1,11 +1,11 @@
-
 <?php
 require_once 'auth.php';
 requireAdmin();
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) {
-    header('Location: usuario.php?erro=id_invalido');
+    mensagemFlash('danger', 'ID inválido.');
+    header('Location: usuario.php');
     exit;
 }
 
@@ -16,7 +16,8 @@ $usuario = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$usuario) {
-    header('Location: usuario.php?erro=nao_encontrado');
+    mensagemFlash('danger', 'Usuário não encontrado.');
+    header('Location: usuario.php');
     exit;
 }
 
@@ -36,15 +37,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conexao->begin_transaction();
 
+            $stmt = $conexao->prepare("SELECT COUNT(*) AS total FROM trens WHERE usuario_responsavel_id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $totalTrens = (int)$stmt->get_result()->fetch_assoc()['total'];
+            $stmt->close();
+
+            if ($totalTrens > 0) {
+                $erro = 'Não é possível excluir este usuário: ele possui trens vinculados.';
+            }
+
             $stmt = $conexao->prepare('SELECT tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
             $stmt->bind_param('i', $id);
             $stmt->execute();
             $atual = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
-            if (!$atual) {
+            if (!$erro && !$atual) {
                 $erro = 'Usuário não encontrado.';
-            } elseif ($atual['tipo'] === 'Administrador' && $atual['status'] === 'Ativo') {
+            } elseif (!$erro && $atual['tipo'] === 'Administrador' && $atual['status'] === 'Ativo') {
                 $total = $conexao->query("SELECT COUNT(*) AS total FROM usuarios WHERE tipo = 'Administrador' AND status = 'Ativo' AND deleted_at IS NULL FOR UPDATE")->fetch_assoc()['total'];
                 if ($total <= 1) $erro = 'O último administrador ativo não pode ser excluído.';
             }
@@ -55,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
                 $excluido = $stmt->affected_rows === 1;
                 $stmt->close();
-
                 if (!$excluido) $erro = 'Não foi possível excluir o usuário.';
             }
 
@@ -63,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conexao->rollback();
             } else {
                 $conexao->commit();
-                header('Location: usuario.php?sucesso=exclusao');
+                mensagemFlash('success', 'Usuário excluído com sucesso.');
+                header('Location: usuario.php');
                 exit;
             }
         } catch (mysqli_sql_exception $ex) {
@@ -110,14 +121,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <form method="post" id="formExcluirUsuario" data-nome="<?= e($usuario['nome']) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                        <input type="hidden" name="confirmacao" value="sim">
-                        <a href="usuario.php" class="btn btn-outline-secondary me-2">Cancelar</a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash me-1"></i>Sim, excluir usuário
-                        </button>
-                    </form>
+                    <?php if ($erro): ?>
+                        <a href="usuario.php" class="btn btn-outline-secondary">Voltar</a>
+                    <?php else: ?>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="confirmacao" value="sim">
+                            <a href="usuario.php" class="btn btn-outline-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Sim, excluir usuário</button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

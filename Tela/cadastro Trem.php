@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -23,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($codigo) > 20) $erros[] = 'Código muito longo.';
     if (!in_array($status, $statusPermitidos, true)) $erros[] = 'Status inválido.';
     if (!is_numeric($posicao) || (float)$posicao < 0 || (float)$posicao > 100) $erros[] = 'Posição inválida.';
+    if (!$rota) $erros[] = 'Selecione uma rota. Todo trem deve estar vinculado a uma rota.';
 
     if (!$erros) {
         try {
@@ -32,8 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
 
-            $_SESSION['mensagem'] = 'Trem cadastrado com sucesso!';
-            $_SESSION['tipo_mensagem'] = 'success';
+            mensagemFlash('success', 'Trem cadastrado com sucesso!');
             header('Location: trens.php');
             exit;
         } catch (mysqli_sql_exception $ex) {
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $usuarios = $conexao->query("SELECT id, nome FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $trechos = $conexao->query('SELECT id, codigo FROM trechos ORDER BY codigo')->fetch_all(MYSQLI_ASSOC);
-$rotas = $conexao->query('SELECT id, codigo, nome FROM rotas ORDER BY codigo')->fetch_all(MYSQLI_ASSOC);
+$rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ativa' ORDER BY codigo")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -71,9 +70,7 @@ $rotas = $conexao->query('SELECT id, codigo, nome FROM rotas ORDER BY codigo')->
 
     <?php if ($erros): ?>
         <div class="alert alert-danger">
-            <?php foreach ($erros as $erro): ?>
-                <div><?= e($erro) ?></div>
-            <?php endforeach; ?>
+            <?php foreach ($erros as $erro): ?><div><?= e($erro) ?></div><?php endforeach; ?>
         </div>
     <?php endif; ?>
 
@@ -81,13 +78,11 @@ $rotas = $conexao->query('SELECT id, codigo, nome FROM rotas ORDER BY codigo')->
         <div class="card-body p-4">
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Código do Trem</label>
                         <input class="form-control" type="text" name="codigo" maxlength="20" value="<?= e($codigo) ?>" required>
                     </div>
-
                     <div class="col-md-6">
                         <label class="form-label">Status Inicial</label>
                         <select class="form-select" name="status">
@@ -96,7 +91,6 @@ $rotas = $conexao->query('SELECT id, codigo, nome FROM rotas ORDER BY codigo')->
                             <?php endforeach; ?>
                         </select>
                     </div>
-
                     <div class="col-md-6">
                         <label class="form-label">Usuário Responsável</label>
                         <select class="form-select" name="usuario_responsavel_id">
@@ -106,28 +100,25 @@ $rotas = $conexao->query('SELECT id, codigo, nome FROM rotas ORDER BY codigo')->
                             <?php endforeach; ?>
                         </select>
                     </div>
-
                     <div class="col-md-6">
                         <label class="form-label">Posição no Trecho (%)</label>
                         <input class="form-control" type="number" name="posicao_percentual" step="0.01" min="0" max="100" value="<?= e($posicao) ?>" required>
                     </div>
-
+                    <div class="col-md-6">
+                        <label class="form-label">Rota (obrigatória)</label>
+                        <select class="form-select" name="rota_id" required>
+                            <option value="">Selecione uma rota</option>
+                            <?php foreach ($rotas as $r): ?>
+                                <option value="<?= $r['id'] ?>" <?= (string)$rotaId === (string)$r['id'] ? 'selected' : '' ?>><?= e($r['codigo'] . ' - ' . $r['nome']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Trecho Atual</label>
                         <select class="form-select" name="trecho_id">
                             <option value="">Sem trecho</option>
                             <?php foreach ($trechos as $t): ?>
                                 <option value="<?= $t['id'] ?>" <?= (string)$trechoId === (string)$t['id'] ? 'selected' : '' ?>><?= e($t['codigo']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Rota Atual</label>
-                        <select class="form-select" name="rota_id">
-                            <option value="">Sem rota</option>
-                            <?php foreach ($rotas as $r): ?>
-                                <option value="<?= $r['id'] ?>" <?= (string)$rotaId === (string)$r['id'] ? 'selected' : '' ?>><?= e($r['codigo'] . ' - ' . $r['nome']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

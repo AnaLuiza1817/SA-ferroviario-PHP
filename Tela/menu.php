@@ -1,4 +1,3 @@
-
 <?php
 $paginaMenu = basename($_SERVER['PHP_SELF']);
 

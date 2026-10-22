@@ -1,4 +1,3 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -12,7 +11,8 @@ if (!empty($_SESSION['usuario_logado']) && !empty($_SESSION['usuario_id'])) {
     exit;
 }
 
-$erro = '';
+$erro = $_SESSION['mensagem_erro'] ?? '';
+unset($_SESSION['mensagem_erro']);
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
