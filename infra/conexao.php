@@ -5,7 +5,7 @@ $usuario = "root";
 $senha = "";
 $banco = "ferrorama_db";
 
-$conexao = new mysqli($host, $usuario, $senha, $banco);
+$conexao = new mysqli($host, $usuario, $senha, $banco,3307);
 
 if ($conexao->connect_error) {
     die("Erro ao conectar ao banco de dados.");
