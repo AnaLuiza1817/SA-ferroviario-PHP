@@ -1,11 +1,12 @@
-
 <?php
 require_once 'auth.php';
 requireLogin();
 
+
 function totalConsulta(mysqli $db, string $sql): int {
     return (int)$db->query($sql)->fetch_assoc()['total'];
 }
+
 
 $trens = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens");
 $operando = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens WHERE status = 'Em operação'");
@@ -15,6 +16,7 @@ $sensores = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM sensores WHER
 $trechos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trechos WHERE status = 'Em manutenção'");
 $usuarios = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE deleted_at IS NULL");
 $ativos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL");
+
 
 $estatisticas = [
     ['fa-train', $trens, 'Trens cadastrados', '#0d6efd'],
@@ -26,9 +28,37 @@ $estatisticas = [
     ['fa-users', $ativos, 'Usuários ativos', '#20c997'],
     ['fa-chart-line', $usuarios, 'Total de usuários', '#17a2b8']
 ];
+
+
+$equipe = [
+    [
+        'nome' => 'Ana',
+        'funcao' => 'Identidade visual',
+        'descricao' => 'Organizar a paleta de cores, logo e tipografia, além de criar o documento de identidade visual.'
+    ],
+    [
+        'nome' => 'Fernanda',
+        'funcao' => 'Dashboard',
+        'descricao' => 'Desenvolver e organizar a página inicial com cards, gráficos e informações principais.'
+    ],
+    [
+        'nome' => 'Gabriel',
+        'funcao' => 'Padronização das telas',
+        'descricao' => 'Ajustar as páginas de trens, rotas e sensores, mantendo a consistência visual.'
+    ],
+    [
+        'nome' => 'Arthur',
+        'funcao' => 'Usabilidade e responsividade',
+        'descricao' => 'Revisar botões, formulários e navegação, garantindo o funcionamento em diferentes dispositivos.'
+    ]
+];
 ?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,46 +67,85 @@ $estatisticas = [
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../Css/style.css">
 </head>
+
+
 <body class="pagina-sistema">
 
-<?php require 'menu.php'; ?>
 
+<?php require 'menu.php'; ?>
 <section class="bg-light py-5 border-bottom">
     <div class="container">
         <div class="row align-items-center g-4">
             <div class="col-lg-8">
-                <span class="badge bg-primary-subtle text-primary mb-3">Painel operacional</span>
-                <h1 class="display-5 fw-bold text-primary">Sistema Ferroviário Hyper Sense</h1>
-                <p class="lead mb-0">Acompanhe a operação ferroviária, sensores, ocorrências e manutenções.</p>
+                <span class="badge bg-primary-subtle text-primary mb-3">
+                    Painel operacional
+                </span>
+
+
+                <h1 class="display-5 fw-bold text-primary">
+                    Sistema Ferroviário Hyper Sense
+                </h1>
+
+                <p class="lead mb-0">
+                    Acompanhe a operação ferroviária, sensores, ocorrências e manutenções.
+                </p>
             </div>
+
             <div class="col-lg-4 text-center">
                 <i class="fas fa-train-subway dashboard-hero-icon"></i>
             </div>
+
+
         </div>
     </div>
 </section>
 
 <main class="container py-4">
+
     <div class="row g-3">
+
         <?php foreach ($estatisticas as [$icone, $valor, $titulo, $cor]): ?>
             <div class="col-xl-3 col-lg-4 col-md-6">
-                <div class="card stat-card text-white border-0 h-100 text-center" style="background-color: <?= e($cor) ?>">
+
+                <div class="card stat-card text-white border-0 h-100 text-center"
+                     style="background-color: <?= e($cor) ?>">
+
                     <div class="card-body py-4">
+
                         <i class="fas <?= e($icone) ?> fa-2x mb-3"></i>
-                        <h3 class="fw-bold mb-1"><?= $valor ?></h3>
-                        <p class="mb-0"><?= e($titulo) ?></p>
+
+                        <h3 class="fw-bold mb-1">
+                            <?= $valor ?>
+                        </h3>
+
+                        <p class="mb-0">
+                            <?= e($titulo) ?>
+                        </p>
+
                     </div>
                 </div>
+
+
             </div>
+
+
         <?php endforeach; ?>
+
+
     </div>
 
     <div class="card border-0 mt-4">
+
         <div class="card-body p-4">
+
             <h4>Visão Operacional</h4>
-            <p class="text-muted">Indicadores que merecem acompanhamento.</p>
+
+            <p class="text-muted">
+                Indicadores que merecem acompanhamento.
+            </p>
 
             <div class="row g-3">
+
                 <div class="col-md-4">
                     <div class="mini-indicator">
                         <strong><?= $ocorrencias ?></strong>
@@ -97,18 +166,95 @@ $estatisticas = [
                         <span>Sensores em atenção</span>
                     </div>
                 </div>
+
+
             </div>
+
+
         </div>
+
+
     </div>
+
+    <section class="card border-0 mt-4 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+                    <h4 class="fw-semibold mb-1">
+                        Equipe do projeto
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                    </p>
+                </div>
+
+                <i class="fas fa-users text-primary fs-4"></i>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Responsável</th>
+                            <th>Atividade</th>
+                            <th>Descrição</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <?php foreach ($equipe as $integrante): ?>
+
+                            <tr>
+
+                                <td class="fw-semibold text-primary">
+                                    <?= e($integrante['nome']) ?>
+                                </td>
+
+                                <td class="fw-medium">
+                                    <?= e($integrante['funcao']) ?>
+                                </td>
+
+                                <td class="text-muted">
+                                    <?= e($integrante['descricao']) ?>
+                                </td>
+
+                            </tr>
+
+
+                        <?php endforeach; ?>
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
 </main>
 
 <footer class="bg-dark text-white py-2">
+
     <div class="container text-center">
         &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
     </div>
-</footer>
 
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="../Js/main.js"></script>
 </body>
 </html>
