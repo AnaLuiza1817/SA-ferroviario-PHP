@@ -130,4 +130,4 @@ A SA Hyper Sense representa nosso aprendizado, dedicação e desenvolvimento de 
 
 ---
 
-**SA Hyper Sense – Tecnologia e inovação para o monitoramento ferroviário.** 🚆
+**SA Hyper Sense – Tecnologia e inovação para o monitoramento ferroviário.**
