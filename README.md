@@ -1,51 +1,75 @@
-# SA Hyper Sense – Sistema de Monitoramento Ferroviário Inteligente
+# SA Hyper Sense – Sistema de Monitoramento Ferroviário
 
-## Sobre o projeto
+## 1. Apresentação do Projeto
 
-A **SA Hyper Sense** é um projeto desenvolvido com o objetivo de criar um sistema de monitoramento ferroviário inteligente, buscando melhorar o acompanhamento e o controle das operações ferroviárias.
+A SA Hyper Sense é um projeto desenvolvido como parte da Situação de Aprendizagem (SA) do curso Técnico em Desenvolvimento de Sistemas.
 
-O sistema foi desenvolvido em PHP, com integração a um banco de dados, permitindo organizar informações sobre trens, rotas, sensores e usuários.
+O projeto tem como proposta desenvolver um sistema de monitoramento ferroviário, utilizando recursos tecnológicos para auxiliar no gerenciamento de informações relacionadas aos trens, rotas, sensores e usuários.
 
-A proposta é facilitar o acesso às informações ferroviárias, contribuir para a segurança e ajudar no acompanhamento das atividades por meio de uma plataforma simples e organizada.
+A aplicação busca oferecer uma plataforma organizada e de fácil utilização, permitindo o acesso e o gerenciamento das informações necessárias para o acompanhamento das atividades ferroviárias.
 
-## Objetivo
+Além do desenvolvimento do sistema, a equipe também trabalha com conceitos de programação, banco de dados, segurança da informação, integração entre sistemas e documentação técnica.
 
-Nosso principal objetivo é desenvolver uma solução tecnológica para o ambiente ferroviário, permitindo o gerenciamento das informações e o monitoramento dos trens.
+## 2. Objetivo Geral
 
-Com o sistema, buscamos tornar o acompanhamento das operações mais prático, organizado e eficiente, utilizando a tecnologia para auxiliar na identificação de situações que precisam de atenção.
+Desenvolver uma aplicação web voltada ao monitoramento ferroviário, utilizando tecnologias de desenvolvimento de sistemas para organizar informações, facilitar o gerenciamento dos dados e contribuir para o acompanhamento das operações.
 
-## Funcionalidades do sistema
+## 3. Objetivos Específicos
 
-O projeto conta com diferentes telas e recursos:
+- Desenvolver uma aplicação utilizando PHP.
+- Implementar a conexão com banco de dados MySQL.
+- Permitir o cadastro, a edição, a consulta e a exclusão de informações.
+- Organizar os dados relacionados aos trens e às rotas.
+- Disponibilizar telas para acompanhamento de sensores.
+- Desenvolver recursos de visualização de informações por meio de gráficos e mapas.
+- Trabalhar com autenticação e controle de acesso.
+- Aplicar conceitos de segurança e boas práticas de programação.
+- Estudar a integração entre sistemas por meio de APIs.
 
-- **Login:** acesso ao sistema por meio de autenticação.
-- **Cadastro:** registro de informações e usuários.
-- **Cadastro de trens:** gerenciamento dos dados dos trens.
-- **Rotas:** consulta e organização das rotas ferroviárias.
-- **Mapa:** visualização das informações relacionadas ao percurso.
-- **Sensores:** acompanhamento das informações dos sensores.
-- **Gráficos:** apresentação visual de dados do sistema.
-- **Edição e atualização:** alteração de informações cadastradas.
-- **Exclusão:** remoção de registros.
-- **Área administrativa:** gerenciamento de informações e usuários.
-- **Segurança:** recursos relacionados à proteção e ao acesso ao sistema.
+## 4. Funcionalidades do Sistema
 
-## Tecnologias utilizadas
+O sistema Hyper Sense possui uma estrutura dividida em diferentes áreas, cada uma responsável por determinadas operações.
 
-Para desenvolver o projeto, utilizamos:
+### Gerenciamento de usuários
+- Cadastro de usuários.
+- Autenticação para acesso ao sistema.
+- Controle de acesso.
+- Gerenciamento de informações dos usuários.
 
-- PHP – programação e funcionamento do sistema.
-- MySQL – armazenamento das informações.
-- PDO – conexão entre PHP e banco de dados.
-- HTML – estrutura das páginas.
-- CSS – aparência e organização visual.
-- JavaScript – funcionalidades e interações das páginas.
-- XAMPP – ambiente local para executar o projeto.
-- Visual Studio Code – editor utilizado durante o desenvolvimento.
+### Gerenciamento ferroviário
+- Cadastro e consulta de trens.
+- Edição e atualização de informações.
+- Exclusão de registros.
+- Organização das informações relacionadas às rotas.
 
-## Organização dos arquivos
+### Monitoramento
+- Área destinada às informações dos sensores.
+- Visualização de informações por meio de gráficos.
+- Tela de mapa para apresentação das informações ferroviárias.
 
-O projeto está organizado da seguinte maneira:
+### Segurança
+- Autenticação de usuários.
+- Verificação de acesso.
+- Testes relacionados à segurança.
+- Validação das informações recebidas pelo sistema.
+
+## 5. Tecnologias Utilizadas
+
+Durante o desenvolvimento da SA Hyper Sense, são utilizadas as seguintes tecnologias:
+
+- **PHP:** linguagem responsável pelo processamento e funcionamento da aplicação.
+- **MySQL:** sistema de gerenciamento do banco de dados.
+- **PDO:** recurso utilizado para realizar a conexão entre PHP e banco de dados.
+- **HTML:** estruturação das páginas.
+- **CSS:** estilização e organização visual da aplicação.
+- **JavaScript:** criação de interações e funcionalidades nas páginas.
+- **XAMPP:** ambiente utilizado para executar o projeto localmente.
+- **Visual Studio Code:** editor de código utilizado no desenvolvimento.
+- **Git e GitHub:** ferramentas utilizadas para versionamento e armazenamento do projeto.
+
+## 6. Estrutura do Projeto
+
+O projeto está organizado em pastas para facilitar a localização dos arquivos e a manutenção do sistema.
 
 ```text
 SA-FERROVIARIO-PHP/
@@ -61,6 +85,10 @@ SA-FERROVIARIO-PHP/
 │
 ├── Js/
 │   └── main.js
+│
+├── pesquisa/
+│   ├── apis.md
+│   └── PDO.MD
 │
 ├── Tela/
 │   ├── atualizar.php
@@ -84,50 +112,91 @@ SA-FERROVIARIO-PHP/
 │   ├── trens.php
 │   └── usuario.php
 │
-├── PDO.MD
 ├── README.md
 ├── RNF.md
 └── validacoes.RNF.MD
 ```
 
-## Banco de dados
+## 7. Banco de Dados
 
-O banco de dados é utilizado para armazenar e organizar as informações necessárias para o funcionamento do sistema.
+O projeto utiliza o MySQL para armazenar e organizar as informações necessárias para o funcionamento da aplicação.
 
-O arquivo `banco.sql` contém os comandos SQL utilizados na criação da estrutura do banco de dados.
+O arquivo `banco.sql`, localizado na pasta Banco de Dados, contém os comandos responsáveis pela criação e organização da estrutura do banco.
 
-A conexão entre o PHP e o MySQL é realizada pelo arquivo `conexao.php`, utilizando PDO.
+A conexão entre a aplicação PHP e o banco de dados é realizada pelo arquivo `conexao.php`, localizado na pasta `infra`.
 
-## Como executar o projeto
+Para essa comunicação, utilizamos PDO, que permite executar consultas e operações no banco de dados de maneira organizada e segura.
 
-Para testar o sistema no computador, siga os passos:
+## 8. Pesquisas e Documentação Técnica
 
-1. Instale o XAMPP e o Visual Studio Code.
-2. Inicie o Apache e o MySQL pelo painel do XAMPP.
-3. Coloque a pasta do projeto dentro da pasta `htdocs`.
-4. Abra o phpMyAdmin pelo navegador.
-5. Importe o arquivo `banco.sql` para criar o banco de dados.
-6. Confira as configurações de conexão no arquivo `infra/conexao.php`.
-7. Abra o navegador e acesse:
+Além da implementação do sistema, a equipe desenvolve pesquisas para aprofundar os conhecimentos utilizados no projeto.
+
+Na pasta `pesquisa`, estão organizados os materiais referentes aos seguintes assuntos:
+
+**APIs**
+
+Estudo sobre interfaces de programação de aplicações, comunicação entre sistemas, APIs REST, métodos HTTP, endpoints, requisições, respostas e troca de informações no formato JSON.
+
+**PDO**
+
+Pesquisa sobre PHP Data Objects, sua finalidade, funcionamento, conexão com bancos de dados e utilização nas operações de uma aplicação PHP.
+
+Esses conhecimentos contribuem para compreender melhor a integração, a organização e a segurança dos sistemas desenvolvidos.
+
+## 9. Requisitos Não Funcionais e Segurança
+
+O projeto também considera aspectos relacionados à qualidade e à segurança da aplicação.
+
+O arquivo `RNF.md` apresenta a documentação dos requisitos não funcionais, enquanto `validacoes.RNF.MD` reúne informações relacionadas às validações desses requisitos.
+
+Entre os aspectos considerados estão:
+
+- Segurança no acesso ao sistema.
+- Organização das informações.
+- Facilidade de utilização.
+- Validação dos dados.
+- Confiabilidade das operações.
+- Manutenção e organização do código.
+
+## 10. Como Executar o Projeto
+
+Para executar a aplicação localmente, é necessário ter o XAMPP e o Visual Studio Code instalados.
+
+Siga os passos:
+
+1. Abra o XAMPP.
+2. Inicie os serviços Apache e MySQL.
+3. Coloque a pasta `SA-FERROVIARIO-PHP` dentro do diretório `htdocs`.
+4. Acesse o phpMyAdmin pelo navegador.
+5. Importe o arquivo `banco.sql` para configurar o banco de dados.
+6. Abra o projeto no Visual Studio Code.
+7. Verifique as configurações de conexão no arquivo `infra/conexao.php`.
+8. Abra o navegador e acesse:
 
 ```text
 http://localhost/SA-FERROVIARIO-PHP/Tela/
 ```
 
-## Importância do projeto
+Após realizar essas etapas, a aplicação poderá ser acessada pelo navegador.
 
-O desenvolvimento da SA Hyper Sense permite colocar em prática os conhecimentos adquiridos durante o curso de Desenvolvimento de Sistemas.
+## 11. Considerações Finais
 
-Durante a construção do projeto, trabalhamos com programação PHP, banco de dados, integração entre tecnologias, organização de arquivos, segurança e desenvolvimento de funcionalidades.
+O desenvolvimento da SA Hyper Sense representa uma oportunidade de colocar em prática os conhecimentos adquiridos durante o curso Técnico em Desenvolvimento de Sistemas.
 
-Além disso, o projeto mostra como a tecnologia pode ser utilizada para ajudar no monitoramento ferroviário e na organização das informações.
+Ao longo do projeto, trabalhamos com diferentes tecnologias, organização de arquivos, banco de dados, programação, segurança e documentação.
 
-## Sobre o desenvolvimento
+A proposta também permite compreender como os sistemas podem auxiliar no gerenciamento e no monitoramento de informações ferroviárias, mostrando a importância da tecnologia na criação de soluções para situações reais.
 
-Este projeto foi desenvolvido em equipe como parte da nossa Situação de Aprendizagem (SA), com a proposta de aplicar na prática os conhecimentos técnicos adquiridos durante as aulas.
+O trabalho em equipe contribui para a troca de conhecimentos, a resolução de problemas e o desenvolvimento de novas habilidades na área de tecnologia.
 
-A SA Hyper Sense representa nosso aprendizado, dedicação e desenvolvimento de habilidades na área de tecnologia e programação.
+## 12. Equipe
+
+Projeto desenvolvido pelos integrantes da equipe como parte da Situação de Aprendizagem do curso Técnico em Desenvolvimento de Sistemas.
+
+**Projeto:** SA Hyper Sense  
+**Área:** Desenvolvimento de Sistemas  
+**Tema:** Monitoramento Ferroviário
 
 ---
 
-**SA Hyper Sense – Tecnologia e inovação para o monitoramento ferroviário.**
+**SA Hyper Sense – Tecnologia aplicada ao monitoramento ferroviário.**
