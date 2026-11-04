@@ -1,22 +1,32 @@
 <?php
+// Impede o cache do navegador para garantir que rotas novas apareçam na hora
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
+
 require_once 'auth.php';
 requireLogin();
+
 
 $admin = isAdmin();
 $flash = consumirFlash();
 $statusPermitidos = ['Ativa', 'Inativa'];
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireAdmin();
     validarCsrf();
 
+
     $acao = $_POST['acao'] ?? '';
+
 
     if ($acao === 'criar') {
         $codigo = trim($_POST['codigo'] ?? '');
         $nome = trim($_POST['nome'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
         $status = $_POST['status'] ?? 'Ativa';
+
 
         if ($codigo === '' || strlen($codigo) > 20 || $nome === '' || mb_strlen($nome) > 100 || mb_strlen($descricao) > 500 || !in_array($status, $statusPermitidos, true)) {
             mensagemFlash('danger', 'Preencha os dados da rota corretamente.');
@@ -35,8 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+
     if ($acao === 'excluir') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+
 
         if (!$id) {
             mensagemFlash('danger', 'Rota inválida.');
@@ -47,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
                 $trensVinculados = (int)$stmt->get_result()->fetch_assoc()['total'];
                 $stmt->close();
+
 
                 if ($trensVinculados > 0) {
                     mensagemFlash('danger', 'Ação bloqueada: Existem trens vinculados a esta rota.');
@@ -67,8 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+
 $busca = trim($_GET['busca'] ?? '');
-$sql = "SELECT r.*, (SELECT COUNT(*) FROM trens t WHERE t.rota_id = r.id) AS total_trens FROM rotas r";
+$sql = "SELECT r., (SELECT COUNT() FROM trens t WHERE t.rota_id = r.id) AS total_trens FROM rotas r";
+
 
 $params = [];
 $tipos = '';
@@ -79,6 +94,7 @@ if ($busca !== '') {
     $tipos = 'ss';
 }
 $sql .= " ORDER BY r.codigo";
+
 
 $stmt = $conexao->prepare($sql);
 if ($params) { $stmt->bind_param($tipos, ...$params); }
@@ -99,6 +115,7 @@ $stmt->close();
 <body class="pagina-sistema bg-light">
 <?php require 'menu.php'; ?>
 
+
 <main class="container py-5">
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4 border-bottom pb-3">
         <div>
@@ -118,12 +135,14 @@ $stmt->close();
         </div>
     </div>
 
+
     <?php if ($flash): ?>
         <div class="alert alert-<?= e($flash['tipo']) ?> alert-dismissible fade show border-0 shadow-sm">
             <?= e($flash['texto']) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
+
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -189,6 +208,7 @@ $stmt->close();
     </div>
 </main>
 
+
 <?php if ($admin): ?>
     <!-- Modal de Criar -->
     <div class="modal fade" id="novaRota" tabindex="-1">
@@ -232,11 +252,13 @@ $stmt->close();
     </div>
 <?php endif; ?>
 
+
 <footer class="bg-white border-top py-3 mt-auto">
     <div class="container text-center text-muted small">
         &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
     </div>
 </footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
