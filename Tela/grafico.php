@@ -126,14 +126,8 @@ $stmtOcorrencias->close();
 $stmtManutencoes->close();
 
 
-$trensDisponiveis = isAdmin()
-    ? $conexao->query('SELECT id, codigo FROM trens ORDER BY codigo')->fetch_all(MYSQLI_ASSOC)
-    : [];
-
-
-$trechosDisponiveis = isAdmin()
-    ? $conexao->query('SELECT id, codigo FROM trechos ORDER BY codigo')->fetch_all(MYSQLI_ASSOC)
-    : [];
+$trensDisponiveis = isAdmin() ? $conexao->query('SELECT id, codigo FROM trens ORDER BY codigo')->fetch_all(MYSQLI_ASSOC) : [];
+$trechosDisponiveis = isAdmin() ? $conexao->query('SELECT id, codigo FROM trechos ORDER BY codigo')->fetch_all(MYSQLI_ASSOC) : [];
 
 
 $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
@@ -176,11 +170,12 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
 
     <div class="row g-4">
         <div class="col-lg-7">
-            <div class="card border-0 h-100">
+            <div class="card border-0 h-100 shadow-sm">
                 <div class="card-body p-4">
                     <h3 class="mb-1">Ocorrências por trem</h3>
                     <p class="text-muted">Selecione uma barra para abrir os detalhes ao lado.</p>
-                    <div class="chart-container chart-container-small" style="height: 400px;">
+                    <!-- O tamanho do gráfico é controlado pelo CSS chart-container -->
+                    <div class="chart-container" style="height: 400px; position: relative;">
                         <canvas id="graficoOcorrencias"></canvas>
                     </div>
                 </div>
@@ -189,7 +184,7 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
 
 
         <div class="col-lg-5">
-            <div class="card border-0 h-100">
+            <div class="card border-0 h-100 shadow-sm">
                 <div class="card-body p-4">
                     <h3 class="mb-3">Detalhes do trem</h3>
                     <div id="detalhesTrem" class="empty-panel">
@@ -223,14 +218,10 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                             <label class="form-label">Componente</label>
                             <input type="text" name="componente" class="form-control" maxlength="100" required>
                         </div>
-
-
                         <div class="col-md-6">
                             <label class="form-label">Ordem de manutenção</label>
                             <input type="text" name="ordem_manutencao" class="form-control" maxlength="30" required>
                         </div>
-
-
                         <div class="col-md-4">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select" required>
@@ -239,20 +230,14 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                                 <option value="Concluída">Concluída</option>
                             </select>
                         </div>
-
-
                         <div class="col-md-4">
                             <label class="form-label">Início</label>
                             <input type="datetime-local" name="inicio" class="form-control" required>
                         </div>
-
-
                         <div class="col-md-4">
                             <label class="form-label">Fim (opcional)</label>
                             <input type="datetime-local" name="fim" class="form-control">
                         </div>
-
-
                         <div class="col-md-6">
                             <label class="form-label">Trem (opcional)</label>
                             <select name="trem_id" class="form-select">
@@ -262,8 +247,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
-
                         <div class="col-md-6">
                             <label class="form-label">Trecho (opcional)</label>
                             <select name="trecho_id" class="form-select">
@@ -273,8 +256,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
-
                         <div class="col-12">
                             <label class="form-label">Descrição</label>
                             <textarea name="descricao" class="form-control" rows="2" maxlength="255"></textarea>
