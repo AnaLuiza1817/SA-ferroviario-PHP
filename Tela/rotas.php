@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
     $acao = $_POST['acao'] ?? '';
 
 
+    // CRIAR ROTA
     if ($acao === 'criar') {
         $codigo = trim($_POST['codigo'] ?? '');
         $nome = trim($_POST['nome'] ?? '');
@@ -29,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
                 $stmt->execute();
                 mensagemFlash('success', 'Rota cadastrada.');
             } catch (mysqli_sql_exception $ex) {
-                mensagemFlash('danger', 'Erro ao cadastrar rota.');
+                mensagemFlash('danger', $ex->getCode() === 1062 ? 'Já existe uma rota com esse código.' : 'Erro ao cadastrar rota.');
             }
         }
         header('Location: rotas.php');
@@ -37,6 +38,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
     }
 
 
+    // EDITAR ROTA
+    if ($acao === 'editar') {
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $codigo = trim($_POST['codigo'] ?? '');
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $status = $_POST['status'] ?? 'Ativa';
+
+
+        if (!$id || $codigo === '' || $nome === '' || !in_array($status, $statusPermitidos, true)) {
+            mensagemFlash('danger', 'Dados inválidos.');
+        } else {
+            try {
+                $stmt = $conexao->prepare('UPDATE rotas SET codigo=?, nome=?, status=?, descricao=? WHERE id=?');
+                $stmt->bind_param('ssssi', $codigo, $nome, $status, $descricao, $id);
+                $stmt->execute();
+                mensagemFlash('success', 'Rota atualizada com sucesso.');
+            } catch (mysqli_sql_exception $ex) {
+                mensagemFlash('danger', $ex->getCode() === 1062 ? 'Já existe uma rota com esse código.' : 'Erro ao atualizar rota.');
+            }
+        }
+        header('Location: rotas.php');
+        exit;
+    }
+
+
+    // EXCLUIR ROTA
     if ($acao === 'excluir') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if ($id) {
@@ -153,8 +181,16 @@ $stmt->close();
                                         <div class="small text-muted"><?= e($rota['lista_trens']) ?></div>
                                     <?php endif; ?>
                                 </td>
+                                
                                 <?php if ($admin): ?>
                                     <td class="text-end pe-4 text-nowrap">
+                                        <!-- Botão de Editar (Lápis) -->
+                                        <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota">
+                                            <i class="fas fa-pen text-muted"></i>
+                                        </button>
+
+
+                                        <!-- Botão de Excluir (Lixeira) -->
                                         <form method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta rota?');">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id" value="<?= (int)$rota['id'] ?>">
@@ -204,6 +240,13 @@ $stmt->close();
                             <input type="text" name="nome" maxlength="100" class="form-control" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="Ativa">Ativa</option>
+                                <option value="Inativa">Inativa</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Descrição</label>
                             <textarea name="descricao" maxlength="500" rows="2" class="form-control"></textarea>
                         </div>
@@ -216,6 +259,54 @@ $stmt->close();
             </div>
         </div>
     </div>
+
+
+    <!-- Modais de Editar para cada Rota -->
+    <?php foreach ($rotas as $rota): ?>
+        <div class="modal fade" id="editarRota<?= (int)$rota['id'] ?>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <form method="post">
+                        <input type="hidden" name="acao" value="editar">
+                        <input type="hidden" name="id" value="<?= (int)$rota['id'] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                        
+                        <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold">Editar Rota <?= e($rota['codigo']) ?></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Código</label>
+                                <input type="text" name="codigo" maxlength="20" class="form-control" value="<?= e($rota['codigo']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nome</label>
+                                <input type="text" name="nome" maxlength="100" class="form-control" value="<?= e($rota['nome']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="Ativa" <?= $rota['status'] === 'Ativa' ? 'selected' : '' ?>>Ativa</option>
+                                    <option value="Inativa" <?= $rota['status'] === 'Inativa' ? 'selected' : '' ?>>Inativa</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descrição</label>
+                                <textarea name="descricao" maxlength="500" rows="2" class="form-control"><?= e($rota['descricao']) ?></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
 <?php endif; ?>
 
 
