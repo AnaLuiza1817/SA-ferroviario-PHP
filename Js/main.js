@@ -1,18 +1,22 @@
 function graficos() {
-    if (!$('graficoManutencoes') || !$('graficoOcorrencias') || !window.Chart) return;
+    const elManutencoes = document.getElementById('graficoManutencoes');
+    const elOcorrencias = document.getElementById('graficoOcorrencias');
+    
+    if (!elManutencoes || !elOcorrencias || typeof Chart === 'undefined') {
+        return;
+    }
     
     Chart.defaults.color = '#6c757d';
     Chart.defaults.font.family = "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif";
     Chart.defaults.font.size = 12;
 
-
     const dados = window.dadosManutencoes || {};
     const anos = (window.anosGrafico || Object.keys(dados)).map(String);
     const ocorrencias = window.dadosOcorrencias || [];
     const detalhes = window.detalhesTrens || {};
-    
-    // Gráfico de linha de manutenções mantido (é funcional e limpo)
-    const linha = new Chart($('graficoManutencoes'), {
+
+    const ctxManutencoes = elManutencoes.getContext('2d');
+    const linha = new Chart(ctxManutencoes, {
         type: 'line', 
         data: {
             labels: window.mesesGrafico || [], 
@@ -40,9 +44,8 @@ function graficos() {
         }
     });
 
-
     document.querySelectorAll('.grafico-toggle').forEach(b => {
-        b.classList.toggle('active', b.dataset.ano === anos[anos.length-1]);
+        b.classList.toggle('active', b.dataset.ano === anos[anos.length - 1]);
         b.addEventListener('click', () => {
             linha.data.datasets.forEach(d => d.hidden = d.label !== b.dataset.ano);
             document.querySelectorAll('.grafico-toggle').forEach(x => x.classList.toggle('active', x === b));
@@ -50,12 +53,25 @@ function graficos() {
         });
     });
 
+    function esc(valor) {
+        if (valor === null || valor === undefined) return '';
+        return String(valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
 
-    function mostrar(codigo) {
+    function num(valor) {
+        return parseInt(valor, 10) || 0;
+    }
+
+    function mostrarDetalhes(codigo) {
         const t = detalhes[codigo];
-        if (!t || !$('detalhesTrem')) return;
-        const lista = (itens, formato) => itens?.length ? '<ul class="mb-0 ps-3">' + itens.slice(0,4).map(x => '<li class="mb-1">' + formato(x) + '</li>').join('') + '</ul>' : '<p class="text-muted mb-0">Nenhum registro.</p>';
-        $('detalhesTrem').innerHTML = '<div class="detail-heading"><strong>' + esc(t.codigo) + '</strong><span class="status-badge">' + esc(t.status) + '</span></div>' +
+        const elDetalhes = document.getElementById('detalhesTrem');
+        if (!t || !elDetalhes) return;
+
+        const lista = (itens, formato) => itens && itens.length 
+            ? '<ul class="mb-0 ps-3">' + itens.slice(0, 4).map(x => '<li class="mb-1">' + formato(x) + '</li>').join('') + '</ul>' 
+            : '<p class="text-muted mb-0">Nenhum registro.</p>';
+        
+        elDetalhes.innerHTML = '<div class="detail-heading"><strong>' + esc(t.codigo) + '</strong><span class="status-badge">' + esc(t.status) + '</span></div>' +
             '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Rota:</span> <span class="fw-medium">' + esc(t.rota) + '</span></div>' +
             '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Ocorrências:</span> <span class="fw-bold text-danger">' + num(t.total_ocorrencias) + '</span></div>' +
             '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Tipos de ocorrência</h6>' + lista(t.tipos, x => esc(x.tipo) + ': ' + num(x.total)) +
@@ -63,9 +79,8 @@ function graficos() {
             '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Manutenções</h6>' + lista(t.manutencoes, x => esc(x.componente) + ': ' + esc(x.status));
     }
 
-
-    // Alterado de 'bar' para 'doughnut' para um visual mais corporativo e menos genérico
-    new Chart($('graficoOcorrencias'), {
+    const ctxOcorrencias = elOcorrencias.getContext('2d');
+    new Chart(ctxOcorrencias, {
         type: 'doughnut', 
         data: {
             labels: ocorrencias.map(t => t.codigo),
@@ -91,9 +106,10 @@ function graficos() {
                 }
             },
             onClick: (_e, elements) => {
-                if (elements.length) mostrar(ocorrencias[elements[0].index].codigo);
+                if (elements.length) mostrarDetalhes(ocorrencias[elements[0].index].codigo);
             }
         }
     });
-    if (ocorrencias.length) mostrar(ocorrencias[0].codigo);
+    
+    if (ocorrencias.length) mostrarDetalhes(ocorrencias[0].codigo);
 }

@@ -6,7 +6,7 @@ $senha = "";
 $banco = "ferrorama_db";
 
 
-$conexao = new mysqli($host, $usuario, $senha, $banco, 3307);
+$conexao = new mysqli($host, $usuario, $senha, $banco, 3306);
  // esse seu numero de porta 
 
 

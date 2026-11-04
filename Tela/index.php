@@ -1,9 +1,11 @@
 <?php
 require_once 'auth.php';
 requireLogin();
+
 function totalConsulta(mysqli $db, string $sql): int {
     return (int)$db->query($sql)->fetch_assoc()['total'];
 }
+
 $trens = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens");
 $operando = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens WHERE status = 'Em operação'");
 $ocorrencias = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM ocorrencias WHERE status <> 'Resolvida'");
@@ -24,7 +26,9 @@ $estatisticas = [
     'usuarios' => ['icone' => 'fa-address-book', 'titulo' => 'Total de Contas', 'valor' => $usuarios, 'cor' => '#0ea5e9', 'link' => 'usuario.php']
 ];
 
-$nomeUsuario = explode(' ', $_SESSION['usuario_nome'] ?? 'Usuário')[0];
+$nomeCompleto = $_SESSION['usuario_nome'] ?? 'Usuário';
+$partesNome = explode(' ', trim($nomeCompleto));
+$primeiroNome = $partesNome[0];
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -43,8 +47,7 @@ $nomeUsuario = explode(' ', $_SESSION['usuario_nome'] ?? 'Usuário')[0];
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <!-- Saudação dinâmica ao usuário -->
-                <h1 class="h3 fw-bold text-dark mb-1">Olá <?= e($nomeUsuario) ?>, seja bem-vindo(a)!</h1>
+                <h1 class="h3 fw-bold text-dark mb-1">Olá <?= e($primeiroNome) ?>, seja bem-vindo(a)!</h1>
                 <p class="text-muted mb-0">Acompanhamento em tempo real da malha ferroviária.</p>
             </div>
             <div class="col-md-4 text-end d-none d-md-block">
@@ -58,7 +61,6 @@ $nomeUsuario = explode(' ', $_SESSION['usuario_nome'] ?? 'Usuário')[0];
     <div class="row g-3 mb-4">
         <?php foreach ($estatisticas as $item): ?>
             <div class="col-xl-3 col-lg-4 col-md-6">
-                <!-- Cards transformados em links interativos -->
                 <a href="<?= e($item['link']) ?>" class="text-decoration-none">
                     <div class="card stat-card h-100" style="border-top-color: <?= e($item['cor']) ?> !important;">
                         <div class="card-body p-3">
