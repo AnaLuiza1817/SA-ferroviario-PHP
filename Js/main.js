@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     inicializarGraficos();
-    inicializarMapaReal();
+    inicializarMapaSVG();
     inicializarMascaraTelefone();
 });
+
 
 function inicializarGraficos() {
     const elOcorrencias = document.getElementById('graficoOcorrencias');
@@ -10,14 +11,14 @@ function inicializarGraficos() {
     
     Chart.defaults.color = '#6c757d';
     Chart.defaults.font.family = "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif";
-    Chart.defaults.font.size = 12;
-
+    
     const ocorrencias = window.dadosOcorrencias || [];
     const detalhes = window.detalhesTrens || {};
 
-    const ctxOcorrencias = elOcorrencias.getContext('2d');
+
+    const ctx = elOcorrencias.getContext('2d');
     
-    new Chart(ctxOcorrencias, {
+    new Chart(ctx, {
         type: 'bar', 
         data: {
             labels: ocorrencias.map(t => t.codigo),
@@ -46,130 +47,181 @@ function inicializarGraficos() {
         }
     });
 
-    function esc(valor) {
-        if (valor === null || valor === undefined) return '';
-        return String(valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-
-    function mostrarDetalhes(codigo, dadosDetalhes) {
-        const t = dadosDetalhes[codigo];
-        const elDetalhes = document.getElementById('detalhesTrem');
-        if (!t || !elDetalhes) return;
-
-        const lista = (itens, formato) => itens && itens.length 
-            ? '<ul class="mb-0 ps-3">' + itens.slice(0, 4).map(x => '<li class="mb-1">' + formato(x) + '</li>').join('') + '</ul>' 
-            : '<p class="text-muted mb-0">Nenhum registro.</p>';
-        
-        elDetalhes.innerHTML = '<div class="detail-heading"><strong>' + esc(t.codigo) + '</strong><span class="status-badge">' + esc(t.status) + '</span></div>' +
-            '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Rota:</span> <span class="fw-medium">' + esc(t.rota) + '</span></div>' +
-            '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Ocorrências:</span> <span class="fw-bold text-danger">' + (parseInt(t.total_ocorrencias, 10) || 0) + '</span></div>' +
-            '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Tipos de ocorrência</h6>' + lista(t.tipos, x => esc(x.tipo) + ': ' + (parseInt(x.total, 10) || 0)) +
-            '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Ocorrências recentes</h6>' + lista(t.ocorrencias, x => esc(x.tipo) + ': ' + esc(x.descricao)) +
-            '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Manutenções</h6>' + lista(t.manutencoes, x => esc(x.componente) + ': ' + esc(x.status));
-    }
 
     if (ocorrencias.length) mostrarDetalhes(ocorrencias[0].codigo, detalhes);
 }
 
-function inicializarMapaReal() {
-    const mapDiv = document.getElementById('mapa-real');
-    if (!mapDiv || !window.dadosMapa) return;
 
-    if (typeof L === 'undefined') {
-        mapDiv.innerHTML = '<div class="alert alert-danger m-3">Não foi possível carregar a biblioteca do mapa (Leaflet). Verifique a conexão.</div>';
-        return;
-    }
+function mostrarDetalhes(codigo, dadosDetalhes) {
+    const t = dadosDetalhes[codigo];
+    const elDetalhes = document.getElementById('detalhesTrem');
+    if (!t || !elDetalhes) return;
 
-    const centerLat = -26.9194;
-    const centerLng = -48.6612;
+
+    const lista = (itens, formato) => itens && itens.length 
+        ? '<ul class="mb-0 ps-3">' + itens.slice(0, 4).map(x => '<li class="mb-1">' + formato(x) + '</li>').join('') + '</ul>' 
+        : '<p class="text-muted mb-0">Nenhum registro.</p>';
     
-    const map = L.map('mapa-real').setView([centerLat, centerLng], 13);
+    elDetalhes.innerHTML = '<div class="detail-heading"><strong>' + t.codigo + '</strong><span class="status-badge">' + t.status + '</span></div>' +
+        '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Rota:</span> <span class="fw-medium">' + (t.rota || 'N/A') + '</span></div>' +
+        '<div class="d-flex justify-content-between mb-3"><span class="text-muted">Ocorrências:</span> <span class="fw-bold text-danger">' + (parseInt(t.total_ocorrencias, 10) || 0) + '</span></div>' +
+        '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Tipos</h6>' + lista(t.tipos, x => x.tipo + ': ' + (parseInt(x.total, 10) || 0)) +
+        '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Recentes</h6>' + lista(t.ocorrencias, x => x.tipo + ': ' + x.descricao) +
+        '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Manutenções</h6>' + lista(t.manutencoes, x => x.componente + ': ' + x.status);
+}
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
-    }).addTo(map);
+
+function inicializarMapaSVG() {
+    const svg = document.getElementById('mapa-svg');
+    if (!svg || !window.dadosMapa) return;
+
+
+    const camadaTrechos = document.getElementById('camada-trechos');
+    const camadaEstacoes = document.getElementById('camada-estacoes');
+    const camadaTrens = document.getElementById('camada-trens');
+
+
+    camadaTrechos.innerHTML = '';
+    camadaEstacoes.innerHTML = '';
+    camadaTrens.innerHTML = '';
+
 
     const mapa = window.dadosMapa;
 
-    // 1. Desenhar os Trilhos
+
+    // 1. Desenhar as Rotas (Linhas)
     if (mapa.trechos) {
-        mapa.trechos.forEach(trecho => {
-            const lat1 = centerLat + (parseFloat(trecho.origem_y) / 10000);
-            const lng1 = centerLng + (parseFloat(trecho.origem_x) / 10000);
-            const lat2 = centerLat + (parseFloat(trecho.destino_y) / 10000);
-            const lng2 = centerLng + (parseFloat(trecho.destino_x) / 10000);
-
-            let cor = '#64748b';
-            if (trecho.status === 'Atenção') cor = '#f5b700';
-            if (trecho.status === 'Em manutenção') cor = '#8b5cf6';
-            if (trecho.status === 'Bloqueado') cor = '#ef4444';
-
-            L.polyline([[lat1, lng1], [lat2, lng2]], {
-                color: cor,
-                weight: 5,
-                opacity: 0.7,
-                dashArray: trecho.status === 'Em manutenção' ? '10, 10' : ''
-            }).addTo(map);
+        mapa.trechos.forEach(t => {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', t.origem_x);
+            line.setAttribute('y1', t.origem_y);
+            line.setAttribute('x2', t.destino_x);
+            line.setAttribute('y2', t.destino_y);
+            line.setAttribute('stroke', t.status === 'Em manutenção' ? '#8b5cf6' : '#cbd5e1');
+            line.setAttribute('stroke-width', '6');
+            line.setAttribute('stroke-linecap', 'round');
+            camadaTrechos.appendChild(line);
         });
     }
+
 
     // 2. Desenhar as Estações
     if (mapa.estacoes) {
-        mapa.estacoes.forEach(estacao => {
-            const lat = centerLat + (parseFloat(estacao.posicao_y) / 10000);
-            const lng = centerLng + (parseFloat(estacao.posicao_x) / 10000);
-            
-            L.circleMarker([lat, lng], {
-                radius: 8,
-                fillColor: '#ffffff',
-                color: '#1e88e5',
-                weight: 3,
-                opacity: 1,
-                fillOpacity: 1
-            }).addTo(map).bindTooltip(estacao.nome, { permanent: true, direction: 'right', className: 'bg-transparent border-0 fw-bold text-dark' });
+        mapa.estacoes.forEach(e => {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', e.posicao_x);
+            circle.setAttribute('cy', e.posicao_y);
+            circle.setAttribute('r', '8');
+            circle.setAttribute('fill', '#ffffff');
+            circle.setAttribute('stroke', '#1e88e5');
+            circle.setAttribute('stroke-width', '4');
+            camadaEstacoes.appendChild(circle);
+
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', parseFloat(e.posicao_x) + 12);
+            text.setAttribute('y', parseFloat(e.posicao_y) + 5);
+            text.setAttribute('fill', '#2c3e50');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('font-weight', 'bold');
+            text.textContent = e.nome;
+            camadaEstacoes.appendChild(text);
         });
     }
 
-    // 3. Desenhar os Trens (Arrastáveis)
+
+    // 3. Desenhar e habilitar o Arrastar (Trens)
     if (mapa.trens) {
         mapa.trens.forEach(trem => {
             const trecho = mapa.trechos.find(t => t.id == trem.trecho_id);
             if (!trecho) return;
 
-            const latBase = centerLat + (parseFloat(trecho.origem_y) / 10000);
-            const lngBase = centerLng + (parseFloat(trecho.origem_x) / 10000);
 
-            const iconeTrem = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="trem-marker ${trem.status === 'Parado' ? 'parado' : ''}"><i class="fas fa-train"></i></div>`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 15]
-            });
+            // Calcula a posição exata no trilho
+            const pct = parseFloat(trem.posicao_percentual) / 100;
+            const cx = parseFloat(trecho.origem_x) + (parseFloat(trecho.destino_x) - parseFloat(trecho.origem_x)) * pct;
+            const cy = parseFloat(trecho.origem_y) + (parseFloat(trecho.destino_y) - parseFloat(trecho.origem_y)) * pct;
 
-            const marcador = L.marker([latBase, lngBase], {
-                icon: iconeTrem,
-                draggable: window.podeControlarTrens 
-            }).addTo(map);
 
-            marcador.bindTooltip(trem.codigo, { direction: 'top', offset: [0, -10] });
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            group.setAttribute('class', 'trem-elemento');
+            
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', cx);
+            circle.setAttribute('cy', cy);
+            circle.setAttribute('r', '8');
+            circle.setAttribute('fill', trem.status === 'Parado' ? '#ef4444' : '#10b981');
+            circle.setAttribute('stroke', '#ffffff');
+            circle.setAttribute('stroke-width', '2');
 
-            marcador.on('dragend', function (e) {
-                const novaPosicao = e.target.getLatLng();
-                const painel = document.getElementById('painelOperacional');
-                if (painel) {
-                    painel.innerHTML = `
-                        <h5 class="fw-bold mb-3">${trem.codigo}</h5>
-                        <p class="mb-1 text-muted">Status: <span class="badge bg-primary">${trem.status}</span></p>
-                        <p class="mb-1 text-muted">Rota: ${trem.rota_codigo || 'N/A'}</p>
-                        <p class="mb-3 text-muted">Nova Posição: Lat ${novaPosicao.lat.toFixed(4)}, Lng ${novaPosicao.lng.toFixed(4)}</p>
-                        <div class="alert alert-success py-2 small">Posição atualizada visualmente.</div>
-                    `;
-                }
-            });
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', cx + 12);
+            text.setAttribute('y', cy + 4);
+            text.setAttribute('fill', '#2c3e50');
+            text.setAttribute('font-size', '11');
+            text.setAttribute('font-weight', 'bold');
+            text.textContent = trem.codigo;
+
+
+            group.appendChild(circle);
+            group.appendChild(text);
+            camadaTrens.appendChild(group);
+
+
+            // Lógica de Arrastar (Drag and Drop)
+            if (window.podeControlarTrens) {
+                let isDragging = false;
+                let offsetX, offsetY;
+
+
+                group.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    const rect = svg.getBoundingClientRect();
+                    // Pega a posição do mouse relativa ao SVG
+                    offsetX = e.clientX - rect.left - cx;
+                    offsetY = e.clientY - rect.top - cy;
+                    group.style.opacity = '0.7';
+                });
+
+
+                svg.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const rect = svg.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left - offsetX;
+                    const mouseY = e.clientY - rect.top - offsetY;
+
+
+                    circle.setAttribute('cx', mouseX);
+                    circle.setAttribute('cy', mouseY);
+                    text.setAttribute('x', mouseX + 12);
+                    text.setAttribute('y', mouseY + 4);
+                });
+
+
+                svg.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        group.style.opacity = '1';
+                        
+                        // Atualiza o painel com a nova posição simulada
+                        const painel = document.getElementById('painelOperacional');
+                        if (painel) {
+                            painel.innerHTML = `
+                                <h5 class="fw-bold mb-3">${trem.codigo}</h5>
+                                <p class="mb-1 text-muted">Status: <span class="badge bg-primary">${trem.status}</span></p>
+                                <p class="mb-1 text-muted">Rota: ${trem.rota_codigo || 'N/A'}</p>
+                                <p class="mb-3 text-muted">Posição alterada visualmente.</p>
+                                <div class="alert alert-success py-2 small">Trem movido com sucesso.</div>
+                            `;
+                        }
+                    }
+                });
+            }
         });
     }
 }
+
 
 function inicializarMascaraTelefone() {
     const telefoneInputs = document.querySelectorAll('input[name="telefone"]');

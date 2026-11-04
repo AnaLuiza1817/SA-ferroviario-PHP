@@ -9,26 +9,18 @@ function buscarMapa(mysqli $db, string $sql): array {
 
 
 $estacoes = buscarMapa($conexao, 'SELECT id, codigo, nome, ordem, posicao_x, posicao_y, status FROM estacoes ORDER BY ordem');
-
-
 $trechos = buscarMapa($conexao, '
-    SELECT t.id, t.codigo, t.status, t.distancia_km,
-           o.codigo AS origem_codigo, o.nome AS origem_nome,
-           o.posicao_x AS origem_x, o.posicao_y AS origem_y,
-           d.codigo AS destino_codigo, d.nome AS destino_nome,
-           d.posicao_x AS destino_x, d.posicao_y AS destino_y
+    SELECT t.id, t.codigo, t.status, 
+           o.codigo AS origem_codigo, o.posicao_x AS origem_x, o.posicao_y AS origem_y,
+           d.codigo AS destino_codigo, d.posicao_x AS destino_x, d.posicao_y AS destino_y
     FROM trechos t
     JOIN estacoes o ON o.id = t.origem_id
     JOIN estacoes d ON d.id = t.destino_id
     ORDER BY t.id
 ');
-
-
 $trens = buscarMapa($conexao, '
-    SELECT t.id, t.codigo, t.status, t.trecho_id, t.rota_id, t.posicao_percentual,
-           tr.codigo AS trecho_codigo, r.codigo AS rota_codigo
+    SELECT t.id, t.codigo, t.status, t.trecho_id, t.posicao_percentual, r.codigo AS rota_codigo
     FROM trens t
-    LEFT JOIN trechos tr ON tr.id = t.trecho_id
     LEFT JOIN rotas r ON r.id = t.rota_id
     ORDER BY t.codigo
 ');
@@ -44,27 +36,21 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
     <title>Mapa Ferroviário | Hyper Sense</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <!-- CSS do Leaflet para o Mapa Geográfico -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="../Css/style.css">
     
     <style>
-        #mapa-real { 
+        .mapa-viewport { 
             height: 600px; 
             width: 100%; 
-            border-radius: 8px; 
-            border: 1px solid #e3e8ef;
-            z-index: 1;
+            background-color: #ffffff; 
+            border: 1px solid #e3e8ef; 
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
         }
-        .trem-marker { 
-            display: flex; align-items: center; justify-content: center; 
-            background: #1e88e5; color: white; border-radius: 50%; 
-            width: 30px; height: 30px; border: 2px solid white; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
-            font-size: 12px; cursor: grab; 
-        }
-        .trem-marker:active { cursor: grabbing; }
-        .trem-marker.parado { background: #ef4444; }
+        #mapa-svg { width: 100%; height: 100%; display: block; }
+        .trem-elemento { cursor: grab; transition: none; }
+        .trem-elemento:active { cursor: grabbing; }
     </style>
 </head>
 <body class="pagina-sistema">
@@ -78,7 +64,7 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
         <div>
             <span class="badge bg-primary-subtle text-primary">Simulação acadêmica</span>
             <h1 class="fw-bold mt-2 mb-1">Mapa Ferroviário</h1>
-            <p class="text-muted mb-0">Arraste os trens para simular a movimentação na malha.</p>
+            <p class="text-muted mb-0">Arraste os trens para simular a movimentação.</p>
         </div>
         <a href="index.php" class="btn btn-outline-primary">
             <i class="fas fa-arrow-left me-2"></i>Voltar ao painel
@@ -90,7 +76,14 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
         <div class="col-xl-9">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-2">
-                    <div id="mapa-real"></div>
+                    <!-- Fundo Branco com SVG -->
+                    <div class="mapa-viewport" id="mapaViewport">
+                        <svg id="mapa-svg" viewBox="0 0 1040 430">
+                            <g id="camada-trechos"></g>
+                            <g id="camada-estacoes"></g>
+                            <g id="camada-trens"></g>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,7 +94,7 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
                 <div class="card-body p-4">
                     <h3 class="h5 mb-3">Painel operacional</h3>
                     <div id="painelOperacional" class="empty-panel">
-                        Clique ou arraste um trem no mapa para visualizar suas informações.
+                        Clique ou arraste um trem para visualizar.
                     </div>
                 </div>
             </div>
@@ -127,7 +120,6 @@ window.dadosMapa = {
 </script>
 
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
 </body>
