@@ -64,6 +64,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
     }
 
 
+    // VINCULAR TREM À ROTA
+    if ($acao === 'vincular_trem') {
+        $rotaId = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
+        $tremId = filter_input(INPUT_POST, 'trem_id', FILTER_VALIDATE_INT);
+
+
+        if ($rotaId && $tremId) {
+            try {
+                $stmt = $conexao->prepare('UPDATE trens SET rota_id = ? WHERE id = ?');
+                $stmt->bind_param('ii', $rotaId, $tremId);
+                $stmt->execute();
+                mensagemFlash('success', 'Trem vinculado à rota com sucesso.');
+            } catch (mysqli_sql_exception $ex) {
+                mensagemFlash('danger', 'Erro ao vincular o trem.');
+            }
+        }
+        header('Location: rotas.php');
+        exit;
+    }
+
+
     // EXCLUIR ROTA
     if ($acao === 'excluir') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -111,6 +132,10 @@ if ($params) { $stmt->bind_param($tipos, ...$params); }
 $stmt->execute();
 $rotas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+
+// Buscar trens que estão SEM rota para poder vincular
+$trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS NULL ORDER BY codigo")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -184,6 +209,14 @@ $stmt->close();
                                 
                                 <?php if ($admin): ?>
                                     <td class="text-end pe-4 text-nowrap">
+                                        <!-- Botão de Vincular Trem -->
+                                        <?php if (count($trensSemRota) > 0): ?>
+                                            <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#vincularTrem<?= (int)$rota['id'] ?>" title="Adicionar Trem a esta Rota">
+                                                <i class="fas fa-train text-primary"></i> <i class="fas fa-plus text-primary" style="font-size: 10px;"></i>
+                                            </button>
+                                        <?php endif; ?>
+
+
                                         <!-- Botão de Editar (Lápis) -->
                                         <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota">
                                             <i class="fas fa-pen text-muted"></i>
@@ -261,8 +294,43 @@ $stmt->close();
     </div>
 
 
-    <!-- Modais de Editar para cada Rota -->
+    <!-- Modais por Rota -->
     <?php foreach ($rotas as $rota): ?>
+        <!-- Modal Vincular Trem -->
+        <div class="modal fade" id="vincularTrem<?= (int)$rota['id'] ?>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <form method="post">
+                        <input type="hidden" name="acao" value="vincular_trem">
+                        <input type="hidden" name="rota_id" value="<?= (int)$rota['id'] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                        
+                        <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold">Adicionar Trem à <?= e($rota['codigo']) ?></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <p class="text-muted small mb-3">Selecione um trem que esteja sem rota para vinculá-lo a esta linha.</p>
+                            <select name="trem_id" class="form-select" required>
+                                <option value="">Selecione um trem...</option>
+                                <?php foreach ($trensSemRota as $t): ?>
+                                    <option value="<?= (int)$t['id'] ?>"><?= e($t['codigo']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Vincular Trem</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Modal Editar Rota -->
         <div class="modal fade" id="editarRota<?= (int)$rota['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
