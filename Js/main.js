@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     inicializarMascaraTelefone();
 });
 
-
 function inicializarGraficos() {
     const elOcorrencias = document.getElementById('graficoOcorrencias');
     if (!elOcorrencias || typeof Chart === 'undefined') return;
@@ -13,10 +12,8 @@ function inicializarGraficos() {
     Chart.defaults.font.family = "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif";
     Chart.defaults.font.size = 12;
 
-
     const ocorrencias = window.dadosOcorrencias || [];
     const detalhes = window.detalhesTrens || {};
-
 
     const ctxOcorrencias = elOcorrencias.getContext('2d');
     
@@ -49,18 +46,15 @@ function inicializarGraficos() {
         }
     });
 
-
     function esc(valor) {
         if (valor === null || valor === undefined) return '';
         return String(valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
-
     function mostrarDetalhes(codigo, dadosDetalhes) {
         const t = dadosDetalhes[codigo];
         const elDetalhes = document.getElementById('detalhesTrem');
         if (!t || !elDetalhes) return;
-
 
         const lista = (itens, formato) => itens && itens.length 
             ? '<ul class="mb-0 ps-3">' + itens.slice(0, 4).map(x => '<li class="mb-1">' + formato(x) + '</li>').join('') + '</ul>' 
@@ -74,51 +68,42 @@ function inicializarGraficos() {
             '<h6 class="mt-4 mb-2 text-muted text-uppercase" style="font-size:0.75rem; font-weight:600;">Manutenções</h6>' + lista(t.manutencoes, x => esc(x.componente) + ': ' + esc(x.status));
     }
 
-
     if (ocorrencias.length) mostrarDetalhes(ocorrencias[0].codigo, detalhes);
 }
-
 
 function inicializarMapaReal() {
     const mapDiv = document.getElementById('mapa-real');
     if (!mapDiv || !window.dadosMapa) return;
 
+    if (typeof L === 'undefined') {
+        mapDiv.innerHTML = '<div class="alert alert-danger m-3">Não foi possível carregar a biblioteca do mapa (Leaflet). Verifique a conexão.</div>';
+        return;
+    }
 
     const centerLat = -26.9194;
     const centerLng = -48.6612;
     
-    // Cria o mapa
     const map = L.map('mapa-real').setView([centerLat, centerLng], 13);
-
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
-
     const mapa = window.dadosMapa;
-    const coordsEstacoes = {};
 
-
+    // 1. Desenhar os Trilhos
     if (mapa.trechos) {
         mapa.trechos.forEach(trecho => {
-            
             const lat1 = centerLat + (parseFloat(trecho.origem_y) / 10000);
             const lng1 = centerLng + (parseFloat(trecho.origem_x) / 10000);
             const lat2 = centerLat + (parseFloat(trecho.destino_y) / 10000);
             const lng2 = centerLng + (parseFloat(trecho.destino_x) / 10000);
 
-
-            coordsEstacoes[trecho.origem_codigo] = [lat1, lng1];
-            coordsEstacoes[trecho.destino_codigo] = [lat2, lng2];
-
-
             let cor = '#64748b';
             if (trecho.status === 'Atenção') cor = '#f5b700';
             if (trecho.status === 'Em manutenção') cor = '#8b5cf6';
             if (trecho.status === 'Bloqueado') cor = '#ef4444';
-
 
             L.polyline([[lat1, lng1], [lat2, lng2]], {
                 color: cor,
@@ -129,7 +114,7 @@ function inicializarMapaReal() {
         });
     }
 
-
+    // 2. Desenhar as Estações
     if (mapa.estacoes) {
         mapa.estacoes.forEach(estacao => {
             const lat = centerLat + (parseFloat(estacao.posicao_y) / 10000);
@@ -146,37 +131,31 @@ function inicializarMapaReal() {
         });
     }
 
-
+    // 3. Desenhar os Trens (Arrastáveis)
     if (mapa.trens) {
         mapa.trens.forEach(trem => {
             const trecho = mapa.trechos.find(t => t.id == trem.trecho_id);
             if (!trecho) return;
 
-
             const latBase = centerLat + (parseFloat(trecho.origem_y) / 10000);
             const lngBase = centerLng + (parseFloat(trecho.origem_x) / 10000);
 
-
             const iconeTrem = L.divIcon({
                 className: 'custom-div-icon',
-                html: <div class="trem-marker ${trem.status === 'Parado' ? 'parado' : ''}"><i class="fas fa-train"></i></div>,
+                html: `<div class="trem-marker ${trem.status === 'Parado' ? 'parado' : ''}"><i class="fas fa-train"></i></div>`,
                 iconSize: [30, 30],
                 iconAnchor: [15, 15]
             });
 
-
             const marcador = L.marker([latBase, lngBase], {
                 icon: iconeTrem,
-                draggable: window.podeControlarTrens // Só permite arrastar se o usuário for Admin/Supervisor
+                draggable: window.podeControlarTrens 
             }).addTo(map);
-
 
             marcador.bindTooltip(trem.codigo, { direction: 'top', offset: [0, -10] });
 
-
             marcador.on('dragend', function (e) {
                 const novaPosicao = e.target.getLatLng();
-                
                 const painel = document.getElementById('painelOperacional');
                 if (painel) {
                     painel.innerHTML = `
@@ -191,7 +170,6 @@ function inicializarMapaReal() {
         });
     }
 }
-
 
 function inicializarMascaraTelefone() {
     const telefoneInputs = document.querySelectorAll('input[name="telefone"]');
