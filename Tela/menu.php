@@ -1,7 +1,6 @@
 <?php
 $paginaMenu = basename($_SERVER['PHP_SELF']);
 
-
 $linksMenu = [
     'index.php' => 'Home',
     'trens.php' => 'Trens',
@@ -10,7 +9,6 @@ $linksMenu = [
     'grafico.php' => 'Gráficos',
     'sensores.php' => 'Sensores'
 ];
-
 
 if (isAdmin()) {
     $linksMenu = array_merge(
@@ -25,11 +23,9 @@ if (isAdmin()) {
             <i class="fas fa-train-subway me-2 text-primary"></i>Hyper Sense
         </a>
 
-
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
             <span class="navbar-toggler-icon"></span>
         </button>
-
 
         <div class="collapse navbar-collapse" id="menuPrincipal">
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
@@ -45,7 +41,14 @@ if (isAdmin()) {
                     <span class="text-muted small me-3 d-none d-lg-block border-end pe-3">
                         <i class="fas fa-user-circle me-1"></i> <?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                     </span>
-                    <a class="btn btn-sm btn-outline-danger" href="logout.php">Sair</a>
+                    <form id="formSair" method="post" action="logout.php">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal" data-bs-target="#modalConfirmacao"
+                            data-confirm-form="formSair" data-confirm-titulo="Confirmar saída"
+                            data-confirm-mensagem="Deseja realmente sair do sistema?"
+                            data-confirm-botao="Sim, sair">Sair</button>
+                    </form>
                 </li>
             </ul>
         </div>
