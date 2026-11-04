@@ -37,21 +37,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conexao->begin_transaction();
 
-            $stmt = $conexao->prepare("SELECT COUNT(*) AS total FROM trens WHERE usuario_responsavel_id = ?");
-            $stmt->bind_param('i', $id);
-            $stmt->execute();
-            $totalTrens = (int)$stmt->get_result()->fetch_assoc()['total'];
-            $stmt->close();
-
-            if ($totalTrens > 0) {
-                $erro = 'Não é possível excluir este usuário: ele possui trens vinculados.';
-            }
-
+            // Trava o cadastro antes de conferir os trens vinculados.
             $stmt = $conexao->prepare('SELECT tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
             $stmt->bind_param('i', $id);
             $stmt->execute();
             $atual = $stmt->get_result()->fetch_assoc();
             $stmt->close();
+
+            $stmt = $conexao->prepare('SELECT COUNT(*) AS total FROM trens WHERE usuario_responsavel_id = ?');
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $totalTrens = (int)$stmt->get_result()->fetch_assoc()['total'];
+            $stmt->close();
+            if ($totalTrens > 0) $erro = 'Não é possível excluir este usuário: ele possui trens vinculados.';
 
             if (!$erro && !$atual) {
                 $erro = 'Usuário não encontrado.';
@@ -84,18 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excluir Usuário | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-<?php require 'menu.php'; ?>
+<?php $tituloPagina = 'Excluir Usuário'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container my-5">
     <div class="row justify-content-center">
@@ -137,11 +124,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </main>
 
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
