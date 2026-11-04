@@ -2,13 +2,15 @@
 require_once 'auth.php';
 requireAdmin();
 
+
 $busca = trim($_GET['busca'] ?? '');
 $sql = "
-    SELECT u.id, u.nome, u.email, u.telefone, u.tipo, u.status,
+    SELECT u.id, u.nome, u.email, u.tipo, u.status,
            (SELECT COUNT(*) FROM trens t WHERE t.usuario_responsavel_id = u.id) AS total_trens
     FROM usuarios u
     WHERE u.deleted_at IS NULL
 ";
+
 
 if ($busca !== '') {
     $termo = '%' . $busca . '%';
@@ -20,6 +22,7 @@ if ($busca !== '') {
 } else {
     $usuarios = $conexao->query($sql . " ORDER BY u.id ASC")->fetch_all(MYSQLI_ASSOC);
 }
+
 
 $flash = consumirFlash();
 ?>
@@ -36,11 +39,12 @@ $flash = consumirFlash();
 <body class="pagina-sistema">
 <?php require 'menu.php'; ?>
 
+
 <main class="container py-5">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <h1 class="fw-bold">Usuários do Sistema</h1>
-            <p class="text-muted mb-0">Total: <?= count($usuarios) ?> usuários cadastrados.</p>
+            <p class="text-muted mb-0">Total: <?= count($usuarios) ?> cadastrados.</p>
         </div>
         <div class="d-flex gap-2">
             <form method="get" class="d-flex gap-2">
@@ -51,9 +55,11 @@ $flash = consumirFlash();
         </div>
     </div>
 
+
     <?php if ($flash): ?>
         <div class="alert alert-<?= e($flash['tipo']) ?>"><?= e($flash['texto']) ?></div>
     <?php endif; ?>
+
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -64,6 +70,7 @@ $flash = consumirFlash();
                             <th class="ps-4">Nome</th>
                             <th>E-mail</th>
                             <th>Tipo</th>
+                            <th>Trens Vinculados</th>
                             <th>Status</th>
                             <th class="text-end pe-4">Ações</th>
                         </tr>
@@ -75,12 +82,22 @@ $flash = consumirFlash();
                                 <td><?= e($usuario['email']) ?></td>
                                 <td><?= e($usuario['tipo']) ?></td>
                                 <td>
+                                    <span class="badge <?= (int)$usuario['total_trens'] > 0 ? 'bg-primary' : 'bg-light text-dark border' ?> rounded-pill">
+                                        <?= (int)$usuario['total_trens'] ?>
+                                    </span>
+                                </td>
+                                <td>
                                     <span class="badge bg-<?= $usuario['status'] === 'Ativo' ? 'success' : 'secondary' ?>">
                                         <?= e($usuario['status']) ?>
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
                                     <a href="editar.php?id=<?= (int)$usuario['id'] ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                    <?php if ((int)$usuario['total_trens'] > 0): ?>
+                                        <button class="btn btn-sm btn-outline-secondary" disabled title="Usuário possui trens vinculados."><i class="fas fa-trash"></i></button>
+                                    <?php else: ?>
+                                        <a href="excluir.php?id=<?= (int)$usuario['id'] ?>" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -91,10 +108,10 @@ $flash = consumirFlash();
     </div>
 </main>
 
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado.</div>
-</footer>
 
+<footer class="bg-dark text-white py-2">
+    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense.</div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
 </body>
