@@ -41,7 +41,7 @@ foreach ($paginasLogin as $arquivo) {
     );
 }
 
-$paginasAdmin = ['Cadastro.php', 'editar.php', 'excluir.php', 'CriarAdministrador.php'];
+$paginasAdmin = ['Cadastro.php', 'editar.php', 'excluir.php', 'criar_admin.php'];
 
 foreach ($paginasAdmin as $arquivo) {
     teste(
@@ -59,7 +59,7 @@ teste(
 
 teste(
     'Criação de administradores protegida',
-    verificarArquivo('CriarAdministrador.php', ['requireAdmin();', 'Administrador']),
+    verificarArquivo('criar_admin.php', ['requireAdmin();', 'Administrador']),
     'A criação de administradores exige autenticação administrativa.'
 );
 
@@ -83,7 +83,7 @@ teste(
 
 $arquivosCsrf = [
     'Cadastro.php', 'editar.php', 'excluir.php',
-    'CriarAdministrador.php', 'sensores.php', 'grafico.php'
+    'criar_admin.php', 'sensores.php', 'grafico.php'
 ];
 
 foreach ($arquivosCsrf as $arquivo) {
@@ -127,19 +127,7 @@ teste(
 
 $totalFalhas = count(array_filter($testes, fn($t) => !$t['resultado']));
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testes de Segurança | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-
-<?php require 'menu.php'; ?>
+<?php $tituloPagina = 'Testes de Segurança'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
     <h1 class="fw-bold">Testes de Segurança</h1>
@@ -182,12 +170,4 @@ $totalFalhas = count(array_filter($testes, fn($t) => !$t['resultado']));
     </div>
 </main>
 
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">
-        &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
