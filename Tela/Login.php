@@ -74,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card border-0 rounded-4 shadow-sm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <!-- Ícone alterado para trem conforme solicitação -->
                         <i class="fas fa-train text-primary fa-3x mb-3"></i>
                         <h2 class="fw-bold text-primary">Hyper Sense</h2>
                         <p class="text-muted">Faça login para acessar o sistema</p>
@@ -109,4 +108,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 </body>
-</html
+</html>          
