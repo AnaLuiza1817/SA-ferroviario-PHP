@@ -71,6 +71,68 @@ function mostrarDetalhes(codigo, dadosDetalhes) {
 }
 
 
+// Função matemática para achar o ponto mais próximo na linha
+function pontoMaisProximoNoTrilho(px, py, trechos) {
+    let menorDistancia = Infinity;
+    let pontoFinal = { x: px, y: py };
+    let trechoMaisProximo = null;
+
+
+    trechos.forEach(t => {
+        const x1 = parseFloat(t.origem_x);
+        const y1 = parseFloat(t.origem_y);
+        const x2 = parseFloat(t.destino_x);
+        const y2 = parseFloat(t.destino_y);
+
+
+        const A = px - x1;
+        const B = py - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+
+
+        const dot = A * C + B * D;
+        const len_sq = C * C + D * D;
+        let param = -1;
+
+
+        if (len_sq !== 0) {
+            param = dot / len_sq;
+        }
+
+
+        let xx, yy;
+
+
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        } else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        } else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+
+
+        const dx = px - xx;
+        const dy = py - yy;
+        const distancia = Math.sqrt(dx * dx + dy * dy);
+
+
+        if (distancia < menorDistancia) {
+            menorDistancia = distancia;
+            pontoFinal = { x: xx, y: yy };
+            trechoMaisProximo = t;
+        }
+    });
+
+
+    return { ponto: pontoFinal, trecho: trechoMaisProximo };
+}
+
+
 function inicializarMapaSVG() {
     const svg = document.getElementById('mapa-svg');
     if (!svg || !window.dadosMapa) return;
@@ -89,7 +151,7 @@ function inicializarMapaSVG() {
     const mapa = window.dadosMapa;
 
 
-    // 1. Desenhar as Rotas
+    // Desenhar as Rotas
     if (mapa.trechos) {
         mapa.trechos.forEach(t => {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -105,7 +167,7 @@ function inicializarMapaSVG() {
     }
 
 
-    // 2. Desenhar as Estações
+    // Desenhar as Estações
     if (mapa.estacoes) {
         mapa.estacoes.forEach(e => {
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -130,7 +192,7 @@ function inicializarMapaSVG() {
     }
 
 
-    // 3. Desenhar Trens e Lógica de Arrastar com Precisão
+    // Desenhar Trens com Restrição de Trilho
     if (mapa.trens) {
         mapa.trens.forEach(trem => {
             const trecho = mapa.trechos.find(t => t.id == trem.trecho_id);
@@ -172,7 +234,6 @@ function inicializarMapaSVG() {
                 let isDragging = false;
 
 
-                // Ao clicar no trem
                 group.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     isDragging = true;
@@ -180,25 +241,26 @@ function inicializarMapaSVG() {
                 });
 
 
-                // Ao mover o mouse pela tela
                 svg.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
                     
-                    // Converte o pixel do mouse para a coordenada exata do SVG
                     const pt = svg.createSVGPoint();
                     pt.x = e.clientX;
                     pt.y = e.clientY;
                     const cursorPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
 
-                    circle.setAttribute('cx', cursorPt.x);
-                    circle.setAttribute('cy', cursorPt.y);
-                    text.setAttribute('x', cursorPt.x + 12);
-                    text.setAttribute('y', cursorPt.y + 4);
+                    // Calcula onde o trem deve ficar preso no trilho
+                    const resultado = pontoMaisProximoNoTrilho(cursorPt.x, cursorPt.y, mapa.trechos);
+
+
+                    circle.setAttribute('cx', resultado.ponto.x);
+                    circle.setAttribute('cy', resultado.ponto.y);
+                    text.setAttribute('x', resultado.ponto.x + 12);
+                    text.setAttribute('y', resultado.ponto.y + 4);
                 });
 
 
-                // Ao soltar o mouse
                 svg.addEventListener('mouseup', () => {
                     if (isDragging) {
                         isDragging = false;
@@ -210,8 +272,8 @@ function inicializarMapaSVG() {
                                 <h5 class="fw-bold mb-3">${trem.codigo}</h5>
                                 <p class="mb-1 text-muted">Status: <span class="badge bg-primary">${trem.status}</span></p>
                                 <p class="mb-1 text-muted">Rota: ${trem.rota_codigo || 'N/A'}</p>
-                                <p class="mb-3 text-muted">Posição alterada visualmente.</p>
-                                <div class="alert alert-success py-2 small">Trem movido com sucesso.</div>
+                                <p class="mb-3 text-muted">Trem reposicionado no trilho mais próximo.</p>
+                                <div class="alert alert-success py-2 small">Posição atualizada.</div>
                             `;
                         }
                     }
