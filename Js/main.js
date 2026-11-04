@@ -1,16 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     inicializarGraficos();
-    inicializarMapa();
+    inicializarMapaReal();
     inicializarMascaraTelefone();
 });
 
 
 function inicializarGraficos() {
     const elOcorrencias = document.getElementById('graficoOcorrencias');
-    
-    if (!elOcorrencias || typeof Chart === 'undefined') {
-        return;
-    }
+    if (!elOcorrencias || typeof Chart === 'undefined') return;
     
     Chart.defaults.color = '#6c757d';
     Chart.defaults.font.family = "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif";
@@ -39,18 +36,10 @@ function inicializarGraficos() {
             animation: false,
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false } 
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { precision: 0 }, 
-                    grid: { borderDash: [4, 4], color: '#f1f5f9' } 
-                },
-                x: { 
-                    grid: { display: false } 
-                }
+                y: { beginAtZero: true, ticks: { precision: 0 }, grid: { borderDash: [4, 4], color: '#f1f5f9' } },
+                x: { grid: { display: false } }
             },
             onClick: (_e, elements) => {
                 if (elements.length) {
@@ -90,68 +79,70 @@ function inicializarGraficos() {
 }
 
 
-function inicializarMapa() {
-    const mapaSvg = document.getElementById('mapa-ferroviario');
-    if (!mapaSvg || !window.dadosMapa) return;
+function inicializarMapaReal() {
+    const mapDiv = document.getElementById('mapa-real');
+    if (!mapDiv || !window.dadosMapa) return;
 
 
-    const camadaTrechos = document.getElementById('camadaTrechos');
-    const camadaEstacoes = document.getElementById('camadaEstacoes');
-    const camadaTrens = document.getElementById('camadaTrens');
+    const centerLat = -26.9194;
+    const centerLng = -48.6612;
+    
+    // Cria o mapa
+    const map = L.map('mapa-real').setView([centerLat, centerLng], 13);
 
 
-    if (!camadaTrechos || !camadaEstacoes || !camadaTrens) return;
-
-
-    camadaTrechos.innerHTML = '';
-    camadaEstacoes.innerHTML = '';
-    camadaTrens.innerHTML = '';
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
 
 
     const mapa = window.dadosMapa;
+    const coordsEstacoes = {};
 
 
     if (mapa.trechos) {
         mapa.trechos.forEach(trecho => {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', trecho.origem_x);
-            line.setAttribute('y1', trecho.origem_y);
-            line.setAttribute('x2', trecho.destino_x);
-            line.setAttribute('y2', trecho.destino_y);
             
-            let cor = '#cbd5e1';
+            const lat1 = centerLat + (parseFloat(trecho.origem_y) / 10000);
+            const lng1 = centerLng + (parseFloat(trecho.origem_x) / 10000);
+            const lat2 = centerLat + (parseFloat(trecho.destino_y) / 10000);
+            const lng2 = centerLng + (parseFloat(trecho.destino_x) / 10000);
+
+
+            coordsEstacoes[trecho.origem_codigo] = [lat1, lng1];
+            coordsEstacoes[trecho.destino_codigo] = [lat2, lng2];
+
+
+            let cor = '#64748b';
             if (trecho.status === 'Atenção') cor = '#f5b700';
             if (trecho.status === 'Em manutenção') cor = '#8b5cf6';
             if (trecho.status === 'Bloqueado') cor = '#ef4444';
-            
-            line.setAttribute('stroke', cor);
-            line.setAttribute('stroke-width', '6');
-            line.setAttribute('stroke-linecap', 'round');
-            camadaTrechos.appendChild(line);
+
+
+            L.polyline([[lat1, lng1], [lat2, lng2]], {
+                color: cor,
+                weight: 5,
+                opacity: 0.7,
+                dashArray: trecho.status === 'Em manutenção' ? '10, 10' : ''
+            }).addTo(map);
         });
     }
 
 
     if (mapa.estacoes) {
         mapa.estacoes.forEach(estacao => {
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', estacao.posicao_x);
-            circle.setAttribute('cy', estacao.posicao_y);
-            circle.setAttribute('r', '8');
-            circle.setAttribute('fill', '#ffffff');
-            circle.setAttribute('stroke', '#1e88e5');
-            circle.setAttribute('stroke-width', '4');
-            camadaEstacoes.appendChild(circle);
-
-
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', parseFloat(estacao.posicao_x) + 12);
-            text.setAttribute('y', parseFloat(estacao.posicao_y) + 5);
-            text.setAttribute('fill', '#2c3e50');
-            text.setAttribute('font-size', '12');
-            text.setAttribute('font-weight', 'bold');
-            text.textContent = estacao.nome;
-            camadaEstacoes.appendChild(text);
+            const lat = centerLat + (parseFloat(estacao.posicao_y) / 10000);
+            const lng = centerLng + (parseFloat(estacao.posicao_x) / 10000);
+            
+            L.circleMarker([lat, lng], {
+                radius: 8,
+                fillColor: '#ffffff',
+                color: '#1e88e5',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(map).bindTooltip(estacao.nome, { permanent: true, direction: 'right', className: 'bg-transparent border-0 fw-bold text-dark' });
         });
     }
 
@@ -159,36 +150,44 @@ function inicializarMapa() {
     if (mapa.trens) {
         mapa.trens.forEach(trem => {
             const trecho = mapa.trechos.find(t => t.id == trem.trecho_id);
-            if (trecho) {
-                const pct = parseFloat(trem.posicao_percentual) / 100;
-                const x1 = parseFloat(trecho.origem_x);
-                const y1 = parseFloat(trecho.origem_y);
-                const x2 = parseFloat(trecho.destino_x);
-                const y2 = parseFloat(trecho.destino_y);
+            if (!trecho) return;
+
+
+            const latBase = centerLat + (parseFloat(trecho.origem_y) / 10000);
+            const lngBase = centerLng + (parseFloat(trecho.origem_x) / 10000);
+
+
+            const iconeTrem = L.divIcon({
+                className: 'custom-div-icon',
+                html: <div class="trem-marker ${trem.status === 'Parado' ? 'parado' : ''}"><i class="fas fa-train"></i></div>,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+
+            const marcador = L.marker([latBase, lngBase], {
+                icon: iconeTrem,
+                draggable: window.podeControlarTrens // Só permite arrastar se o usuário for Admin/Supervisor
+            }).addTo(map);
+
+
+            marcador.bindTooltip(trem.codigo, { direction: 'top', offset: [0, -10] });
+
+
+            marcador.on('dragend', function (e) {
+                const novaPosicao = e.target.getLatLng();
                 
-                const cx = x1 + (x2 - x1) * pct;
-                const cy = y1 + (y2 - y1) * pct;
-
-
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', cx);
-                circle.setAttribute('cy', cy);
-                circle.setAttribute('r', '6');
-                circle.setAttribute('fill', trem.status === 'Em operação' ? '#10b981' : (trem.status === 'Parado' ? '#ef4444' : '#f59e0b'));
-                circle.setAttribute('stroke', '#ffffff');
-                circle.setAttribute('stroke-width', '2');
-                camadaTrens.appendChild(circle);
-
-
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', cx + 10);
-                text.setAttribute('y', cy - 10);
-                text.setAttribute('fill', '#2c3e50');
-                text.setAttribute('font-size', '10');
-                text.setAttribute('font-weight', 'bold');
-                text.textContent = trem.codigo;
-                camadaTrens.appendChild(text);
-            }
+                const painel = document.getElementById('painelOperacional');
+                if (painel) {
+                    painel.innerHTML = `
+                        <h5 class="fw-bold mb-3">${trem.codigo}</h5>
+                        <p class="mb-1 text-muted">Status: <span class="badge bg-primary">${trem.status}</span></p>
+                        <p class="mb-1 text-muted">Rota: ${trem.rota_codigo || 'N/A'}</p>
+                        <p class="mb-3 text-muted">Nova Posição: Lat ${novaPosicao.lat.toFixed(4)}, Lng ${novaPosicao.lng.toFixed(4)}</p>
+                        <div class="alert alert-success py-2 small">Posição atualizada visualmente.</div>
+                    `;
+                }
+            });
         });
     }
 }
@@ -196,16 +195,13 @@ function inicializarMapa() {
 
 function inicializarMascaraTelefone() {
     const telefoneInputs = document.querySelectorAll('input[name="telefone"]');
-    
     telefoneInputs.forEach(input => {
         input.addEventListener('input', function(e) {
             let valor = e.target.value.replace(/\D/g, '');
-            
             if (valor.length > 0) {
                 valor = valor.replace(/^(\d{2})(\d)/g, '($1) $2');
                 valor = valor.replace(/(\d{5})(\d)/, '$1-$2');
             }
-            
             e.target.value = valor;
         });
     });
