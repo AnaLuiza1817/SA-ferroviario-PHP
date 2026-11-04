@@ -48,9 +48,18 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
             overflow: hidden;
             position: relative;
         }
-        #mapa-svg { width: 100%; height: 100%; display: block; }
-        .trem-elemento { cursor: grab; transition: none; }
-        .trem-elemento:active { cursor: grabbing; }
+        #mapa-svg { 
+            width: 100%; 
+            height: 100%; 
+            display: block; 
+        }
+        .trem-elemento { 
+            cursor: grab; 
+            transition: none; 
+        }
+        .trem-elemento:active { 
+            cursor: grabbing; 
+        }
     </style>
 </head>
 <body class="pagina-sistema">
@@ -76,7 +85,6 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
         <div class="col-xl-9">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-2">
-                    <!-- Fundo Branco com SVG -->
                     <div class="mapa-viewport" id="mapaViewport">
                         <svg id="mapa-svg" viewBox="0 0 1040 430">
                             <g id="camada-trechos"></g>

@@ -89,7 +89,7 @@ function inicializarMapaSVG() {
     const mapa = window.dadosMapa;
 
 
-    // 1. Desenhar as Rotas (Linhas)
+    // 1. Desenhar as Rotas
     if (mapa.trechos) {
         mapa.trechos.forEach(t => {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -130,14 +130,13 @@ function inicializarMapaSVG() {
     }
 
 
-    // 3. Desenhar e habilitar o Arrastar (Trens)
+    // 3. Desenhar Trens e Lógica de Arrastar com Precisão
     if (mapa.trens) {
         mapa.trens.forEach(trem => {
             const trecho = mapa.trechos.find(t => t.id == trem.trecho_id);
             if (!trecho) return;
 
 
-            // Calcula a posição exata no trilho
             const pct = parseFloat(trem.posicao_percentual) / 100;
             const cx = parseFloat(trecho.origem_x) + (parseFloat(trecho.destino_x) - parseFloat(trecho.origem_x)) * pct;
             const cy = parseFloat(trecho.origem_y) + (parseFloat(trecho.destino_y) - parseFloat(trecho.origem_y)) * pct;
@@ -169,42 +168,42 @@ function inicializarMapaSVG() {
             camadaTrens.appendChild(group);
 
 
-            // Lógica de Arrastar (Drag and Drop)
             if (window.podeControlarTrens) {
                 let isDragging = false;
-                let offsetX, offsetY;
 
 
+                // Ao clicar no trem
                 group.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
                     isDragging = true;
-                    const rect = svg.getBoundingClientRect();
-                    // Pega a posição do mouse relativa ao SVG
-                    offsetX = e.clientX - rect.left - cx;
-                    offsetY = e.clientY - rect.top - cy;
                     group.style.opacity = '0.7';
                 });
 
 
+                // Ao mover o mouse pela tela
                 svg.addEventListener('mousemove', (e) => {
                     if (!isDragging) return;
-                    const rect = svg.getBoundingClientRect();
-                    const mouseX = e.clientX - rect.left - offsetX;
-                    const mouseY = e.clientY - rect.top - offsetY;
+                    
+                    // Converte o pixel do mouse para a coordenada exata do SVG
+                    const pt = svg.createSVGPoint();
+                    pt.x = e.clientX;
+                    pt.y = e.clientY;
+                    const cursorPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
 
-                    circle.setAttribute('cx', mouseX);
-                    circle.setAttribute('cy', mouseY);
-                    text.setAttribute('x', mouseX + 12);
-                    text.setAttribute('y', mouseY + 4);
+                    circle.setAttribute('cx', cursorPt.x);
+                    circle.setAttribute('cy', cursorPt.y);
+                    text.setAttribute('x', cursorPt.x + 12);
+                    text.setAttribute('y', cursorPt.y + 4);
                 });
 
 
+                // Ao soltar o mouse
                 svg.addEventListener('mouseup', () => {
                     if (isDragging) {
                         isDragging = false;
                         group.style.opacity = '1';
                         
-                        // Atualiza o painel com a nova posição simulada
                         const painel = document.getElementById('painelOperacional');
                         if (painel) {
                             painel.innerHTML = `
