@@ -44,13 +44,25 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
     <title>Mapa Ferroviário | Hyper Sense</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- CSS do Leaflet para o Mapa Geográfico -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="../Css/style.css">
     
     <style>
-        #mapa-real { height: 600px; width: 100%; border-radius: 8px; border: 1px solid #e3e8ef; }
-        .leaflet-container { font-family: inherit; }
-        .trem-marker { display: flex; align-items: center; justify-content: center; background: #1e88e5; color: white; border-radius: 50%; width: 30px; height: 30px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 12px; cursor: grab; }
+        #mapa-real { 
+            height: 600px; 
+            width: 100%; 
+            border-radius: 8px; 
+            border: 1px solid #e3e8ef;
+            z-index: 1;
+        }
+        .trem-marker { 
+            display: flex; align-items: center; justify-content: center; 
+            background: #1e88e5; color: white; border-radius: 50%; 
+            width: 30px; height: 30px; border: 2px solid white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
+            font-size: 12px; cursor: grab; 
+        }
         .trem-marker:active { cursor: grabbing; }
         .trem-marker.parado { background: #ef4444; }
     </style>
@@ -78,7 +90,6 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
         <div class="col-xl-9">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-2">
-                    <!-- Div onde o mapa real será renderizado -->
                     <div id="mapa-real"></div>
                 </div>
             </div>
@@ -90,7 +101,7 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
                 <div class="card-body p-4">
                     <h3 class="h5 mb-3">Painel operacional</h3>
                     <div id="painelOperacional" class="empty-panel">
-                        Clique ou arraste um trem no mapa para visualizar suas informações e atualizar a posição.
+                        Clique ou arraste um trem no mapa para visualizar suas informações.
                     </div>
                 </div>
             </div>
@@ -108,10 +119,6 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
 
 <script>
 window.podeControlarTrens = <?= json_encode(podeEditar()) ?>;
-window.urlAtualizarTrem = 'atualizar.php';
-window.csrfToken = <?= json_encode(csrfToken(), $json) ?>;
-
-
 window.dadosMapa = {
     estacoes: <?= json_encode($estacoes, $json) ?>,
     trechos: <?= json_encode($trechos, $json) ?>,
@@ -120,7 +127,6 @@ window.dadosMapa = {
 </script>
 
 
-<!-- Biblioteca Leaflet para o mapa real -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../Js/main.js"></script>
