@@ -2,15 +2,12 @@
 require_once 'auth.php';
 requireLogin();
 
-
 $mensagem = '';
 $tipoMensagem = 'success';
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastrar_manutencao') {
     requireAdmin();
     validarCsrf();
-
 
     $tremId = filter_input(INPUT_POST, 'trem_id', FILTER_VALIDATE_INT) ?: null;
     $trechoId = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT) ?: null;
@@ -22,21 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
     $descricao = trim($_POST['descricao'] ?? '');
     $erros = [];
 
-
     if ($componente === '' || mb_strlen($componente) > 100) $erros[] = 'Informe um componente válido.';
     if ($ordem === '' || mb_strlen($ordem) > 30) $erros[] = 'Informe uma ordem válida.';
     if (!in_array($status, ['Pendente', 'Em andamento', 'Concluída'], true)) $erros[] = 'Status inválido.';
     if (mb_strlen($descricao) > 255) $erros[] = 'Descrição muito longa.';
 
-
     $inicioData = DateTime::createFromFormat('!Y-m-d\TH:i', $inicio);
     $fimData = $fim !== '' ? DateTime::createFromFormat('!Y-m-d\TH:i', $fim) : null;
-
 
     if (!$inicioData || $inicioData->format('Y-m-d\TH:i') !== $inicio) $erros[] = 'Data de início inválida.';
     if ($fim !== '' && (!$fimData || $fimData->format('Y-m-d\TH:i') !== $fim)) $erros[] = 'Data de fim inválida.';
     if ($inicioData && $fimData && $fimData < $inicioData) $erros[] = 'A data de fim não pode ser anterior ao início.';
-
 
     if (!$erros) {
         try {
@@ -44,12 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
             $fimSql = $fimData ? $fimData->format('Y-m-d H:i:s') : null;
             $descricaoSql = $descricao !== '' ? $descricao : null;
 
-
             $stmt = $conexao->prepare('INSERT INTO manutencoes (trem_id, trecho_id, componente, ordem_manutencao, status, inicio, fim, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->bind_param('iissssss', $tremId, $trechoId, $componente, $ordem, $status, $inicioSql, $fimSql, $descricaoSql);
             $stmt->execute();
             $stmt->close();
-
 
             header('Location: grafico.php?sucesso=cadastro');
             exit;
@@ -58,18 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'cadastr
         }
     }
 
-
     if ($erros) {
         $mensagem = implode(' ', $erros);
         $tipoMensagem = 'danger';
     }
 }
 
-
 if (($_GET['sucesso'] ?? '') === 'cadastro') {
     $mensagem = 'Manutenção cadastrada com sucesso.';
 }
-
 
 $ocorrenciasPorTrem = $conexao->query("
     SELECT t.id, t.codigo, t.status, t.trecho_id,
@@ -81,72 +69,36 @@ $ocorrenciasPorTrem = $conexao->query("
     ORDER BY total_ocorrencias DESC, t.codigo
 ")->fetch_all(MYSQLI_ASSOC);
 
-
-$detalhesTrens = [];
-
-
-$stmtTipos = $conexao->prepare('SELECT tipo, COUNT(*) AS total FROM ocorrencias WHERE trem_id = ? GROUP BY tipo ORDER BY total DESC');
-$stmtOcorrencias = $conexao->prepare('SELECT descricao, tipo, status, ocorrido_em FROM ocorrencias WHERE trem_id = ? ORDER BY ocorrido_em DESC');
-$stmtManutencoes = $conexao->prepare('SELECT componente, ordem_manutencao, status, inicio, fim, descricao FROM manutencoes WHERE trem_id = ? ORDER BY inicio DESC');
-
-
+// Monta os detalhes em lote para evitar três consultas por trem.
+$detalhesTrens = $codigos = [];
 foreach ($ocorrenciasPorTrem as $trem) {
-    $id = (int)$trem['id'];
-
-
-    $stmtTipos->bind_param('i', $id);
-    $stmtTipos->execute();
-    $tipos = $stmtTipos->get_result()->fetch_all(MYSQLI_ASSOC);
-
-
-    $stmtOcorrencias->bind_param('i', $id);
-    $stmtOcorrencias->execute();
-    $ocorrencias = $stmtOcorrencias->get_result()->fetch_all(MYSQLI_ASSOC);
-
-
-    $stmtManutencoes->bind_param('i', $id);
-    $stmtManutencoes->execute();
-    $manutencoes = $stmtManutencoes->get_result()->fetch_all(MYSQLI_ASSOC);
-
-
+    $codigos[(int)$trem['id']] = $trem['codigo'];
     $detalhesTrens[$trem['codigo']] = [
         'codigo' => $trem['codigo'],
         'status' => $trem['status'],
         'rota' => $trem['rota_codigo'] ?? 'Sem rota',
         'total_ocorrencias' => (int)$trem['total_ocorrencias'],
-        'tipos' => $tipos,
-        'ocorrencias' => $ocorrencias,
-        'manutencoes' => $manutencoes
+        'tipos' => [], 'ocorrencias' => [], 'manutencoes' => []
     ];
 }
-
-
-$stmtTipos->close();
-$stmtOcorrencias->close();
-$stmtManutencoes->close();
-
+$consultas = [
+    'tipos' => 'SELECT trem_id, tipo, COUNT(*) AS total FROM ocorrencias WHERE trem_id IS NOT NULL GROUP BY trem_id, tipo ORDER BY total DESC',
+    'ocorrencias' => 'SELECT trem_id, descricao, tipo, status, ocorrido_em FROM ocorrencias WHERE trem_id IS NOT NULL ORDER BY ocorrido_em DESC',
+    'manutencoes' => 'SELECT trem_id, componente, ordem_manutencao, status, inicio, fim, descricao FROM manutencoes WHERE trem_id IS NOT NULL ORDER BY inicio DESC'
+];
+foreach ($consultas as $grupo => $sql) {
+    foreach ($conexao->query($sql) as $registro) {
+        $codigo = $codigos[(int)$registro['trem_id']] ?? null;
+        if ($codigo !== null) $detalhesTrens[$codigo][$grupo][] = $registro;
+    }
+}
 
 $trensDisponiveis = isAdmin() ? $conexao->query('SELECT id, codigo FROM trens ORDER BY codigo')->fetch_all(MYSQLI_ASSOC) : [];
 $trechosDisponiveis = isAdmin() ? $conexao->query('SELECT id, codigo FROM trechos ORDER BY codigo')->fetch_all(MYSQLI_ASSOC) : [];
 
-
 $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráficos | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-
-
-<?php require 'menu.php'; ?>
-
+<?php $tituloPagina = 'Gráficos'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
     <div class="mb-4">
@@ -154,26 +106,23 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
         <h1 class="fw-bold mt-2">Gráficos e indicadores</h1>
         <p class="text-muted mb-0">Dados de ocorrências consultados diretamente do MySQL.</p>
 
-
         <?php if (isAdmin()): ?>
             <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#modalAdicionarDados">
                 <i class="fas fa-plus me-1"></i>Adicionar manutenção
             </button>
         <?php endif; ?>
 
-
         <?php if ($mensagem): ?>
             <div class="alert alert-<?= e($tipoMensagem) ?> mt-3"><?= e($mensagem) ?></div>
         <?php endif; ?>
     </div>
-
 
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="card border-0 h-100 shadow-sm">
                 <div class="card-body p-4">
                     <h3 class="mb-1">Ocorrências por trem</h3>
-                    <p class="text-muted">Selecione uma barra para abrir os detalhes ao lado.</p>
+                    <p class="text-muted">Histórico completo, incluindo ocorrências resolvidas. Selecione uma barra para ver os detalhes.</p>
                     <!-- O tamanho do gráfico é controlado pelo CSS chart-container -->
                     <div class="chart-container" style="height: 400px; position: relative;">
                         <canvas id="graficoOcorrencias"></canvas>
@@ -181,7 +130,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                 </div>
             </div>
         </div>
-
 
         <div class="col-lg-5">
             <div class="card border-0 h-100 shadow-sm">
@@ -196,7 +144,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
     </div>
 </main>
 
-
 <?php if (isAdmin()): ?>
 <div class="modal" id="modalAdicionarDados" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -205,12 +152,10 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                 <input type="hidden" name="acao" value="cadastrar_manutencao">
                 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
-
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Adicionar manutenção</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
 
                 <div class="modal-body">
                     <div class="row g-3">
@@ -263,7 +208,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                     </div>
                 </div>
 
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success">Salvar</button>
@@ -274,20 +218,8 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
 </div>
 <?php endif; ?>
 
-
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</div>
-</footer>
-
-
 <script>
 window.dadosOcorrencias = <?= json_encode($ocorrenciasPorTrem, $jsonOpcoes) ?>;
 window.detalhesTrens = <?= json_encode($detalhesTrens, $jsonOpcoes) ?>;
 </script>
-
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php $carregarGrafico = true; require __DIR__ . '/rodape.php'; ?>
