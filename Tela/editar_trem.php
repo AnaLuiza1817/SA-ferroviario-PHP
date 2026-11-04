@@ -19,7 +19,7 @@ $posicao = filter_input(INPUT_POST, 'posicao_percentual', FILTER_VALIDATE_FLOAT)
 
 $statusPermitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
 
-if (!$id || $codigo === '' || strlen($codigo) > 20 || !$rotaId ||
+if (!$id || $codigo === '' || strlen($codigo) > 20 || !$rotaId || !$trechoId ||
     !in_array($status, $statusPermitidos, true) ||
     $posicao === false || $posicao === null || $posicao < 0 || $posicao > 100) {
     mensagemFlash('danger', 'Dados inválidos ao editar o trem.');
