@@ -2,7 +2,6 @@
 require_once 'auth.php';
 requireAdmin();
 
-
 $erros = [];
 $codigo = trim($_POST['codigo'] ?? '');
 $status = $_POST['status'] ?? 'Em operação';
@@ -12,26 +11,22 @@ $posicao = $_POST['posicao_percentual'] ?? '50';
 $responsavelId = $_POST['usuario_responsavel_id'] ?? '';
 $statusPermitidos = ['Em operação', 'Parado', 'Em manutenção', 'Atrasado'];
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validarCsrf();
-
 
     $trecho = filter_input(INPUT_POST, 'trecho_id', FILTER_VALIDATE_INT) ?: null;
     $rota = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT) ?: null;
     $responsavel = filter_input(INPUT_POST, 'usuario_responsavel_id', FILTER_VALIDATE_INT) ?: null;
-
 
     if ($codigo === '') $erros[] = 'Informe o código do trem.';
     if (strlen($codigo) > 20) $erros[] = 'Código muito longo.';
     if (!in_array($status, $statusPermitidos, true)) $erros[] = 'Status inválido.';
     if (!is_numeric($posicao) || (float)$posicao < 0 || (float)$posicao > 100) $erros[] = 'Posição inválida.';
     
-    // Validação rígida para garantir que a rota foi selecionada
+    if (!$trecho) $erros[] = 'Selecione o trecho inicial para exibir o trem no mapa.';
     if (!$rota) {
         $erros[] = 'Selecione uma rota. Todo trem deve estar vinculado a uma rota.';
     }
-
 
     if (!$erros) {
         try {
@@ -40,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param('ssiidi', $codigo, $status, $trecho, $rota, $valor, $responsavel);
             $stmt->execute();
             $stmt->close();
-
 
             mensagemFlash('success', 'Trem cadastrado com sucesso!');
             header('Location: trens.php');
@@ -51,26 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
 $usuarios = $conexao->query("SELECT id, nome FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
 $trechos = $conexao->query('SELECT id, codigo FROM trechos ORDER BY codigo')->fetch_all(MYSQLI_ASSOC);
 $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ativa' ORDER BY codigo")->fetch_all(MYSQLI_ASSOC);
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Trem | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-
-
-<?php require 'menu.php'; ?>
-
+<?php $tituloPagina = 'Novo Trem'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -81,13 +60,11 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
         <a href="trens.php" class="btn btn-outline-secondary">Voltar</a>
     </div>
 
-
     <?php if ($erros): ?>
         <div class="alert alert-danger">
             <?php foreach ($erros as $erro): ?><div><?= e($erro) ?></div><?php endforeach; ?>
         </div>
     <?php endif; ?>
-
 
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
@@ -129,16 +106,15 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Trecho Atual (Opcional)</label>
-                        <select class="form-select" name="trecho_id">
-                            <option value="">Sem trecho</option>
+                        <label class="form-label">Trecho Inicial (Obrigatório para o mapa)</label>
+                        <select class="form-select" name="trecho_id" required>
+                            <option value="">Selecione um trecho</option>
                             <?php foreach ($trechos as $t): ?>
                                 <option value="<?= $t['id'] ?>" <?= (string)$trechoId === (string)$t['id'] ? 'selected' : '' ?>><?= e($t['codigo']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
-
 
                 <div class="d-flex gap-2 justify-content-end mt-4">
                     <a href="trens.php" class="btn btn-outline-secondary">Cancelar</a>
@@ -149,13 +125,4 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
     </div>
 </main>
 
-
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</div>
-</footer>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
