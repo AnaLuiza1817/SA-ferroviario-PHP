@@ -1,23 +1,29 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
+
 require_once '../infra/conexao.php';
+
 
 if (!empty($_SESSION['usuario_logado']) && !empty($_SESSION['usuario_id'])) {
     header('Location: index.php');
     exit;
 }
 
+
 $erro = $_SESSION['mensagem_erro'] ?? '';
 unset($_SESSION['mensagem_erro']);
 $email = '';
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['usuario'] ?? '');
     $senha = $_POST['senha'] ?? '';
+
 
     if ($email === '' || $senha === '') {
         $erro = 'Preencha todos os campos.';
@@ -28,8 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $usuario = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
+
         if ($usuario && password_verify($senha, $usuario['senha'])) {
             session_regenerate_id(true);
+
 
             $_SESSION['usuario_logado'] = true;
             $_SESSION['usuario_id'] = (int)$usuario['id'];
@@ -37,9 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['usuario_email'] = $usuario['email'];
             $_SESSION['usuario_tipo'] = $usuario['tipo'];
 
+
             header('Location: index.php');
             exit;
         }
+
 
         $erro = 'E-mail ou senha inválidos.';
     }
@@ -57,20 +67,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="bg-light">
 
+
 <div class="container">
     <div class="row justify-content-center align-items-center min-vh-100">
         <div class="col-md-5 col-lg-4">
-            <div class="card border-0 rounded-4">
+            <div class="card border-0 rounded-4 shadow-sm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-chart-line text-primary fa-3x mb-3"></i>
+                        <!-- Ícone alterado para trem conforme solicitação -->
+                        <i class="fas fa-train text-primary fa-3x mb-3"></i>
                         <h2 class="fw-bold text-primary">Hyper Sense</h2>
                         <p class="text-muted">Faça login para acessar o sistema</p>
                     </div>
 
+
                     <?php if ($erro): ?>
                         <div class="alert alert-danger"><?= htmlspecialchars($erro, ENT_QUOTES, 'UTF-8') ?></div>
                     <?php endif; ?>
+
 
                     <form method="post">
                         <div class="mb-3">
@@ -78,10 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" name="usuario" class="form-control" value="<?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>" autocomplete="username" required>
                         </div>
 
+
                         <div class="mb-4">
                             <label class="form-label">Senha</label>
                             <input type="password" name="senha" class="form-control" autocomplete="current-password" required>
                         </div>
+
 
                         <button type="submit" class="btn btn-primary w-100">Entrar</button>
                     </form>
@@ -91,5 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
+
 </body>
-</html>
+</html
