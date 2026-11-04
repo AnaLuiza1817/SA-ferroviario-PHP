@@ -92,19 +92,7 @@ $resumos = [
     ['fa-bell', 'Em alerta', $alertas]
 ];
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensores | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-
-<?php require 'menu.php'; ?>
+<?php $tituloPagina = 'Sensores'; require __DIR__ . '/cabecalho.php'; ?>
 
 <header class="page-header py-5 mb-4">
     <div class="container">
@@ -228,7 +216,7 @@ $resumos = [
 </main>
 
 <?php if ($admin): ?>
-<div class="modal fade" id="novoSensor" tabindex="-1">
+<div class="modal" id="novoSensor" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="post">
@@ -302,7 +290,7 @@ $resumos = [
 
 <?php if ($podeEditar): ?>
     <?php foreach ($sensores as $sensor): ?>
-        <div class="modal fade" id="editarSensor<?= (int)$sensor['id'] ?>" tabindex="-1">
+        <div class="modal" id="editarSensor<?= (int)$sensor['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="post">
@@ -346,13 +334,4 @@ $resumos = [
     <?php endforeach; ?>
 <?php endif; ?>
 
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">
-        &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
