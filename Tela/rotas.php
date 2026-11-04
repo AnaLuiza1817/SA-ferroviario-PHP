@@ -2,16 +2,13 @@
 require_once 'auth.php';
 requireLogin();
 
-
 $admin = isAdmin();
 $flash = consumirFlash();
 $statusPermitidos = ['Ativa', 'Inativa'];
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
     validarCsrf();
     $acao = $_POST['acao'] ?? '';
-
 
     // CRIAR ROTA
     if ($acao === 'criar') {
@@ -19,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         $nome = trim($_POST['nome'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
         $status = $_POST['status'] ?? 'Ativa';
-
 
         if ($codigo === '' || $nome === '' || !in_array($status, $statusPermitidos, true)) {
             mensagemFlash('danger', 'Preencha os dados corretamente.');
@@ -37,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-
     // EDITAR ROTA
     if ($acao === 'editar') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -45,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         $nome = trim($_POST['nome'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
         $status = $_POST['status'] ?? 'Ativa';
-
 
         if (!$id || $codigo === '' || $nome === '' || !in_array($status, $statusPermitidos, true)) {
             mensagemFlash('danger', 'Dados inválidos.');
@@ -63,12 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-
     // VINCULAR TREM À ROTA
     if ($acao === 'vincular_trem') {
         $rotaId = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
         $tremId = filter_input(INPUT_POST, 'trem_id', FILTER_VALIDATE_INT);
-
 
         if ($rotaId && $tremId) {
             try {
@@ -84,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-
     // EXCLUIR ROTA
     if ($acao === 'excluir') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -94,7 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
             $stmt->execute();
             $trensVinculados = (int)$stmt->get_result()->fetch_assoc()['total'];
             $stmt->close();
-
 
             if ($trensVinculados > 0) {
                 mensagemFlash('danger', 'Existem trens vinculados a esta rota.');
@@ -109,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 }
-
 
 $busca = trim($_GET['busca'] ?? '');
 $sql = "SELECT r.*, 
@@ -126,30 +115,16 @@ if ($busca !== '') {
 }
 $sql .= " ORDER BY r.codigo";
 
-
 $stmt = $conexao->prepare($sql);
 if ($params) { $stmt->bind_param($tipos, ...$params); }
 $stmt->execute();
 $rotas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-
 // Buscar trens que estão SEM rota para poder vincular
 $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS NULL ORDER BY codigo")->fetch_all(MYSQLI_ASSOC);
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Rotas | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema bg-light">
-<?php require 'menu.php'; ?>
-
+<?php $tituloPagina = 'Gestão de Rotas'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4 border-bottom pb-3">
@@ -170,11 +145,9 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
         </div>
     </div>
 
-
     <?php if ($flash): ?>
         <div class="alert alert-<?= e($flash['tipo']) ?>"><?= e($flash['texto']) ?></div>
     <?php endif; ?>
-
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -216,15 +189,13 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
                                             </button>
                                         <?php endif; ?>
 
-
                                         <!-- Botão de Editar (Lápis) -->
                                         <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota">
                                             <i class="fas fa-pen text-muted"></i>
                                         </button>
 
-
                                         <!-- Botão de Excluir (Lixeira) -->
-                                        <form method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta rota?');">
+                                        <form id="formExcluirRota<?= (int)$rota['id'] ?>" method="post" class="d-inline">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id" value="<?= (int)$rota['id'] ?>">
                                             <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -234,7 +205,12 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
                                                     <i class="fas fa-trash text-muted opacity-50"></i>
                                                 </button>
                                             <?php else: ?>
-                                                <button type="submit" class="btn btn-sm btn-light border" title="Excluir Rota">
+                                                <button type="button" class="btn btn-sm btn-light border" title="Excluir Rota"
+                                                    data-bs-toggle="modal" data-bs-target="#modalConfirmacao"
+                                                    data-confirm-form="formExcluirRota<?= (int)$rota['id'] ?>"
+                                                    data-confirm-titulo="Excluir rota"
+                                                    data-confirm-mensagem="Deseja realmente excluir a rota <?= e($rota['codigo']) ?>?"
+                                                    data-confirm-botao="Sim, excluir">
                                                     <i class="fas fa-trash text-danger"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -250,10 +226,9 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
     </div>
 </main>
 
-
 <?php if ($admin): ?>
     <!-- Modal de Criar -->
-    <div class="modal fade" id="novaRota" tabindex="-1">
+    <div class="modal" id="novaRota" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <form method="post">
@@ -293,11 +268,10 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
         </div>
     </div>
 
-
     <!-- Modais por Rota -->
     <?php foreach ($rotas as $rota): ?>
         <!-- Modal Vincular Trem -->
-        <div class="modal fade" id="vincularTrem<?= (int)$rota['id'] ?>" tabindex="-1">
+        <div class="modal" id="vincularTrem<?= (int)$rota['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <form method="post">
@@ -329,9 +303,8 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
             </div>
         </div>
 
-
         <!-- Modal Editar Rota -->
-        <div class="modal fade" id="editarRota<?= (int)$rota['id'] ?>" tabindex="-1">
+        <div class="modal" id="editarRota<?= (int)$rota['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <form method="post">
@@ -377,15 +350,4 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
     <?php endforeach; ?>
 <?php endif; ?>
 
-
-<footer class="bg-white border-top py-3 mt-auto">
-    <div class="container text-center text-muted small">
-        &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
-    </div>
-</footer>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
