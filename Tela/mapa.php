@@ -48,18 +48,9 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
             overflow: hidden;
             position: relative;
         }
-        #mapa-svg { 
-            width: 100%; 
-            height: 100%; 
-            display: block; 
-        }
-        .trem-elemento { 
-            cursor: grab; 
-            transition: none; 
-        }
-        .trem-elemento:active { 
-            cursor: grabbing; 
-        }
+        #mapa-svg { width: 100%; height: 100%; display: block; }
+        .trem-elemento { cursor: grab; transition: none; }
+        .trem-elemento:active { cursor: grabbing; }
     </style>
 </head>
 <body class="pagina-sistema">
