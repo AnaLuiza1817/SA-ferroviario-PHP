@@ -6,10 +6,10 @@ $senha = "";
 $banco = "ferrorama_db";
 
 // Conexão com o MySQL local; ajuste a porta se necessário.
-$conexao = new mysqli($host, $usuario, $senha, $banco, 3306);
+$conexao = new mysqli($host, $usuario, $senha, $banco, 3307);
 
 if ($conexao->connect_error) {
     die("Erro ao conectar ao banco de dados.");
 }
 
-$conexao->set_charset("utf8mb4");z
+$conexao->set_charset("utf8mb4");
