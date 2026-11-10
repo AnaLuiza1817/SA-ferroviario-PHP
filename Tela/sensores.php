@@ -94,15 +94,8 @@ $resumos = [
 ?>
 <?php $tituloPagina = 'Sensores'; require __DIR__ . '/cabecalho.php'; ?>
 
-<header class="page-header py-5 mb-4">
-    <div class="container">
-        <span class="badge bg-light text-primary mb-3">Monitoramento ferroviário</span>
-        <h1 class="fw-bold">Sensores</h1>
-        <p>Acompanhe leituras, limites, trechos e status dos sensores.</p>
-    </div>
-</header>
-
 <main class="container pb-5">
+    <div class="titulo-tela"><div><h1>Sensores</h1><p>Acompanhe leituras, limites, trechos e status dos sensores.</p></div></div>
     <?php if ($erro): ?>
         <div class="alert alert-danger"><?= e($erro) ?></div>
     <?php endif; ?>
@@ -111,23 +104,13 @@ $resumos = [
         <div class="alert alert-success">Operação realizada com sucesso.</div>
     <?php endif; ?>
 
-    <div class="row g-4 mb-4">
+    <section class="resumo-linear resumo-sensores" aria-label="Resumo de sensores">
         <?php foreach ($resumos as [$icone, $titulo, $total]): ?>
-            <div class="col-md-3">
-                <div class="card sensor-card h-100">
-                    <div class="card-body">
-                        <div class="sensor-icon mb-3">
-                            <i class="fas <?= e($icone) ?>"></i>
-                        </div>
-                        <div class="text-muted"><?= e($titulo) ?></div>
-                        <div class="fs-2 fw-bold"><?= $total ?></div>
-                    </div>
-                </div>
-            </div>
+            <a href="#lista-sensores"><span><i class="fas <?= e($icone) ?> me-1" aria-hidden="true"></i> <?= e($titulo) ?></span><strong><?= (int)$total ?></strong></a>
         <?php endforeach; ?>
-    </div>
+    </section>
 
-    <div class="card border-0 table-wrap">
+    <div class="card border-0 table-wrap" id="lista-sensores">
         <div class="card-body p-0">
             <div class="d-flex justify-content-between align-items-center p-4">
                 <div>
