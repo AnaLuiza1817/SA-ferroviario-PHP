@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -37,12 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
 
             mensagemFlash('success', 'Trem cadastrado com sucesso!');
+            if (($_POST['modal'] ?? '') === '1') { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE); exit; }
             header('Location: trens.php');
             exit;
         } catch (mysqli_sql_exception $ex) {
             $erros[] = $ex->getCode() == 1062 ? 'Já existe um trem com esse código.' : 'Não foi possível cadastrar o trem.';
         }
     }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
+    header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => false, 'erros' => $erros], JSON_UNESCAPED_UNICODE); exit;
 }
 
 $usuarios = $conexao->query("SELECT id, nome FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL ORDER BY nome")->fetch_all(MYSQLI_ASSOC);
@@ -52,9 +58,9 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
 <?php $tituloPagina = 'Novo Trem'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="titulo-tela flex-wrap">
         <div>
-            <h1 class="display-6 fw-semibold"><i class="fas fa-train text-primary me-2"></i>Novo Trem</h1>
+            <h1 class="fw-bold">Novo Trem</h1>
             <p class="text-muted mb-0">Preencha os dados do trem e vincule à sua rota.</p>
         </div>
         <a href="trens.php" class="btn btn-outline-secondary">Voltar</a>
