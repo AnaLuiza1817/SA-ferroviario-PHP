@@ -29,7 +29,7 @@ function verificarArquivo(string $arquivo, array $termos): bool {
 
 $paginasLogin = [
     'index.php', 'usuario.php', 'trens.php',
-    'rotas.php', 'mapa.php', 'grafico.php', 'sensores.php'
+    'rotas.php', 'mapa.php', 'grafico.php', 'sensores.php', 'alertas.php', 'clima.php'
 ];
 
 foreach ($paginasLogin as $arquivo) {
@@ -130,8 +130,7 @@ $totalFalhas = count(array_filter($testes, fn($t) => !$t['resultado']));
 <?php $tituloPagina = 'Testes de Segurança'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
-    <h1 class="fw-bold">Testes de Segurança</h1>
-    <p class="text-muted">Verificações automáticas de autenticação e permissões.</p>
+    <div class="titulo-tela"><div><h1>Testes de Segurança</h1><p>Verificações automáticas de autenticação e permissões.</p></div></div>
 
     <div class="alert alert-<?= $totalFalhas === 0 ? 'success' : 'danger' ?>">
         <?= $totalFalhas === 0
