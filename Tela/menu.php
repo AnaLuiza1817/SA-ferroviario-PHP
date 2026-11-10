@@ -1,56 +1,30 @@
+
 <?php
 $paginaMenu = basename($_SERVER['PHP_SELF']);
-
 $linksMenu = [
-    'index.php' => 'Home',
-    'trens.php' => 'Trens',
-    'rotas.php' => 'Rotas',
-    'mapa.php' => 'Mapa',
-    'grafico.php' => 'Gráficos',
-    'sensores.php' => 'Sensores'
+    'index.php' => 'Início', 'trens.php' => 'Trens', 'rotas.php' => 'Rotas',
+    'alertas.php' => 'Alertas', 'clima.php' => 'Clima', 'sensores.php' => 'Sensores',
+    'mapa.php' => 'Mapa', 'grafico.php' => 'Gráficos', 'consulta-cep.php' => 'Consultar CEP'
 ];
-
-if (isAdmin()) {
-    $linksMenu = array_merge(
-        ['index.php' => 'Home', 'usuario.php' => 'Usuários'],
-        array_slice($linksMenu, 1, null, true)
-    );
-}
+if (isAdmin()) $linksMenu['usuario.php'] = 'Usuários';
 ?>
-<nav class="navbar navbar-expand-lg navbar-hyper sticky-top">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">
-            <i class="fas fa-train-subway me-2 text-primary"></i>Hyper Sense
-        </a>
-
-        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
+<nav class="navbar navbar-expand-xl navbar-hyper sticky-top" aria-label="Navegação principal">
+    <div class="container layout-menu">
+        <a class="navbar-brand" href="index.php"><span class="hs-mark">HS</span><span>HYPER SENSE</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="menuPrincipal">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+            <ul class="navbar-nav mx-auto align-items-xl-center">
                 <?php foreach ($linksMenu as $arquivo => $nome): ?>
-                    <li class="nav-item">
-                        <a class="nav-link px-3 <?= $paginaMenu === $arquivo ? 'active' : '' ?>" href="<?= e($arquivo) ?>">
-                            <?= e($nome) ?>
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link <?= $paginaMenu === $arquivo ? 'active' : '' ?>" href="<?= e($arquivo) ?>" <?= $paginaMenu === $arquivo ? 'aria-current="page"' : '' ?>><?= e($nome) ?></a></li>
                 <?php endforeach; ?>
-                
-                <li class="nav-item ms-lg-3 mt-2 mt-lg-0 d-flex align-items-center">
-                    <span class="text-muted small me-3 d-none d-lg-block border-end pe-3">
-                        <i class="fas fa-user-circle me-1"></i> <?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?>
-                    </span>
-                    <form id="formSair" method="post" action="logout.php">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                        <button type="button" class="btn btn-sm btn-outline-danger"
-                            data-bs-toggle="modal" data-bs-target="#modalConfirmacao"
-                            data-confirm-form="formSair" data-confirm-titulo="Confirmar saída"
-                            data-confirm-mensagem="Deseja realmente sair do sistema?"
-                            data-confirm-botao="Sim, sair">Sair</button>
-                    </form>
-                </li>
             </ul>
+            <div class="menu-user">
+                <span class="user-identidade" title="<?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?>"><strong><?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?></strong><small><?= e($_SESSION['usuario_tipo'] ?? 'Usuário') ?></small></span>
+                <form id="formSair" method="post" action="logout.php">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalConfirmacao" data-confirm-form="formSair" data-confirm-titulo="Confirmar saída" data-confirm-mensagem="Deseja realmente sair do sistema?" data-confirm-botao="Sim, sair">Sair</button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>
