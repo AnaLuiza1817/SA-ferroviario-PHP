@@ -1,4 +1,3 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -66,22 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Login | Hyper Sense</title>
 
-    <link
-        rel="stylesheet"
-        href="../Css/vendor/bootstrap.min.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../Css/style.css?v=<?= filemtime(__DIR__ . '/../Css/style.css') ?>"
-    >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../Css/style.css?v=<?= filemtime(__DIR__ . '/../Css/style.css') ?>">
 </head>
 
 <body class="pagina-sistema bg-light">
 
     <main class="container d-flex flex-column justify-content-center">
         <div class="row justify-content-center align-items-center">
-
             <div class="col-md-5 col-lg-4">
 
                 <div class="card border-0 rounded-4 shadow-sm">
@@ -105,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
 
                         <form method="post">
-
                             <div class="mb-3">
                                 <label for="email" class="form-label">
                                     E-mail
@@ -137,19 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 >
                             </div>
 
-                            <button
-                                type="submit"
-                                class="btn btn-primary w-100"
-                            >
+                            <button type="submit" class="btn btn-primary w-100">
                                 Entrar
                             </button>
-
                         </form>
 
-                        <a
-                            class="login-voltar"
-                            href="landing-page.php"
-                        >
+                        <a class="login-voltar" href="landing-page.php">
                             Voltar à apresentação do projeto
                         </a>
 
@@ -164,6 +147,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $semScripts = true;
     require __DIR__ . '/rodape.php';
     ?>
-
-</body>
-</html>
