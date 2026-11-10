@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -37,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conexao->begin_transaction();
 
-            // Trava o cadastro antes de conferir os trens vinculados.
             $stmt = $conexao->prepare('SELECT tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
             $stmt->bind_param('i', $id);
             $stmt->execute();
