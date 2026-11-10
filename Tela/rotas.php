@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -10,7 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
     validarCsrf();
     $acao = $_POST['acao'] ?? '';
 
-    // CRIAR ROTA
     if ($acao === 'criar') {
         $codigo = trim($_POST['codigo'] ?? '');
         $nome = trim($_POST['nome'] ?? '');
@@ -33,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-    // EDITAR ROTA
     if ($acao === 'editar') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         $codigo = trim($_POST['codigo'] ?? '');
@@ -57,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-    // VINCULAR TREM À ROTA
     if ($acao === 'vincular_trem') {
         $rotaId = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT);
         $tremId = filter_input(INPUT_POST, 'trem_id', FILTER_VALIDATE_INT);
@@ -76,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $admin) {
         exit;
     }
 
-    // EXCLUIR ROTA
     if ($acao === 'excluir') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if ($id) {
@@ -121,13 +118,12 @@ $stmt->execute();
 $rotas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Buscar trens que estão SEM rota para poder vincular
 $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS NULL ORDER BY codigo")->fetch_all(MYSQLI_ASSOC);
 ?>
 <?php $tituloPagina = 'Gestão de Rotas'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
-    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4 border-bottom pb-3">
+    <div class="titulo-tela flex-wrap">
         <div>
             <h1 class="h3 fw-bold mb-1">Gestão de Rotas</h1>
             <p class="text-muted mb-0">Visualização da malha ferroviária.</p>
@@ -182,19 +178,19 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
                                 
                                 <?php if ($admin): ?>
                                     <td class="text-end pe-4 text-nowrap">
-                                        <!-- Botão de Vincular Trem -->
+                                        
                                         <?php if (count($trensSemRota) > 0): ?>
                                             <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#vincularTrem<?= (int)$rota['id'] ?>" title="Adicionar Trem a esta Rota">
                                                 <i class="fas fa-train text-primary"></i> <i class="fas fa-plus text-primary" style="font-size: 10px;"></i>
                                             </button>
                                         <?php endif; ?>
 
-                                        <!-- Botão de Editar (Lápis) -->
+                                        
                                         <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota">
                                             <i class="fas fa-pen text-muted"></i>
                                         </button>
 
-                                        <!-- Botão de Excluir (Lixeira) -->
+                                        
                                         <form id="formExcluirRota<?= (int)$rota['id'] ?>" method="post" class="d-inline">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id" value="<?= (int)$rota['id'] ?>">
@@ -227,7 +223,7 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
 </main>
 
 <?php if ($admin): ?>
-    <!-- Modal de Criar -->
+    
     <div class="modal" id="novaRota" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -268,9 +264,9 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
         </div>
     </div>
 
-    <!-- Modais por Rota -->
+    
     <?php foreach ($rotas as $rota): ?>
-        <!-- Modal Vincular Trem -->
+        
         <div class="modal" id="vincularTrem<?= (int)$rota['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -303,7 +299,7 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
             </div>
         </div>
 
-        <!-- Modal Editar Rota -->
+        
         <div class="modal" id="editarRota<?= (int)$rota['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
