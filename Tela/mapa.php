@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -27,11 +28,10 @@ $json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | J
 ?>
 <?php $tituloPagina = 'Mapa Ferroviário'; require __DIR__ . '/cabecalho.php'; ?>
 
-<main class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+<main class="container py-4">
+    <div class="titulo-tela flex-wrap">
         <div>
-            <span class="badge bg-primary-subtle text-primary">Visualização da malha</span>
-            <h1 class="fw-bold mt-2 mb-1">Mapa Ferroviário</h1>
+            <h1 class="fw-bold mb-1">Mapa Ferroviário</h1>
             <p class="text-muted mb-0">Selecione um trem para consultar sua posição e situação atual.</p>
         </div>
         <a href="index.php" class="btn btn-outline-primary">
