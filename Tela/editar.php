@@ -2,6 +2,7 @@
 <?php
 require_once 'auth.php';
 requireAdmin();
+require_once __DIR__ . '/endereco.php';
 
 $tipos = ['Usuário', 'Supervisor', 'Administrador'];
 $statusPermitidos = ['Ativo', 'Inativo'];
@@ -13,7 +14,7 @@ if (!$id || $id <= 0) {
     exit;
 }
 
-$stmt = $conexao->prepare('SELECT nome, email, telefone, tipo, status FROM usuarios WHERE id = ? AND deleted_at IS NULL');
+$stmt = $conexao->prepare('SELECT nome, email, telefone, tipo, status, cep, logradouro, bairro, cidade, uf FROM usuarios WHERE id = ? AND deleted_at IS NULL');
 $stmt->bind_param('i', $id);
 $stmt->execute();
 $usuario = $stmt->get_result()->fetch_assoc();
@@ -35,11 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'status' => $_POST['status'] ?? ''
     ];
 
+    $usuario = array_merge($usuario, lerEndereco($_POST));
     if ($usuario['nome'] === '' || mb_strlen($usuario['nome']) > 150) $erros[] = 'Informe um nome válido.';
     if (!filter_var($usuario['email'], FILTER_VALIDATE_EMAIL) || strlen($usuario['email']) > 150) $erros[] = 'Informe um e-mail válido.';
     if (strlen($usuario['telefone']) > 30) $erros[] = 'Telefone muito longo.';
     if (!in_array($usuario['tipo'], $tipos, true)) $erros[] = 'Tipo inválido.';
     if (!in_array($usuario['status'], $statusPermitidos, true)) $erros[] = 'Status inválido.';
+    array_push($erros, ...validarEndereco($usuario));
 
     if ($id === (int)$_SESSION['usuario_id'] && ($usuario['tipo'] !== 'Administrador' || $usuario['status'] !== 'Ativo')) {
         $erros[] = 'Não é permitido remover seu próprio acesso administrativo.';
@@ -47,10 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$erros) {
         try {
-            $stmt = $conexao->prepare('UPDATE usuarios SET nome = ?, email = ?, telefone = ?, tipo = ?, status = ? WHERE id = ? AND deleted_at IS NULL');
-            $stmt->bind_param('sssssi', $usuario['nome'], $usuario['email'], $usuario['telefone'], $usuario['tipo'], $usuario['status'], $id);
+            $stmt = $conexao->prepare('UPDATE usuarios SET nome = ?, email = ?, telefone = ?, tipo = ?, status = ?, cep = ?, logradouro = ?, bairro = ?, cidade = ?, uf = ? WHERE id = ? AND deleted_at IS NULL');
+            $stmt->bind_param('ssssssssssi', $usuario['nome'], $usuario['email'], $usuario['telefone'], $usuario['tipo'], $usuario['status'], $usuario['cep'], $usuario['logradouro'], $usuario['bairro'], $usuario['cidade'], $usuario['uf'], $id);
             $stmt->execute();
             $stmt->close();
+            if (($_POST['modal'] ?? '') === '1') { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE); exit; }
             header('Location: usuario.php?sucesso=edicao');
             exit;
         } catch (mysqli_sql_exception $ex) {
@@ -58,11 +62,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'erros' => $erros], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 ?>
 <?php $tituloPagina = 'Editar Usuário'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container my-5">
-    <h1 class="display-6 fw-semibold mb-4"><i class="fas fa-user-edit text-primary me-2"></i>Editar Usuário</h1>
+    <div class="titulo-tela"><h1>Editar Usuário</h1></div>
 
     <?php if ($erros): ?>
         <div class="alert alert-danger">
@@ -74,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
-            <form method="post">
+            <form method="post" data-cep-lookup>
                 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
                 <div class="row g-3">
@@ -110,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php $prefixoEndereco = 'edicao'; $enderecoValores = $usuario; require __DIR__ . '/campos-endereco.php'; ?>
                 </div>
 
                 <div class="d-flex gap-2 justify-content-end mt-4">

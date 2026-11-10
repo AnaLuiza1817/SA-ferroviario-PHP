@@ -37,20 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Administrador | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
-</head>
-<body class="pagina-sistema">
-
-<?php require 'menu.php'; ?>
-
+<?php $tituloPagina = 'Criar Administrador'; require __DIR__ . '/cabecalho.php'; ?>
 <main class="container my-5">
     <div class="row justify-content-center">
         <div class="col-lg-7">
@@ -109,11 +96,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </main>
 
-<footer class="bg-dark text-white py-2">
-    <div class="container text-center">&copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.</div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../Js/main.js"></script>
-</body>
-</html>
+<?php require __DIR__ . '/rodape.php'; ?>
