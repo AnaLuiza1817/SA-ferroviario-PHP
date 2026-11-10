@@ -2,12 +2,14 @@
 <?php
 require_once 'auth.php';
 requireAdmin();
+require_once __DIR__ . '/endereco.php';
 
 $erros = [];
 $sucesso = '';
 $nome = trim($_POST['nome'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $telefone = trim($_POST['telefone'] ?? '');
+$endereco = lerEndereco($_POST);
 $tipo = $_POST['tipo'] ?? 'Usuário';
 $status = $_POST['status'] ?? 'Ativo';
 $tipos = ['Usuário', 'Supervisor', 'Administrador'];
@@ -22,17 +24,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strlen($senha) < 8) $erros[] = 'A senha deve ter pelo menos 8 caracteres.';
     if (!in_array($tipo, $tipos, true)) $erros[] = 'Tipo inválido.';
     if (!in_array($status, $statusPermitidos, true)) $erros[] = 'Status inválido.';
+    array_push($erros, ...validarEndereco($endereco));
 
     if (!$erros) {
         try {
             $hash = password_hash($senha, PASSWORD_DEFAULT);
-            $stmt = $conexao->prepare('INSERT INTO usuarios (nome, email, telefone, tipo, status, senha) VALUES (?, ?, ?, ?, ?, ?)');
-            $stmt->bind_param('ssssss', $nome, $email, $telefone, $tipo, $status, $hash);
+            $stmt = $conexao->prepare('INSERT INTO usuarios (nome, email, telefone, tipo, status, senha, cep, logradouro, bairro, cidade, uf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->bind_param('sssssssssss', $nome, $email, $telefone, $tipo, $status, $hash, $endereco['cep'], $endereco['logradouro'], $endereco['bairro'], $endereco['cidade'], $endereco['uf']);
             $stmt->execute();
             $stmt->close();
 
             $sucesso = 'Usuário cadastrado com sucesso.';
             $nome = $email = $telefone = '';
+            $endereco = lerEndereco([]);
             $tipo = 'Usuário';
             $status = 'Ativo';
         } catch (mysqli_sql_exception $ex) {
@@ -40,13 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => !$erros, 'erros' => $erros, 'mensagem' => $sucesso], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 ?>
 <?php $tituloPagina = 'Novo Usuário'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="titulo-tela flex-wrap">
         <div>
-            <h1 class="display-6 fw-semibold"><i class="fas fa-user-plus text-primary me-2"></i>Novo Usuário</h1>
+            <h1 class="fw-bold">Novo Usuário</h1>
             <p class="text-muted mb-0">Preencha os campos para cadastrar.</p>
         </div>
         <a href="usuario.php" class="btn btn-outline-secondary">Voltar</a>
@@ -66,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
-            <form method="post" data-validar="usuario">
+            <form method="post" data-validar="usuario" data-cep-lookup>
                 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
                 <div class="row g-3">
@@ -107,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php $prefixoEndereco = 'cadastro'; $enderecoValores = $endereco; require __DIR__ . '/campos-endereco.php'; ?>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-4">
