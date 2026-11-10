@@ -1,6 +1,7 @@
-// Componentes usados nas telas de gráficos, mapa e cadastro.
+
 document.addEventListener('DOMContentLoaded', () => {
     inicializarConfirmacoes();
+    inicializarFormulariosModal();
     inicializarGraficos();
     inicializarMapa();
     document.querySelectorAll('input[name="telefone"]').forEach(input => {
@@ -13,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Associa a confirmação ao formulário original sem perder os campos enviados.
 function inicializarConfirmacoes() {
     const modal = document.getElementById('modalConfirmacao');
     if (!modal) return;
@@ -39,15 +39,15 @@ function inicializarGraficos() {
     const canvas = document.getElementById('graficoOcorrencias');
     if (!canvas || typeof Chart === 'undefined') return;
     const trens = window.dadosOcorrencias || [], detalhes = window.detalhesTrens || {};
-    Chart.defaults.color = '#6c757d';
-    Chart.defaults.font.family = "'-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', sans-serif";
+    Chart.defaults.color = '#515c6b';
+    Chart.defaults.font.family = 'Arial';
     new Chart(canvas, {
         type: 'bar',
-        data: { labels: trens.map(t => t.codigo), datasets: [{ label: 'Ocorrências', data: trens.map(t => Number(t.total_ocorrencias) || 0), backgroundColor: '#1e88e5', borderRadius: 6, barThickness: 40 }] },
+        data: { labels: trens.map(t => t.codigo), datasets: [{ label: 'Ocorrências', data: trens.map(t => Number(t.total_ocorrencias) || 0), backgroundColor: '#1c2f70', borderRadius: 6, barThickness: 40 }] },
         options: {
             animation: false, responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#d9d9d9' } }, x: { grid: { display: false } } },
             onClick: (_, itens) => { if (itens.length) mostrarDetalhes(trens[itens[0].index].codigo, detalhes); }
         }
     });
@@ -69,7 +69,6 @@ function mostrarDetalhes(codigo, dados) {
         <h6 class="mt-4 mb-2">Manutenções</h6>${lista(trem.manutencoes, t => `${escapar(t.componente)}: ${escapar(t.status)}`)}`;
 }
 
-// Desenha os registros do MySQL.
 function inicializarMapa() {
     const svg = document.getElementById('mapa-svg'), mapa = window.dadosMapa;
     if (!svg || !mapa) return;
@@ -83,17 +82,17 @@ function inicializarMapa() {
         if (conteudo !== undefined) el.textContent = conteudo;
         return el;
     };
-    const cores = { 'Em operação': '#10b981', 'Parado': '#ef4444', 'Em manutenção': '#8b5cf6', 'Atrasado': '#f97316' };
+    const cores = { 'Em operação': '#228b5b', 'Parado': '#ca3339', 'Em manutenção': '#ebb636', 'Atrasado': '#ebb636' };
     const trechos = mapa.trechos || [];
     trilhos.replaceChildren(); estacoes.replaceChildren(); trens.replaceChildren();
     trechos.forEach(t => {
-        const cor = { 'Em manutenção': '#8b5cf6', 'Bloqueado': '#ef4444', 'Atenção': '#f5b700' }[t.status] || '#cbd5e1';
+        const cor = { 'Em manutenção': '#ebb636', 'Bloqueado': '#ca3339', 'Atenção': '#ebb636' }[t.status] || '#9da3ae';
         trilhos.append(criar('line', { x1: t.origem_x, y1: t.origem_y, x2: t.destino_x, y2: t.destino_y, stroke: cor, 'stroke-width': 6, 'stroke-linecap': 'round' }));
     });
     (mapa.estacoes || []).forEach(e => {
         estacoes.append(
-            criar('circle', { cx: e.posicao_x, cy: e.posicao_y, r: 8, fill: '#fff', stroke: '#1e88e5', 'stroke-width': 4 }),
-            criar('text', { x: Number(e.posicao_x) + 12, y: Number(e.posicao_y) + 5, fill: '#2c3e50', 'font-size': 12, 'font-weight': 'bold' }, e.nome)
+            criar('circle', { cx: e.posicao_x, cy: e.posicao_y, r: 8, fill: '#fff', stroke: '#1c2f70', 'stroke-width': 4 }),
+            criar('text', { x: Number(e.posicao_x) + 12, y: Number(e.posicao_y) + 5, fill: '#202b45', 'font-size': 12, 'font-weight': 'bold' }, e.nome)
         );
     });
     let semTrecho = 0;
@@ -107,8 +106,8 @@ function inicializarMapa() {
         const grupo = criar('g', { class: 'trem-elemento', tabindex: 0, role: 'button', 'aria-label': `Ver trem ${t.codigo}` });
         grupo.append(
             criar('title', {}, `${t.codigo} — ${t.status}`),
-            criar('circle', { cx: x, cy: y, r: 8, fill: cores[t.status] || '#64748b', stroke: '#fff', 'stroke-width': 2 }),
-            criar('text', { x: x + 12, y: y + 4, fill: '#2c3e50', 'font-size': 11, 'font-weight': 'bold' }, t.codigo)
+            criar('circle', { cx: x, cy: y, r: 8, fill: cores[t.status] || '#6c7480', stroke: '#fff', 'stroke-width': 2 }),
+            criar('text', { x: x + 12, y: y + 4, fill: '#202b45', 'font-size': 12, 'font-weight': 'bold' }, t.codigo)
         );
         const selecionar = () => {
             painel.innerHTML = `<h5 class="fw-bold mb-3">${escapar(t.codigo)}</h5>
@@ -123,4 +122,29 @@ function inicializarMapa() {
         trens.append(grupo);
     });
     if (semTrecho) painel.textContent = `${semTrecho} trem(ns) sem trecho cadastrado não aparecem no mapa. Defina o trecho na gestão de trens.`;
+}
+function inicializarFormulariosModal() {
+    const editar = document.getElementById('modalEditarUsuario');
+    editar?.addEventListener('show.bs.modal', event => {
+        const dados = event.relatedTarget?.dataset, form = editar.querySelector('form');
+        if (!dados?.usuarioId || !/^\d+$/.test(dados.usuarioId)) { event.preventDefault(); return; }
+        form.action = `editar.php?id=${dados.usuarioId}`;
+        for (const field of ['nome','email','telefone','tipo','status','cep','logradouro','bairro','cidade','uf']) form.elements[field].value = dados[`usuario${field.charAt(0).toUpperCase()}${field.slice(1)}`] || '';
+        const erro = form.querySelector('[data-modal-erro]'); erro.textContent = ''; erro.classList.add('d-none');
+        const statusCep = form.querySelector('[data-cep-status]');
+        if (statusCep) statusCep.textContent = 'Informe o CEP e clique em Consultar para preencher os dados.';
+    });
+    document.querySelectorAll('[data-modal-ajax]').forEach(form => form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = form.querySelector('[type=submit]'), errorBox = form.querySelector('[data-modal-erro]');
+        button.disabled = true; errorBox.textContent = ''; errorBox.classList.add('d-none');
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin', headers: {'Accept':'application/json'} });
+            if (!response.ok) throw new Error('Não foi possível salvar. Verifique sua sessão e tente novamente.');
+            const data = await response.json();
+            if (!data.ok) throw new Error((data.erros || []).join(' ') || 'Verifique os dados informados.');
+            location.assign(form.dataset.recarregar + (form.action.includes('Cadastro.php') ? '?sucesso=cadastro' : form.action.includes('editar.php') ? '?sucesso=edicao' : ''));
+        } catch (error) { errorBox.textContent = error.message || 'Falha na comunicação com o servidor.'; errorBox.classList.remove('d-none'); }
+        finally { button.disabled = false; }
+    }));
 }
