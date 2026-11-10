@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -5,7 +6,6 @@ requireLogin();
 $admin = isAdmin();
 $flash = consumirFlash();
 
-// Processar exclusão
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir' && $admin) {
     validarCsrf();
     $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
     exit;
 }
 
-// Buscar dados para os formulários
 $trens = $conexao->query("
     SELECT t.*, r.codigo AS rota_codigo, u.nome AS responsavel
     FROM trens t
@@ -39,13 +38,13 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
 <?php $tituloPagina = 'Trens'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="titulo-tela flex-wrap">
         <div>
             <h1 class="fw-bold">Trens</h1>
             <p class="text-muted">Controle da frota ferroviária.</p>
         </div>
         <?php if ($admin): ?>
-            <a class="btn btn-success" href="cadastro%20Trem.php"><i class="fas fa-plus me-1"></i>Adicionar Trem</a>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoTrem">Adicionar Trem</button>
         <?php endif; ?>
     </div>
 
@@ -79,12 +78,12 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
                                 </td>
                                 <?php if ($admin): ?>
                                     <td class="text-end pe-4 text-nowrap">
-                                        <!-- Botão Editar (Abre o Modal) -->
+                                        
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editarTrem<?= (int)$trem['id'] ?>" title="Editar Trem">
-                                            <i class="fas fa-edit"></i>
+                                            Editar
                                         </button>
                                         
-                                        <!-- Botão Excluir -->
+                                        
                                         <form id="formExcluirTrem<?= (int)$trem['id'] ?>" method="post" class="d-inline">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id" value="<?= (int)$trem['id'] ?>">
@@ -94,7 +93,7 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
                                                 data-confirm-form="formExcluirTrem<?= (int)$trem['id'] ?>"
                                                 data-confirm-titulo="Excluir trem"
                                                 data-confirm-mensagem="Deseja realmente excluir o trem <?= e($trem['codigo']) ?>?"
-                                                data-confirm-botao="Sim, excluir"><i class="fas fa-trash"></i></button>
+                                                data-confirm-botao="Sim, excluir">Excluir</button>
                                         </form>
                                     </td>
                                 <?php endif; ?>
@@ -108,7 +107,29 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
 </main>
 
 <?php if ($admin): ?>
-    <!-- Modais de Edição para cada Trem -->
+<div class="modal fade" id="modalNovoTrem" tabindex="-1" aria-labelledby="tituloNovoTrem" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title" id="tituloNovoTrem">Cadastrar trem</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+        <form method="post" action="cadastro%20Trem.php" data-modal-ajax data-recarregar="trens.php">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>"><input type="hidden" name="modal" value="1">
+            <div class="modal-body"><div class="alert alert-danger d-none" role="alert" data-modal-erro></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label" for="trem-codigo">Código</label><input id="trem-codigo" class="form-control" name="codigo" maxlength="20" required></div>
+                    <div class="col-md-6"><label class="form-label" for="trem-status">Status</label><select id="trem-status" name="status" class="form-select"><option>Em operação</option><option>Parado</option><option>Em manutenção</option><option>Atrasado</option></select></div>
+                    <div class="col-md-6"><label class="form-label" for="trem-responsavel">Responsável</label><select id="trem-responsavel" name="usuario_responsavel_id" class="form-select"><option value="">Selecione</option><?php foreach ($usuariosDisponiveis as $u): ?><option value="<?= (int)$u['id'] ?>"><?= e($u['nome']) ?></option><?php endforeach; ?></select></div>
+                    <div class="col-md-6"><label class="form-label" for="trem-posicao">Posição (%)</label><input id="trem-posicao" class="form-control" type="number" name="posicao_percentual" value="50" min="0" max="100" step=".01" required></div>
+                    <div class="col-md-6"><label class="form-label" for="trem-rota">Rota</label><select id="trem-rota" class="form-select" name="rota_id" required><option value="">Selecione</option><?php foreach ($rotasDisponiveis as $r): ?><option value="<?= (int)$r['id'] ?>"><?= e($r['codigo'].' - '.$r['nome']) ?></option><?php endforeach; ?></select></div>
+                    <div class="col-md-6"><label class="form-label" for="trem-trecho">Trecho inicial</label><select id="trem-trecho" class="form-select" name="trecho_id" required><option value="">Selecione</option><?php foreach ($trechosDisponiveis as $t): ?><option value="<?= (int)$t['id'] ?>"><?= e($t['codigo']) ?></option><?php endforeach; ?></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="submit">Cadastrar</button></div>
+        </form>
+    </div></div>
+</div>
+<?php endif; ?>
+
+<?php if ($admin): ?>
+    
     <?php foreach ($trens as $trem): ?>
         <div class="modal" id="editarTrem<?= (int)$trem['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
