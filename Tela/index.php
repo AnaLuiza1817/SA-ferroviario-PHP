@@ -1,107 +1,73 @@
+
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($_SESSION['usuario_logado']) || empty($_SESSION['usuario_id'])) {
+    header('Location: landing-page.php');
+    exit;
+}
 require_once 'auth.php';
 requireLogin();
-
 function totalConsulta(mysqli $db, string $sql): int {
     return (int)$db->query($sql)->fetch_assoc()['total'];
 }
-
-$trens = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens");
+$trens = totalConsulta($conexao, 'SELECT COUNT(*) AS total FROM trens');
 $operando = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trens WHERE status = 'Em operação'");
+$rotas = totalConsulta($conexao, 'SELECT COUNT(*) AS total FROM rotas');
+$alertas = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM alertas WHERE status = 'Ativo'");
 $ocorrencias = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM ocorrencias WHERE status <> 'Resolvida'");
 $manutencoes = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM manutencoes WHERE status = 'Em andamento'");
 $sensores = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM sensores WHERE status IN ('Atenção', 'Alerta')");
 $trechos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM trechos WHERE status = 'Em manutenção'");
-$usuarios = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE deleted_at IS NULL");
-$ativos = totalConsulta($conexao, "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'Ativo' AND deleted_at IS NULL");
-
-$estatisticas = [
-    'trens' => ['icone' => 'fa-train', 'titulo' => 'Frota Cadastrada', 'valor' => $trens, 'cor' => '#1e88e5', 'link' => 'trens.php'],
-    'operando' => ['icone' => 'fa-circle-check', 'titulo' => 'Em Operação', 'valor' => $operando, 'cor' => '#10b981', 'link' => 'trens.php'],
-    'ocorrencias' => ['icone' => 'fa-triangle-exclamation', 'titulo' => 'Ocorrências Ativas', 'valor' => $ocorrencias, 'cor' => '#ef4444', 'link' => 'grafico.php'],
-    'manutencoes' => ['icone' => 'fa-screwdriver-wrench', 'titulo' => 'Manutenções em andamento', 'valor' => $manutencoes, 'cor' => '#8b5cf6', 'link' => 'grafico.php'],
-    'sensores' => ['icone' => 'fa-satellite-dish', 'titulo' => 'Sensores em atenção/alerta', 'valor' => $sensores, 'cor' => '#f59e0b', 'link' => 'sensores.php'],
-    'trechos' => ['icone' => 'fa-road', 'titulo' => 'Trechos em manutenção', 'valor' => $trechos, 'cor' => '#64748b', 'link' => 'mapa.php'],
-    'ativos' => ['icone' => 'fa-users', 'titulo' => 'Contas Ativas', 'valor' => $ativos, 'cor' => '#14b8a6', 'link' => isAdmin() ? 'usuario.php' : null],
-    'usuarios' => ['icone' => 'fa-address-book', 'titulo' => 'Total de Contas', 'valor' => $usuarios, 'cor' => '#0ea5e9', 'link' => isAdmin() ? 'usuario.php' : null]
+$resumo = [
+    ['Trens cadastrados', $trens, 'trens.php'], ['Rotas cadastradas', $rotas, 'rotas.php'],
+    ['Alertas ativos', $alertas, 'alertas.php'], ['Sensores em atenção', $sensores, 'sensores.php']
 ];
-
-$nomeCompleto = $_SESSION['usuario_nome'] ?? 'Usuário';
-$partesNome = explode(' ', trim($nomeCompleto));
-$primeiroNome = $partesNome[0];
+$operacao = [
+    ['Trens em operação', $operando, 'trens.php', 'normal'],
+    ['Ocorrências abertas', $ocorrencias, 'grafico.php', $ocorrencias ? 'critico' : 'normal'],
+    ['Manutenções em andamento', $manutencoes, 'grafico.php', $manutencoes ? 'atencao' : 'normal'],
+    ['Trechos em manutenção', $trechos, 'mapa.php', $trechos ? 'atencao' : 'normal']
+];
+$tituloPagina = 'Painel de Controle';
+require __DIR__ . '/cabecalho.php';
 ?>
-<?php $tituloPagina = 'Painel de Controle'; require __DIR__ . '/cabecalho.php'; ?>
-
-<div class="bg-white border-bottom py-4 mb-4">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="h3 fw-bold text-dark mb-1">Olá <?= e($primeiroNome) ?>, seja bem-vindo(a)!</h1>
-                <p class="text-muted mb-0">Acompanhamento da malha ferroviária.</p>
-            </div>
-            <div class="col-md-4 text-end d-none d-md-block">
-                <span class="text-muted small"><i class="far fa-calendar-alt me-1"></i> Hoje, <?= date('d/m/Y') ?></span>
-            </div>
-        </div>
+<main class="container py-4 pb-5">
+    <div class="titulo-tela">
+        <div><h1>Painel de controle</h1><p>Acompanhamento da operação ferroviária.</p></div>
+        <time datetime="<?= date('Y-m-d') ?>"><?= date('d/m/Y') ?></time>
     </div>
-</div>
-
-<main class="container pb-5">
-    <div class="row g-3 mb-4">
-        <?php foreach ($estatisticas as $item): ?>
-            <div class="col-xl-3 col-lg-4 col-md-6">
-                <?php if ($item['link']): ?><a href="<?= e($item['link']) ?>" class="text-decoration-none"><?php endif; ?>
-                    <div class="card stat-card h-100" style="border-top-color: <?= e($item['cor']) ?> !important;">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <span class="text-muted fw-semibold" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    <?= e($item['titulo']) ?>
-                                </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: <?= e($item['cor']) ?>15;">
-                                    <i class="fas <?= e($item['icone']) ?>" style="color: <?= e($item['cor']) ?>;"></i>
-                                </div>
-                            </div>
-                            <h2 class="fw-bold mb-0 text-dark"><?= $item['valor'] ?></h2>
-                        </div>
-                    </div>
-                <?php if ($item['link']): ?></a><?php endif; ?>
-            </div>
+    <section class="resumo-linear" aria-label="Indicadores gerais">
+        <?php foreach ($resumo as [$titulo, $valor, $link]): ?>
+            <a href="<?= e($link) ?>"><span><?= e($titulo) ?></span><strong><?= (int)$valor ?></strong></a>
         <?php endforeach; ?>
-    </div>
-    
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card h-100">
-                <div class="card-header bg-white border-bottom pt-3 pb-3">
-                    <h5 class="mb-0 fw-semibold">Status da Operação</h5>
+    </section>
+    <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+            <section class="painel-liso" aria-labelledby="titulo-operacao">
+                <div class="painel-topo"><h2 id="titulo-operacao">Status da operação</h2><span>Dados do sistema</span></div>
+                <div class="tabela-status">
+                    <?php foreach ($operacao as [$titulo, $valor, $link, $estado]): ?>
+                        <a href="<?= e($link) ?>"><span><?= e($titulo) ?></span><strong class="estado-<?= e($estado) ?>"><?= (int)$valor ?></strong></a>
+                    <?php endforeach; ?>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="mini-indicator h-100">
-                                <span>Ocorrências Abertas</span>
-                                <strong class="text-warning"><?= $ocorrencias ?></strong>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mini-indicator h-100">
-                                <span>Em Manutenção</span>
-                                <strong class="text-primary"><?= $manutencoes ?></strong>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mini-indicator h-100">
-                                <span>Trechos em Manutenção</span>
-                                <strong class="text-danger"><?= $trechos ?></strong>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-muted small mt-4 mb-0">Indicadores consultados no banco de dados a cada acesso à página.</p>
-                </div>
-            </div>
+                <p class="painel-nota">Os indicadores são consultados no banco de dados a cada acesso.</p>
+            </section>
         </div>
-        
+        <div class="col-lg-5" id="clima">
+            <section class="painel-liso" data-weather aria-labelledby="titulo-clima">
+                <div class="painel-topo"><h2 id="titulo-clima">Clima em Joinville</h2><span>SC · Brasil</span></div>
+                <p class="clima-condicao" data-weather-condition aria-live="polite">Consultando clima...</p>
+                <div class="clima-principal"><strong data-weather-temperature>—</strong><span>Temperatura atual</span></div>
+                <dl class="clima-dados">
+                    <div><dt>Chuva agora</dt><dd data-weather-rain>—</dd></div>
+                    <div><dt>Vento</dt><dd data-weather-wind>—</dd></div>
+                    <div><dt>Maior chance de chuva (6 h)</dt><dd data-weather-probability>—</dd></div>
+                    <div><dt>Chuva prevista (6 h)</dt><dd data-weather-precipitation>—</dd></div>
+                </dl>
+                <p class="painel-nota" data-weather-update>Fonte: Open-Meteo · Aguardando atualização.</p>
+                <a class="clima-detalhe" href="clima.php">Ver previsão horária de chuva</a>
+            </section>
+        </div>
     </div>
 </main>
-
 <?php require __DIR__ . '/rodape.php'; ?>
