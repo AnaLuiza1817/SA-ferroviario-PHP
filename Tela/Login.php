@@ -1,3 +1,4 @@
+
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -51,9 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Hyper Sense</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../Css/vendor/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../Css/style.css">
+    <link rel="stylesheet" href="../Css/style.css?v=<?= filemtime(__DIR__ . '/../Css/style.css') ?>">
 </head>
 <body class="pagina-sistema bg-light">
 
@@ -63,8 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card border-0 rounded-4 shadow-sm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <i class="fas fa-train text-primary fa-3x mb-3"></i>
-                        <h2 class="fw-bold text-primary">Hyper Sense</h2>
+                        <div class="login-identidade"><span class="hs-mark">HS</span><span>HYPER SENSE</span></div>
                         <p class="text-muted">Faça login para acessar o sistema</p>
                     </div>
 
@@ -85,9 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <button type="submit" class="btn btn-primary w-100">Entrar</button>
                     </form>
+                    <a class="login-voltar" href="landing-page.php">Voltar à apresentação do projeto</a>
                 </div>
             </div>
         </div>
     </div>
 </main>
-<?php $semScripts = true; require __DIR__ . '/rodape.php'; ?>          
+<?php $semScripts = true; require __DIR__ . '/rodape.php'; ?>
