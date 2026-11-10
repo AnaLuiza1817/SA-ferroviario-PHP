@@ -1,3 +1,4 @@
+
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -69,7 +70,6 @@ $ocorrenciasPorTrem = $conexao->query("
     ORDER BY total_ocorrencias DESC, t.codigo
 ")->fetch_all(MYSQLI_ASSOC);
 
-// Monta os detalhes em lote para evitar três consultas por trem.
 $detalhesTrens = $codigos = [];
 foreach ($ocorrenciasPorTrem as $trem) {
     $codigos[(int)$trem['id']] = $trem['codigo'];
@@ -101,21 +101,15 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
 <?php $tituloPagina = 'Gráficos'; require __DIR__ . '/cabecalho.php'; ?>
 
 <main class="container py-5">
-    <div class="mb-4">
-        <span class="badge bg-primary-subtle text-primary">Análise operacional</span>
-        <h1 class="fw-bold mt-2">Gráficos e indicadores</h1>
-        <p class="text-muted mb-0">Dados de ocorrências consultados diretamente do MySQL.</p>
-
+    <div class="titulo-tela flex-wrap">
+        <div><h1>Gráficos e indicadores</h1><p>Dados de ocorrências consultados diretamente do MySQL.</p></div>
         <?php if (isAdmin()): ?>
-            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#modalAdicionarDados">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAdicionarDados">
                 <i class="fas fa-plus me-1"></i>Adicionar manutenção
             </button>
         <?php endif; ?>
-
-        <?php if ($mensagem): ?>
-            <div class="alert alert-<?= e($tipoMensagem) ?> mt-3"><?= e($mensagem) ?></div>
-        <?php endif; ?>
     </div>
+    <?php if ($mensagem): ?><div class="alert alert-<?= e($tipoMensagem) ?> mb-4"><?= e($mensagem) ?></div><?php endif; ?>
 
     <div class="row g-4">
         <div class="col-lg-7">
@@ -123,7 +117,6 @@ $jsonOpcoes = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | J
                 <div class="card-body p-4">
                     <h3 class="mb-1">Ocorrências por trem</h3>
                     <p class="text-muted">Histórico completo, incluindo ocorrências resolvidas. Selecione uma barra para ver os detalhes.</p>
-                    <!-- O tamanho do gráfico é controlado pelo CSS chart-container -->
                     <div class="chart-container" style="height: 400px; position: relative;">
                         <canvas id="graficoOcorrencias"></canvas>
                     </div>
