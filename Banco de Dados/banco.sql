@@ -1,3 +1,4 @@
+
 CREATE DATABASE IF NOT EXISTS ferrorama_db
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
@@ -9,6 +10,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL,
     telefone VARCHAR(30) NULL,
+    cep VARCHAR(9) NULL,
+    logradouro VARCHAR(150) NULL,
+    bairro VARCHAR(100) NULL,
+    cidade VARCHAR(100) NULL,
+    uf CHAR(2) NULL,
     tipo VARCHAR(50) NOT NULL DEFAULT 'Usuário',
     status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
     senha VARCHAR(255) NULL,
