@@ -4,6 +4,7 @@ require_once 'auth.php';
 requireAdmin();
 require_once __DIR__ . '/endereco.php';
 
+
 $erros = [];
 $sucesso = '';
 $nome = trim($_POST['nome'] ?? '');
@@ -19,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     validarCsrf();
     $senha = $_POST['senha'] ?? '';
 
-    
+
     if ($nome === '' || mb_strlen($nome) > 150) $erros[] = 'Informe um nome válido.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 150) $erros[] = 'Informe um e-mail válido.';
     if (strlen($senha) < 8) $erros[] = 'A senha deve ter pelo menos 8 caracteres.';
