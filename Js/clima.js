@@ -24,8 +24,9 @@
         66: 'Chuva gelada',
 
         67: 'Chuva gelada',
-        
+
         71: 'Neve',
+        
         73: 'Neve',
         75: 'Neve',
         77: 'Neve',
