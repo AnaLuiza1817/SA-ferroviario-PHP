@@ -25,3 +25,16 @@ if (isAdmin()) {
             <span class="hs-mark">HS</span>
             <span>HYPER SENSE</span>
         </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="menuPrincipal">
+
+            <ul class="navbar-nav mx-auto align-items-xl-center">
+                <?php foreach ($linksMenu as $arquivo => $nome): ?>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $paginaMenu === $arquivo ? 'active' : '' ?>"
+                           href="<?= e($arquivo) ?>"
+                           <?= $paginaMenu === $arquivo ? 'aria-current="page"' : '' ?>>
