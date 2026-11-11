@@ -24,3 +24,24 @@ $trens = buscarMapa($conexao, '
     LEFT JOIN rotas r ON r.id = t.rota_id
     ORDER BY t.codigo
 ');
+
+$json = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+
+$tituloPagina = 'Mapa Ferroviário';
+require __DIR__ . '/cabecalho.php';
+?>
+
+<style>
+/* Mapa ferroviário */
+.mapa-viewport {
+    width: 100%;
+    min-height: 500px;
+    overflow: auto;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
