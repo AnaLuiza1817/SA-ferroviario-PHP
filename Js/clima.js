@@ -153,3 +153,34 @@
                 ]) {
                     text(root, key, 'Indisponível');
                 }
+                
+                text(root, 'condition', 'Não foi possível consultar o clima.');
+
+                text(
+                    root,
+                    'update',
+                    'Fonte: Open-Meteo · Dados indisponíveis. Verifique a conexão com a internet.'
+                );
+
+                const tbody = root.querySelector('[data-weather-hourly]');
+
+                if (tbody) {
+                    tbody.replaceChildren();
+
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+
+                    td.colSpan = 3;
+                    td.textContent = 'Previsão indisponível.';
+
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                }
+            }
+        }
+    }
+
+    atualizar();
+
+    setInterval(atualizar, 600000);
+})();
