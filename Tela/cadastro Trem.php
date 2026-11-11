@@ -76,7 +76,7 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
         </div>
     <?php endif; ?>
 
-    
+
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
             <form method="post">
@@ -135,5 +135,6 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
         </div>
     </div>
 </main>
+
 
 <?php require __DIR__ . '/rodape.php'; ?>
