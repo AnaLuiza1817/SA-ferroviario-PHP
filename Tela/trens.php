@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -44,7 +43,7 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
             <p class="text-muted">Controle da frota ferroviária.</p>
         </div>
         <?php if ($admin): ?>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoTrem">Adicionar Trem</button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoTrem" title="Adicionar um novo trem à frota" aria-label="Adicionar novo trem">Adicionar Trem</button>
         <?php endif; ?>
     </div>
 
@@ -78,17 +77,15 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
                                 </td>
                                 <?php if ($admin): ?>
                                     <td class="text-end pe-4 text-nowrap">
-                                        
-                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editarTrem<?= (int)$trem['id'] ?>" title="Editar Trem">
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editarTrem<?= (int)$trem['id'] ?>" title="Editar Trem <?= e($trem['codigo']) ?>" aria-label="Editar o trem <?= e($trem['codigo']) ?>">
                                             Editar
                                         </button>
-                                        
                                         
                                         <form id="formExcluirTrem<?= (int)$trem['id'] ?>" method="post" class="d-inline">
                                             <input type="hidden" name="acao" value="excluir">
                                             <input type="hidden" name="id" value="<?= (int)$trem['id'] ?>">
                                             <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir Trem"
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir Trem <?= e($trem['codigo']) ?>" aria-label="Excluir o trem <?= e($trem['codigo']) ?>"
                                                 data-bs-toggle="modal" data-bs-target="#modalConfirmacao"
                                                 data-confirm-form="formExcluirTrem<?= (int)$trem['id'] ?>"
                                                 data-confirm-titulo="Excluir trem"
@@ -129,7 +126,6 @@ $usuariosDisponiveis = $conexao->query("SELECT id, nome FROM usuarios WHERE stat
 <?php endif; ?>
 
 <?php if ($admin): ?>
-    
     <?php foreach ($trens as $trem): ?>
         <div class="modal" id="editarTrem<?= (int)$trem['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
