@@ -91,6 +91,7 @@ limpar();
             }
         };
 
+        
         botao?.addEventListener('click', consultar);
 
         if (form.hasAttribute('data-cep-form')) {
