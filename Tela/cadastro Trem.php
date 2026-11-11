@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rota = filter_input(INPUT_POST, 'rota_id', FILTER_VALIDATE_INT) ?: null;
     $responsavel = filter_input(INPUT_POST, 'usuario_responsavel_id', FILTER_VALIDATE_INT) ?: null;
 
+    
     if ($codigo === '') $erros[] = 'Informe o código do trem.';
     if (strlen($codigo) > 20) $erros[] = 'Código muito longo.';
     if (!in_array($status, $statusPermitidos, true)) $erros[] = 'Status inválido.';
