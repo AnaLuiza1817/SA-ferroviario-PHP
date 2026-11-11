@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = 'Selecione uma rota. Todo trem deve estar vinculado a uma rota.';
     }
 
+    
     if (!$erros) {
         try {
             $valor = (float)$posicao;
