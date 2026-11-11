@@ -1,5 +1,5 @@
-
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarTooltips();
     inicializarConfirmacoes();
     inicializarFormulariosModal();
     inicializarGraficos();
@@ -13,6 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function inicializarTooltips() {
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = document.querySelectorAll('[title]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover',
+            placement: 'top'
+        }));
+    }
+}
 
 function inicializarConfirmacoes() {
     const modal = document.getElementById('modalConfirmacao');
@@ -123,6 +133,7 @@ function inicializarMapa() {
     });
     if (semTrecho) painel.textContent = `${semTrecho} trem(ns) sem trecho cadastrado não aparecem no mapa. Defina o trecho na gestão de trens.`;
 }
+
 function inicializarFormulariosModal() {
     const editar = document.getElementById('modalEditarUsuario');
     editar?.addEventListener('show.bs.modal', event => {
