@@ -29,3 +29,11 @@ if (ini_get('session.use_cookies')) {
         'secure' => $params['secure'],
         'httponly' => $params['httponly'],
         'samesite' => $params['samesite'] ?? 'Lax'
+         ]);
+}
+
+session_destroy();
+
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Location: Login.php');
+exit;
