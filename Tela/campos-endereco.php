@@ -14,3 +14,18 @@
                 </button>
             </div>
         </div>
+        
+        <div class="col-md-7">
+            <label class="form-label" for="<?= e($prefixoEndereco) ?>-logradouro">Logradouro</label>
+            <input class="form-control" id="<?= e($prefixoEndereco) ?>-logradouro" name="logradouro" maxlength="150" value="<?= e($enderecoValores['logradouro'] ?? '') ?>">
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label" for="<?= e($prefixoEndereco) ?>-bairro">Bairro</label>
+            <input class="form-control" id="<?= e($prefixoEndereco) ?>-bairro" name="bairro" maxlength="100" value="<?= e($enderecoValores['bairro'] ?? '') ?>">
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label" for="<?= e($prefixoEndereco) ?>-cidade">Cidade</label>
+            <input class="form-control" id="<?= e($prefixoEndereco) ?>-cidade" name="cidade" maxlength="100" value="<?= e($enderecoValores['cidade'] ?? '') ?>">
+        </div>
