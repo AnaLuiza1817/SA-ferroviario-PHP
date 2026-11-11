@@ -72,3 +72,24 @@ require __DIR__ . '/cabecalho.php';
     }
 }
 </style>
+
+<main class="container-fluid px-4 py-4">
+
+    <div class="titulo-tela flex-wrap mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Mapa Ferroviário</h1>
+            <p class="text-muted mb-0">
+                Selecione um trem para consultar sua posição e situação atual.
+            </p>
+        </div>
+
+        <a href="index.php" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao painel
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-xl-9">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
