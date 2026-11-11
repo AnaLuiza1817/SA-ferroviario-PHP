@@ -56,3 +56,14 @@ limpar();
                 if (!resposta.ok) {
                     throw new Error('Erro HTTP');
                 }
+
+                const dados = await resposta.json();
+
+                if (dados.erro) {
+                    status.textContent = 'CEP não encontrado. Confira o número informado.';
+                    return;
+                }
+
+                if (!dados.cep || !dados.localidade || !dados.uf) {
+                    throw new Error('Dados incompletos');
+                }
