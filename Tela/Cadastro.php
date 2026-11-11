@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-    
+
 
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
@@ -131,5 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
         </div>
     </div>
 </main>
+
 
 <?php require __DIR__ . '/rodape.php'; ?>
