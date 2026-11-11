@@ -123,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
                     <?php $prefixoEndereco = 'cadastro'; $enderecoValores = $endereco; require __DIR__ . '/campos-endereco.php'; ?>
                 </div>
 
+                
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="usuario.php" class="btn btn-outline-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-success">Cadastrar</button>
