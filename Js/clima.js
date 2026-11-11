@@ -26,9 +26,10 @@
         67: 'Chuva gelada',
 
         71: 'Neve',
-        
+
         73: 'Neve',
         75: 'Neve',
+        
         77: 'Neve',
         80: 'Pancadas de chuva',
         81: 'Pancadas de chuva',
