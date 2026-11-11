@@ -29,3 +29,15 @@
             <label class="form-label" for="<?= e($prefixoEndereco) ?>-cidade">Cidade</label>
             <input class="form-control" id="<?= e($prefixoEndereco) ?>-cidade" name="cidade" maxlength="100" value="<?= e($enderecoValores['cidade'] ?? '') ?>">
         </div>
+
+        <div class="col-md-2">
+            <label class="form-label" for="<?= e($prefixoEndereco) ?>-uf">UF</label>
+            <input class="form-control" id="<?= e($prefixoEndereco) ?>-uf" name="uf" maxlength="2" value="<?= e($enderecoValores['uf'] ?? '') ?>">
+        </div>
+
+    </div>
+
+    <p class="small text-muted mt-2 mb-0" role="status" aria-live="polite" data-cep-status>
+        Informe o CEP e clique em Consultar para preencher os dados.
+    </p>
+</div>
