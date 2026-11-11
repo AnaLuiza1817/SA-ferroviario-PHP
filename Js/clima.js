@@ -36,3 +36,27 @@
         96: 'Trovoadas',
         99: 'Trovoadas'
     };
+    
+    const label = (value, unit, decimals = 0) => {
+        return Number.isFinite(value)
+            ? `${value.toLocaleString('pt-BR', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            })} ${unit}`
+            : 'Indisponível';
+    };
+
+    const text = (root, key, value) => {
+        const el = root.querySelector(`[data-weather-${key}]`);
+
+        if (el) {
+            el.textContent = value;
+        }
+    };
+
+    async function atualizar() {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+
+            let response;
