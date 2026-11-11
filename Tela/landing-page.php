@@ -17,10 +17,18 @@
             <div class="layout-largura hero-grade">
                 <div class="hero-texto">
                     <p class="sobretitulo">PLATAFORMA DE GESTÃO FERROVIÁRIA</p>
-                    <h1>Informações organizadas.<br>Operação sob controle.</h1>
-                    <p class="hero-descricao">O Hyper Sense, plataforma do projeto Ferrorama, reúne trens, rotas, sensores e alertas para facilitar o acompanhamento da operação ferroviária em um só ambiente.</p>
-                    <a class="botao-acesso" href="Login.php">Acessar o sistema <span aria-hidden="true">→</span></a>
-                    <p class="hero-nota">Acesso destinado a usuários cadastrados.</p>
+
+<h1>Gestão integrada.<br>Operação inteligente.</h1>
+
+<p class="hero-descricao">
+    O Hyper Sense, plataforma do projeto Ferrorama, centraliza informações sobre trens, rotas, sensores e alertas, proporcionando maior controle, visibilidade e eficiência na gestão da operação ferroviária.
+</p>
+
+<a class="botao-acesso" href="Login.php">
+    Acessar a plataforma <span aria-hidden="true">→</span>
+</a>
+
+<p class="hero-nota">Acesso exclusivo para usuários cadastrados.</p>
                 </div>
                 <figure class="hero-foto">
                     <img src="../Img/trem-hyper-sense.webp" alt="Locomotiva ferroviária azul e branca sobre trilhos, com vagões de carga ao fundo" width="1200" height="675" loading="eager">
