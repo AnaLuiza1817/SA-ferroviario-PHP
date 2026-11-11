@@ -87,3 +87,35 @@
             if (start < 0) {
                 throw Error('Previsão horária indisponível.');
             }
+
+            
+            const next6 = data.hourly.precipitation_probability.slice(start, start + 6);
+            const rainfall = data.hourly.precipitation.slice(start, start + 6);
+
+            const chance = next6.length && next6.every(Number.isFinite)
+                ? Math.max(...next6)
+                : null;
+
+            const sum = rainfall.length && rainfall.every(Number.isFinite)
+                ? rainfall.reduce((a, b) => a + b, 0)
+                : null;
+
+            for (const root of sections) {
+                text(root, 'condition', conditions[data.current.weather_code] || 'Condição indisponível');
+
+                text(root, 'temperature', label(data.current.temperature_2m, '°C', 1));
+                text(root, 'rain', label(data.current.precipitation, 'mm', 1));
+                text(root, 'wind', label(data.current.wind_speed_10m, 'km/h', 0));
+                text(root, 'probability', label(chance, '%', 0));
+                text(root, 'precipitation', label(sum, 'mm', 1));
+
+                text(
+                    root,
+                    'update',
+                    `Fonte: Open-Meteo · Referência: ${data.current.time.slice(8, 10)}/${data.current.time.slice(5, 7)} às ${data.current.time.slice(11, 16)} (Joinville)`
+                );
+
+                const tbody = root.querySelector('[data-weather-hourly]');
+
+                if (tbody) {
+                    tbody.replaceChildren();
