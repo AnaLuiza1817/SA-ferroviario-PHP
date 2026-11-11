@@ -119,3 +119,37 @@
 
                 if (tbody) {
                     tbody.replaceChildren();
+                    
+                    for (let i = start; i < Math.min(start + 24, data.hourly.time.length); i += 3) {
+                        const tr = document.createElement('tr');
+                        const horario = data.hourly.time[i];
+
+                        const valores = [
+                            `${horario.slice(8, 10)}/${horario.slice(5, 7)} ${horario.slice(11, 16)}`,
+                            label(data.hourly.precipitation_probability[i], '%', 0),
+                            label(data.hourly.precipitation[i], 'mm', 1)
+                        ];
+
+                        for (const value of valores) {
+                            const td = document.createElement('td');
+
+                            td.textContent = value;
+                            tr.appendChild(td);
+                        }
+
+                        tbody.appendChild(tr);
+                    }
+                }
+            }
+
+        } catch (error) {
+            for (const root of sections) {
+                for (const key of [
+                    'temperature',
+                    'rain',
+                    'wind',
+                    'probability',
+                    'precipitation'
+                ]) {
+                    text(root, key, 'Indisponível');
+                }
