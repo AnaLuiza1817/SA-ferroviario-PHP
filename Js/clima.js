@@ -60,3 +60,30 @@
             const timeout = setTimeout(() => controller.abort(), 10000);
 
             let response;
+            
+            try {
+                response = await fetch(url, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+            } finally {
+                clearTimeout(timeout);
+            }
+
+            if (!response.ok) {
+                throw Error('Não foi possível consultar a fonte meteorológica.');
+            }
+
+            const data = await response.json();
+
+            if (!data.current || !Array.isArray(data.hourly?.time)) {
+                throw Error('Dados meteorológicos incompletos.');
+            }
+
+            const start = data.hourly.time.findIndex(t =>
+                t >= data.current.time.slice(0, 13) + ':00'
+            );
+
+            if (start < 0) {
+                throw Error('Previsão horária indisponível.');
+            }
