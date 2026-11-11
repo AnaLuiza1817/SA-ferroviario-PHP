@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
                         </select>
                     </div>
 
-                    
+
                     <div class="col-md-6">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
@@ -136,3 +136,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
 
 
 <?php require __DIR__ . '/rodape.php'; ?>
+
+
