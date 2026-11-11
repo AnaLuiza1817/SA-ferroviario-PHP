@@ -43,3 +43,16 @@ limpar();
 
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const resposta = await fetch(
+                    `https://viacep.com.br/ws/${numeros}/json/`,
+                    {
+                        signal: controller.signal,
+                        cache: 'no-store'
+                    }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Erro HTTP');
+                }
