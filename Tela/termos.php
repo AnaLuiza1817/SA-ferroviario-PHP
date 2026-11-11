@@ -11,10 +11,28 @@
 <body class="pagina-sistema">
 <main class="container py-5" style="max-width: 700px">
     <h1>Termos de Uso</h1>
-    <p>O Hyper Sense é um sistema demonstrativo de gestão ferroviária.</p>
-    <p>Utilize dados corretos, proteja suas credenciais e não acesse contas de terceiros.</p>
-    <p>O sistema armazena nome, e-mail e telefone para identificação e gerenciamento de acesso.</p>
-    <p>Solicite ao administrador a exclusão da conta quando necessário.</p>
-    <a href="Login.php">Voltar</a>
+    <p>
+        O Hyper Sense é uma plataforma demonstrativa de gestão ferroviária,
+        desenvolvida no âmbito do projeto Ferrorama.
+    </p>
+    <p>
+        Ao utilizar o sistema, o usuário compromete-se a fornecer informações
+        verdadeiras, manter suas credenciais em sigilo e utilizar exclusivamente
+        sua própria conta.
+    </p>
+    <p>
+        Para fins de identificação e gerenciamento de acesso, o sistema coleta
+        e armazena informações como nome, e-mail e telefone.
+    </p>
+    <p>
+        Caso deseje encerrar sua conta, o usuário poderá solicitar sua exclusão
+        ao administrador do sistema.
+    </p>
+    <a href="Login.php">Voltar ao login</a>
 </main>
-<?php $semScripts = true; require __DIR__ . '/rodape.php'; ?>
+<?php
+$semScripts = true;
+require __DIR__ . '/rodape.php';
+?>
+</body>
+</html>

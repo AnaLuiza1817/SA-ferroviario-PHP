@@ -17,10 +17,18 @@
             <div class="layout-largura hero-grade">
                 <div class="hero-texto">
                     <p class="sobretitulo">PLATAFORMA DE GESTÃO FERROVIÁRIA</p>
-                    <h1>Informações organizadas.<br>Operação sob controle.</h1>
-                    <p class="hero-descricao">O Hyper Sense, plataforma do projeto Ferrorama, reúne trens, rotas, sensores e alertas para facilitar o acompanhamento da operação ferroviária em um só ambiente.</p>
-                    <a class="botao-acesso" href="Login.php">Acessar o sistema <span aria-hidden="true">→</span></a>
-                    <p class="hero-nota">Acesso destinado a usuários cadastrados.</p>
+
+<h1>Gestão integrada.<br>Operação inteligente.</h1>
+
+<p class="hero-descricao">
+    O Hyper Sense, plataforma do projeto Ferrorama, centraliza informações sobre trens, rotas, sensores e alertas, proporcionando maior controle, visibilidade e eficiência na gestão da operação ferroviária.
+</p>
+
+<a class="botao-acesso" href="Login.php">
+    Acessar a plataforma <span aria-hidden="true">→</span>
+</a>
+
+<p class="hero-nota">Acesso exclusivo para usuários cadastrados.</p>
                 </div>
                 <figure class="hero-foto">
                     <img src="../Img/trem-hyper-sense.webp" alt="Locomotiva ferroviária azul e branca sobre trilhos, com vagões de carga ao fundo" width="1200" height="675" loading="eager">
@@ -36,7 +44,7 @@
         </section>
         <section class="apresentacao-secao" aria-labelledby="modulos">
             <div class="layout-largura">
-                <div class="secao-intro"><p class="sobretitulo">O SISTEMA</p><h2 id="modulos">Uma visão mais clara da ferrovia.</h2><p>As principais áreas estão separadas por função, com navegação direta para cada tipo de informação.</p></div>
+                <div class="secao-intro"><p class="sobretitulo">O SISTEMA</p><h2 id="modulos">Ter uma visão mais clara da ferrovia.</h2><p>As principais áreas estão separadas por função, com navegação direta para cada tipo de informação.</p></div>
                 <div class="lista-modulos">
                     <div class="modulo-linha"><span>01</span><h3>Trens e rotas</h3><p>Consulte os trens registrados, seus status e os percursos cadastrados no sistema.</p></div>
                     <div class="modulo-linha"><span>02</span><h3>Sensores e alertas</h3><p>Acompanhe leituras dos sensores, estados de atenção e alertas vinculados à operação.</p></div>
