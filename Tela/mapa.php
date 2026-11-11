@@ -93,3 +93,27 @@ require __DIR__ . '/cabecalho.php';
         <div class="col-xl-9">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
+
+                    <div class="mapa-viewport" id="mapaViewport">
+                        <svg id="mapa-svg" viewBox="0 0 1040 430" preserveAspectRatio="xMidYMid meet">
+                            <title>Malha ferroviária com estações e trens cadastrados</title>
+
+                            <g id="camada-trechos"></g>
+                            <g id="camada-estacoes"></g>
+                            <g id="camada-trens"></g>
+                        </svg>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h3 class="h5 mb-3">Painel operacional</h3>
+
+                    <div id="painelOperacional" class="empty-panel">
+                        Clique em um trem no mapa para visualizar seus dados.
+                    </div>
