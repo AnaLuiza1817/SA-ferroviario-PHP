@@ -22,3 +22,12 @@
                 ? `${numeros.slice(0, 5)}-${numeros.slice(5)}`
                 : numeros;
 
+limpar();
+
+            status.textContent = 'Informe um CEP brasileiro com 8 números.';
+        });
+
+        const consultar = async () => {
+            const numeros = cep.value.replace(/\D/g, '');
+
+            limpar();
