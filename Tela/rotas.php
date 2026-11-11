@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -132,11 +131,11 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
             <form method="get" class="d-flex">
                 <div class="input-group">
                     <input type="text" name="busca" class="form-control form-control-sm" placeholder="Pesquisar..." value="<?= e($busca) ?>">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="fas fa-search"></i></button>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Pesquisar rotas" aria-label="Pesquisar rotas"><i class="fas fa-search"></i></button>
                 </div>
             </form>
             <?php if ($admin): ?>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#novaRota"><i class="fas fa-plus me-1"></i> Nova Rota</button>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#novaRota" title="Cadastrar uma nova rota" aria-label="Cadastrar nova rota"><i class="fas fa-plus me-1"></i> Nova Rota</button>
             <?php endif; ?>
         </div>
     </div>
@@ -180,13 +179,13 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
                                     <td class="text-end pe-4 text-nowrap">
                                         
                                         <?php if (count($trensSemRota) > 0): ?>
-                                            <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#vincularTrem<?= (int)$rota['id'] ?>" title="Adicionar Trem a esta Rota">
+                                            <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#vincularTrem<?= (int)$rota['id'] ?>" title="Adicionar Trem à Rota <?= e($rota['codigo']) ?>" aria-label="Adicionar trem à rota <?= e($rota['codigo']) ?>">
                                                 <i class="fas fa-train text-primary"></i> <i class="fas fa-plus text-primary" style="font-size: 10px;"></i>
                                             </button>
                                         <?php endif; ?>
 
                                         
-                                        <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota">
+                                        <button class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#editarRota<?= (int)$rota['id'] ?>" title="Editar Rota <?= e($rota['codigo']) ?>" aria-label="Editar a rota <?= e($rota['codigo']) ?>">
                                             <i class="fas fa-pen text-muted"></i>
                                         </button>
 
@@ -197,11 +196,11 @@ $trensSemRota = $conexao->query("SELECT id, codigo FROM trens WHERE rota_id IS N
                                             <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                                             
                                             <?php if ((int)$rota['total_trens'] > 0): ?>
-                                                <button type="button" class="btn btn-sm btn-light border" disabled title="Não é possível excluir: existem trens vinculados.">
+                                                <button type="button" class="btn btn-sm btn-light border" disabled title="Não é possível excluir: existem trens vinculados." aria-label="Exclusão bloqueada: existem trens vinculados">
                                                     <i class="fas fa-trash text-muted opacity-50"></i>
                                                 </button>
                                             <?php else: ?>
-                                                <button type="button" class="btn btn-sm btn-light border" title="Excluir Rota"
+                                                <button type="button" class="btn btn-sm btn-light border" title="Excluir Rota <?= e($rota['codigo']) ?>" aria-label="Excluir a rota <?= e($rota['codigo']) ?>"
                                                     data-bs-toggle="modal" data-bs-target="#modalConfirmacao"
                                                     data-confirm-form="formExcluirRota<?= (int)$rota['id'] ?>"
                                                     data-confirm-titulo="Excluir rota"
