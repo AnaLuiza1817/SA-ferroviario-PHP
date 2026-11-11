@@ -36,7 +36,7 @@
         96: 'Trovoadas',
         99: 'Trovoadas'
     };
-    
+
     
     const label = (value, unit, decimals = 0) => {
         return Number.isFinite(value)
@@ -46,6 +46,7 @@
             })} ${unit}`
             : 'Indisponível';
     };
+    
 
     const text = (root, key, value) => {
         const el = root.querySelector(`[data-weather-${key}]`);
