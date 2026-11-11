@@ -36,7 +36,7 @@
         </section>
         <section class="apresentacao-secao" aria-labelledby="modulos">
             <div class="layout-largura">
-                <div class="secao-intro"><p class="sobretitulo">O SISTEMA</p><h2 id="modulos">Uma visão mais clara da ferrovia.</h2><p>As principais áreas estão separadas por função, com navegação direta para cada tipo de informação.</p></div>
+                <div class="secao-intro"><p class="sobretitulo">O SISTEMA</p><h2 id="modulos">Ter uma visão mais clara da ferrovia.</h2><p>As principais áreas estão separadas por função, com navegação direta para cada tipo de informação.</p></div>
                 <div class="lista-modulos">
                     <div class="modulo-linha"><span>01</span><h3>Trens e rotas</h3><p>Consulte os trens registrados, seus status e os percursos cadastrados no sistema.</p></div>
                     <div class="modulo-linha"><span>02</span><h3>Sensores e alertas</h3><p>Acompanhe leituras dos sensores, estados de atenção e alertas vinculados à operação.</p></div>
