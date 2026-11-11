@@ -37,6 +37,7 @@
         99: 'Trovoadas'
     };
     
+    
     const label = (value, unit, decimals = 0) => {
         return Number.isFinite(value)
             ? `${value.toLocaleString('pt-BR', {
