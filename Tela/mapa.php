@@ -45,3 +45,30 @@ require __DIR__ . '/cabecalho.php';
     align-items: center;
     justify-content: center;
 }
+
+
+#mapa-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+}
+
+/* Painel operacional */
+#painelOperacional {
+    min-height: 150px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .mapa-viewport {
+        min-height: 350px;
+        padding: 8px;
+    }
+
+    #mapa-svg {
+        min-width: 650px;
+        min-height: 300px;
+    }
+}
+</style>
