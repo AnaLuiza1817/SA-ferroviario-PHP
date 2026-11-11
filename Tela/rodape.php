@@ -3,3 +3,22 @@
         &copy; <?= date('Y') ?> Hyper Sense - Sistema Integrado de Gestão Ferroviária.
     </div>
 </footer>
+
+<?php if (empty($semScripts)): ?>
+
+    <div class="modal" id="modalConfirmacao" tabindex="-1" aria-labelledby="tituloConfirmacao" aria-describedby="mensagemConfirmacao" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloConfirmacao">Confirmar ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body" id="mensagemConfirmacao">
+                    Deseja continuar?
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
