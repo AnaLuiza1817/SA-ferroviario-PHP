@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = 'Selecione uma rota. Todo trem deve estar vinculado a uma rota.';
     }
 
-    
+
     if (!$erros) {
         try {
             $valor = (float)$posicao;
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
 
+            
             mensagemFlash('success', 'Trem cadastrado com sucesso!');
             if (($_POST['modal'] ?? '') === '1') { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE); exit; }
             header('Location: trens.php');
