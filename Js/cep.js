@@ -67,3 +67,17 @@ limpar();
                 if (!dados.cep || !dados.localidade || !dados.uf) {
                     throw new Error('Dados incompletos');
                 }
+
+                for (const [campo, chave] of [
+                    ['logradouro', 'logradouro'],
+                    ['bairro', 'bairro'],
+                    ['cidade', 'localidade'],
+                    ['uf', 'uf']
+                ]) {
+                    form.elements[campo].value = String(dados[chave] || '');
+                }
+
+                cep.value = String(dados.cep);
+
+                status.textContent = 'Endereço encontrado e preenchido pela ViaCEP.';
+
