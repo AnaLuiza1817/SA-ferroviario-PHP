@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['modal'] ?? '') === '1') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['ok' => !$erros, 'erros' => $erros, 'mensagem' => $sucesso], JSON_UNESCAPED_UNICODE);
