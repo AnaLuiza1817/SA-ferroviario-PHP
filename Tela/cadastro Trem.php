@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $stmt->close();
 
-            
+
             mensagemFlash('success', 'Trem cadastrado com sucesso!');
             if (($_POST['modal'] ?? '') === '1') { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE); exit; }
             header('Location: trens.php');
@@ -76,6 +76,7 @@ $rotas = $conexao->query("SELECT id, codigo, nome FROM rotas WHERE status = 'Ati
         </div>
     <?php endif; ?>
 
+    
     <div class="card border-0 rounded-4">
         <div class="card-body p-4">
             <form method="post">
