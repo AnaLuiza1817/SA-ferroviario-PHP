@@ -38,3 +38,34 @@ if (isAdmin()) {
                         <a class="nav-link <?= $paginaMenu === $arquivo ? 'active' : '' ?>"
                            href="<?= e($arquivo) ?>"
                            <?= $paginaMenu === $arquivo ? 'aria-current="page"' : '' ?>>
+                           
+                            <?= e($nome) ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+
+            <div class="menu-user">
+                <span class="user-identidade" title="<?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?>">
+                    <strong><?= e($_SESSION['usuario_nome'] ?? 'Usuário') ?></strong>
+                    <small><?= e($_SESSION['usuario_tipo'] ?? 'Usuário') ?></small>
+                </span>
+
+                <form id="formSair" method="post" action="logout.php">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalConfirmacao"
+                            data-confirm-form="formSair"
+                            data-confirm-titulo="Confirmar saída"
+                            data-confirm-mensagem="Deseja realmente sair do sistema?"
+                            data-confirm-botao="Sim, sair">
+                        Sair
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</nav>
