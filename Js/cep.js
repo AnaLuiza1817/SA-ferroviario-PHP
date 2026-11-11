@@ -31,3 +31,15 @@ limpar();
             const numeros = cep.value.replace(/\D/g, '');
 
             limpar();
+
+            if (!/^\d{8}$/.test(numeros)) {
+                status.textContent = 'CEP inválido. Informe 8 números.';
+                return;
+            }
+
+            status.textContent = 'Consultando CEP...';
+
+            if (botao) botao.disabled = true;
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
