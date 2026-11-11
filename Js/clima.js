@@ -33,8 +33,9 @@
         77: 'Neve',
 
         80: 'Pancadas de chuva',
-        
+
         81: 'Pancadas de chuva',
+        
         82: 'Pancadas de chuva fortes',
         85: 'Neve',
         86: 'Neve',
