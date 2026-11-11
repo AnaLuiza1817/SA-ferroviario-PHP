@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireLogin();
@@ -119,7 +118,7 @@ $resumos = [
                 </div>
 
                 <?php if ($admin): ?>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#novoSensor">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#novoSensor" title="Cadastrar um novo sensor" aria-label="Adicionar novo sensor">
                         <i class="fas fa-plus me-1"></i>Adicionar sensor
                     </button>
                 <?php endif; ?>
@@ -176,7 +175,9 @@ $resumos = [
                                     <td>
                                         <button class="btn btn-sm btn-outline-primary"
                                                 data-bs-toggle="modal"
-                                                data-bs-target="#editarSensor<?= (int)$sensor['id'] ?>">
+                                                data-bs-target="#editarSensor<?= (int)$sensor['id'] ?>"
+                                                title="Editar Sensor <?= e($sensor['codigo']) ?>"
+                                                aria-label="Editar o sensor <?= e($sensor['codigo']) ?>">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     </td>
