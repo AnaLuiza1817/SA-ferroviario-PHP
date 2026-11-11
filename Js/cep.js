@@ -81,3 +81,23 @@ limpar();
 
                 status.textContent = 'Endereço encontrado e preenchido pela ViaCEP.';
 
+  } catch {
+                status.textContent = 'Não foi possível consultar o CEP. Verifique sua conexão e tente novamente.';
+
+            } finally {
+                clearTimeout(timeout);
+
+                if (botao) botao.disabled = false;
+            }
+        };
+
+        botao?.addEventListener('click', consultar);
+
+        if (form.hasAttribute('data-cep-form')) {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                consultar();
+            });
+        }
+    });
+})();
