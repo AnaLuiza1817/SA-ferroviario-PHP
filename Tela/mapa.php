@@ -117,3 +117,20 @@ require __DIR__ . '/cabecalho.php';
                     <div id="painelOperacional" class="empty-panel">
                         Clique em um trem no mapa para visualizar seus dados.
                     </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+window.dadosMapa = {
+    estacoes: <?= json_encode($estacoes, $json) ?>,
+    trechos: <?= json_encode($trechos, $json) ?>,
+    trens: <?= json_encode($trens, $json) ?>
+};
+</script>
+
+<?php require __DIR__ . '/rodape.php'; ?>
