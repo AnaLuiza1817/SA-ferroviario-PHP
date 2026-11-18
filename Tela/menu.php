@@ -11,9 +11,9 @@ $linksMenu = [
     'mapa.php' => 'Mapa',
     'grafico.php' => 'Gráficos',
     'consulta-cep.php' => 'Consultar CEP'
-    ];
+];
 
-if (isAdmin()) {
+if (podeVisualizarUsuarios()) {
     $linksMenu['usuario.php'] = 'Usuários';
 }
 ?>
@@ -25,7 +25,7 @@ if (isAdmin()) {
             <span class="hs-mark">HS</span>
             <span>HYPER SENSE</span>
         </a>
-        
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -38,7 +38,6 @@ if (isAdmin()) {
                         <a class="nav-link <?= $paginaMenu === $arquivo ? 'active' : '' ?>"
                            href="<?= e($arquivo) ?>"
                            <?= $paginaMenu === $arquivo ? 'aria-current="page"' : '' ?>>
-                           
                             <?= e($nome) ?>
                         </a>
                     </li>

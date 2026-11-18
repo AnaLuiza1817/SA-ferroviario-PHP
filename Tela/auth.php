@@ -1,6 +1,15 @@
-
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    ini_set('session.use_strict_mode', '1');
+    session_start();
+}
 
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -36,6 +45,14 @@ function isAdmin(): bool {
     return ($_SESSION['usuario_tipo'] ?? '') === 'Administrador';
 }
 
+function isSupervisor(): bool {
+    return ($_SESSION['usuario_tipo'] ?? '') === 'Supervisor';
+}
+
+function podeVisualizarUsuarios(): bool {
+    return in_array($_SESSION['usuario_tipo'] ?? '', ['Administrador', 'Supervisor'], true);
+}
+
 function podeEditar(): bool {
     return in_array($_SESSION['usuario_tipo'] ?? '', ['Administrador', 'Supervisor'], true);
 }
@@ -44,6 +61,13 @@ function redirecionarAcessoNegado(): void {
     $_SESSION['mensagem_erro'] = 'Acesso negado. Faça login com um perfil autorizado.';
     header("Location: Login.php");
     exit;
+}
+
+function requireUsuarioRead(): void {
+    requireLogin();
+    if (!podeVisualizarUsuarios()) {
+        redirecionarAcessoNegado();
+    }
 }
 
 function requireAdmin(): void {

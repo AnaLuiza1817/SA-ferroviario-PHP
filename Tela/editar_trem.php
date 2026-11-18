@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -29,6 +28,18 @@ if (!$id || $codigo === '' || strlen($codigo) > 20 || !$rotaId || !$trechoId ||
 }
 
 try {
+    $relacao = $conexao->prepare('SELECT 1 FROM rota_trechos WHERE rota_id = ? AND trecho_id = ? LIMIT 1');
+    $relacao->bind_param('ii', $rotaId, $trechoId);
+    $relacao->execute();
+    $relacaoExiste = (bool) $relacao->get_result()->fetch_row();
+    $relacao->close();
+
+    if (!$relacaoExiste) {
+        mensagemFlash('danger', 'O trecho selecionado não pertence à rota escolhida.');
+        header('Location: trens.php');
+        exit;
+    }
+
     $stmt = $conexao->prepare('
         UPDATE trens
         SET codigo = ?, rota_id = ?, trecho_id = ?, usuario_responsavel_id = ?, status = ?, posicao_percentual = ?

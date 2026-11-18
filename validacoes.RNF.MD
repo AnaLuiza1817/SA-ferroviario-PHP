@@ -379,9 +379,9 @@ LIMIT 1;
 
 ### RNF-VAL-03 — Força mínima da senha
 
-* **Requisito:** Senha com no mínimo 6 caracteres.
+* **Requisito:** Senha com no mínimo 8 caracteres.
 
-* **Regra esperada:** Bloqueio client-side (`minlength="6"`) e server-side (`strlen($senha) < 6`).
+* **Regra esperada:** Bloqueio client-side (`minlength="8"`) e server-side (`strlen($senha) < 8`).
 
 * **Estratégia de validação:** Teste manual enviando senha de 3 caracteres → deve ser rejeitada.
 
@@ -394,7 +394,7 @@ LIMIT 1;
 ```html
 <input
     type="password"
-    minlength="6"
+    minlength="8"
     required
 >
 ```
@@ -402,8 +402,8 @@ LIMIT 1;
 * PHP:
 
 ```php
-if (strlen($senha) < 6) {
-    $erros[] = 'A senha deve ter pelo menos 6 caracteres.';
+if (strlen($senha) < 8) {
+    $erros[] = 'A senha deve ter pelo menos 8 caracteres.';
 }
 ```
 
@@ -905,7 +905,7 @@ REFERENCES estacoes(id)
 | RNF-SEG-08 | Segurança      | Admin só no servidor      | ✅         | `CadastroPublico.php` + `criar_admin.php` |
 | RNF-VAL-01 | Validação      | Campos obrigatórios       | ✅         | `main.js`, `Cadastro*.php`                |
 | RNF-VAL-02 | Validação      | Formato de e-mail         | ✅         | `filter_var(..., FILTER_VALIDATE_EMAIL)`  |
-| RNF-VAL-03 | Validação      | Senha ≥ 6 caracteres      | ✅         | HTML + PHP                                |
+| RNF-VAL-03 | Validação      | Senha ≥ 8 caracteres      | ✅         | HTML + PHP                                |
 | RNF-VAL-04 | Validação      | Confirmação de senha      | ✅         | `CadastroPublico.php`, `criar_admin.php`  |
 | RNF-VAL-05 | Validação      | E-mail único              | ✅         | `SELECT` + tratamento 1062                |
 | RNF-VAL-06 | Validação      | Sanitização XSS           | ✅         | `htmlspecialchars()` + `escaparHtml()`    |

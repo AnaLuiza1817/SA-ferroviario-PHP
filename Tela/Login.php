@@ -1,5 +1,13 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    ini_set('session.use_strict_mode', '1');
     session_start();
 }
 
@@ -18,42 +26,71 @@ unset($_SESSION['mensagem_erro']);
 
 $email = '';
 
+if (empty($_SESSION['csrf_login'])) {
+    $_SESSION['csrf_login'] = bin2hex(random_bytes(32));
+}
+
+if (($_SESSION['login_bloqueado_ate'] ?? 0) > time()) {
+    $erro = 'Muitas tentativas incorretas. Aguarde alguns minutos antes de tentar novamente.';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['usuario'] ?? '');
-    $senha = $_POST['senha'] ?? '';
-
-    if ($email === '' || $senha === '') {
-        $erro = 'Preencha todos os campos.';
+    $token = $_POST['csrf_login'] ?? '';
+    if (!is_string($token) || !hash_equals($_SESSION['csrf_login'], $token)) {
+        http_response_code(403);
+        $erro = 'Requisição inválida.';
+    } elseif (($_SESSION['login_bloqueado_ate'] ?? 0) > time()) {
+        $erro = 'Muitas tentativas incorretas. Aguarde alguns minutos antes de tentar novamente.';
     } else {
-        $stmt = $conexao->prepare(
-            "SELECT id, nome, email, tipo, senha
-             FROM usuarios
-             WHERE email = ?
-               AND status = 'Ativo'
-               AND deleted_at IS NULL
-             LIMIT 1"
-        );
+        $email = trim($_POST['usuario'] ?? '');
+        $senha = $_POST['senha'] ?? '';
 
-        $stmt->bind_param('s', $email);
-        $stmt->execute();
+        if ($email === '' || $senha === '') {
+            $erro = 'Preencha todos os campos.';
+        } else {
+            $stmt = $conexao->prepare(
+                "SELECT id, nome, email, tipo, senha
+                 FROM usuarios
+                 WHERE email = ?
+                   AND status = 'Ativo'
+                   AND deleted_at IS NULL
+                 LIMIT 1"
+            );
 
-        $usuario = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
 
-        if ($usuario && password_verify($senha, $usuario['senha'])) {
-            session_regenerate_id(true);
+            $usuario = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
 
-            $_SESSION['usuario_logado'] = true;
-            $_SESSION['usuario_id'] = (int) $usuario['id'];
-            $_SESSION['usuario_nome'] = $usuario['nome'];
-            $_SESSION['usuario_email'] = $usuario['email'];
-            $_SESSION['usuario_tipo'] = $usuario['tipo'];
+            if ($usuario && password_verify($senha, $usuario['senha'])) {
+                unset($_SESSION['login_tentativas'], $_SESSION['login_bloqueado_ate']);
+                session_regenerate_id(true);
 
-            header('Location: index.php');
-            exit;
+                $_SESSION['usuario_logado'] = true;
+                $_SESSION['usuario_id'] = (int) $usuario['id'];
+                $_SESSION['usuario_nome'] = $usuario['nome'];
+                $_SESSION['usuario_email'] = $usuario['email'];
+                $_SESSION['usuario_tipo'] = $usuario['tipo'];
+                unset($_SESSION['csrf_login']);
+
+                header('Location: index.php');
+                exit;
+            }
+
+            $_SESSION['login_tentativas'] = (int) ($_SESSION['login_tentativas'] ?? 0) + 1;
+            if ($_SESSION['login_tentativas'] >= 5) {
+                $_SESSION['login_bloqueado_ate'] = time() + 900;
+                unset($_SESSION['login_tentativas']);
+                $erro = 'Muitas tentativas incorretas. Aguarde 15 minutos antes de tentar novamente.';
+            } else {
+                $tentativasRestantes = 5 - (int) $_SESSION['login_tentativas'];
+                $erro = 'E-mail ou senha inválidos.';
+                if ($tentativasRestantes <= 2) {
+                    $erro .= " Restam {$tentativasRestantes} tentativa(s).";
+                }
+            }
         }
-
-        $erro = 'E-mail ou senha inválidos.';
     }
 }
 ?>
@@ -96,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
 
                         <form method="post">
+                            <input type="hidden" name="csrf_login" value="<?= htmlspecialchars($_SESSION['csrf_login'], ENT_QUOTES, 'UTF-8') ?>">
                             <div class="mb-3">
                                 <label for="email" class="form-label">
                                     E-mail
@@ -127,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 >
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100">
+                            <button type="submit" class="btn btn-primary w-100" <?= (($_SESSION['login_bloqueado_ate'] ?? 0) > time()) ? 'disabled' : '' ?>>
                                 Entrar
                             </button>
                         </form>

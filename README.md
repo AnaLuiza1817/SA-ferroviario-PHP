@@ -58,8 +58,7 @@ O sistema Hyper Sense possui uma estrutura dividida em diferentes áreas, cada u
 Durante o desenvolvimento da SA Hyper Sense, são utilizadas as seguintes tecnologias:
 
 - **PHP:** linguagem responsável pelo processamento e funcionamento da aplicação.
-- **MySQL:** sistema de gerenciamento do banco de dados.
-- **PDO:** recurso utilizado para realizar a conexão entre PHP e banco de dados.
+- **MySQLi:** recurso utilizado pelo PHP para conectar e operar o banco de dados MySQL.
 - **HTML:** estruturação das páginas.
 - **CSS:** estilização e organização visual da aplicação.
 - **JavaScript:** criação de interações e funcionalidades nas páginas.
@@ -125,7 +124,7 @@ O arquivo `banco.sql`, localizado na pasta Banco de Dados, contém os comandos r
 
 A conexão entre a aplicação PHP e o banco de dados é realizada pelo arquivo `conexao.php`, localizado na pasta `infra`.
 
-Para essa comunicação, utilizamos PDO, que permite executar consultas e operações no banco de dados de maneira organizada e segura.
+Para essa comunicação, o projeto utiliza MySQLi com instruções preparadas (`prepare()` e `bind_param()`), consultas organizadas e tratamento de erros.
 
 ## 8. Pesquisas e Documentação Técnica
 
@@ -140,6 +139,8 @@ Estudo sobre interfaces de programação de aplicações, comunicação entre si
 **PDO**
 
 Pesquisa sobre PHP Data Objects, sua finalidade, funcionamento, conexão com bancos de dados e utilização nas operações de uma aplicação PHP.
+
+**Observação sobre a pesquisa de PDO:** o projeto implementado utiliza MySQLi. O documento `pesquisa/PDO.MD` deve ser entendido como pesquisa comparativa entre tecnologias de acesso a banco.
 
 Esses conhecimentos contribuem para compreender melhor a integração, a organização e a segurança dos sistemas desenvolvidos.
 

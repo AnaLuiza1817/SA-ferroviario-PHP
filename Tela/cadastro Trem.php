@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -29,6 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$trecho) $erros[] = 'Selecione o trecho inicial para exibir o trem no mapa.';
     if (!$rota) {
         $erros[] = 'Selecione uma rota. Todo trem deve estar vinculado a uma rota.';
+    }
+
+    if ($trecho && $rota) {
+        $stmtRelacao = $conexao->prepare('SELECT 1 FROM rota_trechos WHERE rota_id = ? AND trecho_id = ? LIMIT 1');
+        $stmtRelacao->bind_param('ii', $rota, $trecho);
+        $stmtRelacao->execute();
+        $relacaoExiste = (bool) $stmtRelacao->get_result()->fetch_row();
+        $stmtRelacao->close();
+
+        if (!$relacaoExiste) {
+            $erros[] = 'O trecho selecionado não pertence à rota escolhida.';
+        }
     }
 
 

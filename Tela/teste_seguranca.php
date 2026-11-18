@@ -1,4 +1,3 @@
-
 <?php
 require_once 'auth.php';
 requireAdmin();
@@ -123,6 +122,13 @@ teste(
     'Coluna de senha no banco',
     $colunaExiste,
     'A tabela usuarios possui a coluna senha.'
+);
+
+teste(
+    'Supervisor pode visualizar usuários',
+    verificarArquivo('usuario.php', ['requireUsuarioRead();', 'podeVisualizarUsuarios']) &&
+    verificarArquivo('menu.php', ['podeVisualizarUsuarios()']),
+    'Supervisor e Administrador podem visualizar usuários; usuário comum continua bloqueado.'
 );
 
 $totalFalhas = count(array_filter($testes, fn($t) => !$t['resultado']));

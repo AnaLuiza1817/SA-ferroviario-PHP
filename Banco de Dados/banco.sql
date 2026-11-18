@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME NULL,
     deleted_at DATETIME NULL DEFAULT NULL,
-    UNIQUE KEY uk_usuarios_email (email)
+    UNIQUE KEY uk_usuarios_email (email),
+    CONSTRAINT ck_usuarios_tipo CHECK (tipo IN ('Administrador', 'Supervisor', 'Usuário')),
+    CONSTRAINT ck_usuarios_status CHECK (status IN ('Ativo', 'Inativo'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS estacoes (
@@ -61,7 +63,8 @@ CREATE TABLE IF NOT EXISTS rota_trechos (
     trecho_id INT NOT NULL,
     ordem INT NOT NULL,
     CONSTRAINT fk_rota_trecho_rota FOREIGN KEY (rota_id) REFERENCES rotas(id) ON DELETE CASCADE,
-    CONSTRAINT fk_rota_trecho_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE CASCADE
+    CONSTRAINT fk_rota_trecho_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_rota_trecho (rota_id, trecho_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS trens (
@@ -71,6 +74,7 @@ CREATE TABLE IF NOT EXISTS trens (
     trecho_id INT NULL,
     rota_id INT NULL,
     posicao_percentual DECIMAL(5,2) NOT NULL DEFAULT 50,
+    CONSTRAINT ck_trens_posicao CHECK (posicao_percentual BETWEEN 0 AND 100),
     usuario_responsavel_id INT NULL,
     CONSTRAINT fk_trem_trecho FOREIGN KEY (trecho_id) REFERENCES trechos(id) ON DELETE SET NULL,
     CONSTRAINT fk_trem_rota FOREIGN KEY (rota_id) REFERENCES rotas(id) ON DELETE SET NULL,
@@ -144,13 +148,13 @@ CREATE TABLE IF NOT EXISTS alteracoes_rota (
     id INT AUTO_INCREMENT PRIMARY KEY,
     trem_id INT NOT NULL,
     rota_anterior_id INT NULL,
-    rota_nova_id INT NOT NULL,
+    rota_nova_id INT NULL,
     amv_id INT NULL,
     motivo VARCHAR(255) NOT NULL,
     alterado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_alteracao_trem FOREIGN KEY (trem_id) REFERENCES trens(id) ON DELETE CASCADE,
     CONSTRAINT fk_alteracao_rota_anterior FOREIGN KEY (rota_anterior_id) REFERENCES rotas(id) ON DELETE SET NULL,
-    CONSTRAINT fk_alteracao_rota_nova FOREIGN KEY (rota_nova_id) REFERENCES rotas(id) ON DELETE CASCADE,
+    CONSTRAINT fk_alteracao_rota_nova FOREIGN KEY (rota_nova_id) REFERENCES rotas(id) ON DELETE SET NULL,
     CONSTRAINT fk_alteracao_amv FOREIGN KEY (amv_id) REFERENCES amvs(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
