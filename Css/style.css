@@ -1235,7 +1235,6 @@ select:focus-visible {
     }
 }
 
-/* Melhorias de acessibilidade: contraste e legibilidade */
 .text-muted {
     color: #3b4554 !important;
     font-weight: 600
