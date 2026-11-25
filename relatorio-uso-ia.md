@@ -1,4 +1,3 @@
-
 # Relatório de utilização de Inteligência Artificial
 
 ## Ferramenta utilizada
@@ -16,4 +15,4 @@ ChatGPT — auxílio ao desenvolvimento, revisão e documentação.
 
 ## Reflexão
 
-A IA acelerou a padronização de interface, estruturação de modais e pesquisa de APIs, mas não substitui execução local do sistema, validação de segurança, conferência do banco e revisão humana das regras da aplicação. O grupo é responsável pela entrega final.
+A IA acelerou a padronização de interface, estruturação de modais e pesquisa de APIs, mas não substitui execução local do sistema, validação de segurança, conferência do banco e revisão humana das regras da aplicação. O grupo é responsável pela entrega final.               
