@@ -1,5 +1,5 @@
 <?php
-// Inicia a sessão e configura os cookies de segurança.
+
 if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'lifetime' => 0, // Cookie válido enquanto o navegador estiver aberto.
