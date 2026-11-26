@@ -14,7 +14,6 @@ Ele é bastante utilizado junto com o PDO, que é uma ferramenta do PHP para tra
 
 ## Como funciona?
 
-
 ```php
 $sql = "SELECT * FROM usuarios";
 
